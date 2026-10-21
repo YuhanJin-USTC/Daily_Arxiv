@@ -1,6 +1,6 @@
 # 双语 Daily-Arxiv 配置、迁移和发布
 
-本项目将共享原始论文与两种 AI 解读分开维护。首页与统计页面默认 English；EN / 中文只切换 AI 内容，标题、作者、原始摘要与 arXiv 链接不翻译。个人关键词和作者过滤只保存在当前浏览器，不控制仓库邮件。旧存储键不删除，旧站登录凭据不迁移。
+本项目将共享原始论文与两种 AI 解读分开维护。首页与统计页面默认 English；EN / ZH只切换 AI 内容，标题、作者、原始摘要与 arXiv 链接不翻译。个人关键词和作者过滤只保存在当前浏览器，不控制仓库邮件。旧存储键不删除，旧站登录凭据不迁移。
 
 ## 配置
 
@@ -67,13 +67,21 @@ python scripts/notify.py --state DATA_CHECKOUT/data/notification-state.json --pr
 
 人工核对邮箱/服务端记录和 Message-ID 后，用 `scripts/notify.py --state ... --resolve-recipient ID --resolve-paper ARXIV_ID --resolution sent|retry|cancelled --note '核验依据'` 记录整个汇总批次的决定，再通过正常数据发布流程提交。不要把凭据放进 note。禁用或地址改变的旧收件人批次不会静默转发至新地址。确需放弃时，可以带核验备注将 pending 批次显式 cancelled；不允许把未发送的 pending 直接标为 sent 或重置重试。通知失败在工作流最后明确报告，不回滚论文或阻断 AI 保存。
 
+## 有限发布实测
+
+`Release checks` 是显式手动工作流，与其他数据写入共用 `arxiv-data` 并发组。`crawl` 阶段仅抓取一次并发布已验证原始新发现；`ai` 必须提供一个已有来源绑定、在历史基线之外的 `paper_id`，分别保存该论文的 English/Chinese 解读，不处理其他待补论文，也不重复调用已经完成的目标。没有真正新论文时等待下一批公告，不能把历史缺译改标为新论文测试。
+
+`mail` 阶段通过 `release_probe.py` 发送独立的英文 SMTP 基础设施测试，只发给配置的一个收件人，不包含历史论文通知。固定探针 `initial-release-v1` 与 Message-ID 保存在 `notification-state.json.release_probes`；发送前持久推送 sending，sent/cancelled 不重发，sending/uncertain 需要人工核验。明确失败也受次数上限约束。服务端接受不等于收件箱已确认送达。
+
+科大邮箱网页二次验证不影响 SMTP 自动化；`SMTP_PASSWORD` 必须使用在“设置 → 安全设置 → 客户端专用密码”生成的专用密码（去掉显示空格），不是网页登录密码或短信验证码，SMTP_USERNAME 使用完整邮箱地址。参见[科大官方说明](https://email.ustc.edu.cn/notice/2fa/)与[客户端设置](https://mail.ustc.edu.cn/coremail/help/index.jsp?locale=zh_CN)。不要在日志或本地浏览器测试文件中复制 Secrets。
+
 ## 发布与回退
 
 本地成果完成不代表已发布。本阶段不创建远端仓库、不 push、不部署、不真实发信/调用付费模型、不更改旧站。
 
 1. 用户验收代码、测试、迁移报告、网页/邮件预览；所有源项目继续保留。
 2. 用户另行授权创建 `yuhanjin-ustc/daily-arxiv` 并推送源码及审核的数据分支。先核对目标名称归属/内容；目标存在冲突则停止。目标当前本地 origin 指向中文源，发布时必须显式改为已确认的新 GitHub 远端，绝不能向原本地源 push。
-3. 配置 Secrets：`OPENAI_API_KEY`、`ACCESS_PASSWORD`、`SMTP_USERNAME`、`SMTP_PASSWORD`。配置 Pages 使用 GitHub Actions。没有密码时保留原有禁止未配置登录行为。
+3. 配置 Secrets：`OPENAI_API_KEY`、`ACCESS_PASSWORD`、`SMTP_USERNAME`、`SMTP_PASSWORD`。配置 Pages 使用 GitHub Actions。缺少 ACCESS_PASSWORD 时，既有鉴权逻辑会开放阅读；为保持旧站密码访问行为，必须先配置该 Secret 再部署。
 4. 经单独授权，实测邮件和少量真正新论文的双语生成。检查 durable queue、各语言恢复和费用，不用迁移历史作自动补发。优先手动运行，暂不同时打开两套定时任务。
 5. 启用 `ENABLE_PAGES=true`、`ENABLE_DATA_WRITES=true` 后，手动 dispatch Deploy website 与 Refresh researcher highlights（变量变化本身不会重跑先前跳过的任务），核对仓库链接、GitHub Pages 子路径、鉴权、缺译、匹配版本及三种屏幕宽度。按授权启用 `ENABLE_AI`、`ENABLE_EMAIL`。
 6. 切换前再次只读核对两个旧仓库最新 data SHA，重新制作全量候选并验证迁移期间增量，保留旧候选和来源证据。若新仓库已经有 smoke test 产物，先冻结并保留该数据提交，将最新旧站数据作为有来源/hash 的增量审查合入；保留新仓库已付费的健康 AI、检查点、discovery 状态和通知队列，严禁用重新初始化的迁移候选整体替换。仅为从旧站新导入且尚未在新仓库发现的 ID 增加历史基线；遇到元数据/健康 AI 冲突需再次交由用户判断。当前迁移工具处理两个源快照，已有运行状态的第三方合并需要独立审查的增量方案，不是一键覆盖。完成基线核对后，短时停用旧定时任务，完成最终增量检查，再启用新站 `ENABLE_DAILY=true`；避免漏收论文或长期重复付费。

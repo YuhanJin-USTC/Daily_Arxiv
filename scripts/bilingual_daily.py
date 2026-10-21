@@ -135,6 +135,7 @@ def stage_raw(source, raw, output, day, coverage):
         state["discoveries"][identifier] = {
             "date": day,
             "summary_sha256": abstract_hash(row),
+            "source_sha256": source_hash(row),
             "languages": {language: "pending" for language in LANGUAGES},
         }
         known.add(identifier)
@@ -157,11 +158,24 @@ def stage_raw(source, raw, output, day, coverage):
     return stage.finish()
 
 
-def stage_language(source, output, language, generate=process_all_items):
+def stage_language(source, output, language, generate=process_all_items, *, ids=None):
     language = validate_language(language)
     stage = Stage(source, output, "language", language)
     stage.track(STATE)
     state = load_state(source)
+    selected = None
+    if ids is not None:
+        if isinstance(ids, str):
+            raise ValueError("Selected IDs must be an explicit sequence")
+        requested = [paper_id(identifier) for identifier in ids]
+        if not requested or len(requested) != len(set(requested)):
+            raise ValueError("Selected IDs must be nonempty and unique")
+        selected = set(requested)
+        if not selected <= state["discoveries"].keys():
+            raise ValueError(
+                "Selected IDs must be post-baseline discoveries; history is excluded"
+            )
+    stage.manifest["selected_ids"] = sorted(selected) if selected is not None else None
     provenance = generation_provenance()
     checkpoint_name = f"data/ai-checkpoints/{language}.json"
     stage.track(checkpoint_name)
@@ -187,9 +201,49 @@ def stage_language(source, output, language, generate=process_all_items):
             "records": {},
         }
     )
+    if selected is not None:
+        verified_days = {}
+        for identifier in sorted(selected):
+            entry = state["discoveries"][identifier]
+            day = entry["date"]
+            if day not in verified_days:
+                raw = source / "data" / f"{day}.jsonl"
+                if not raw.is_file():
+                    raise ValueError("Selected discovery has no raw source")
+                originals = {paper_id(row["id"]): row for row in read_records(raw)}
+                enhanced = source / "data" / f"{day}_AI_enhanced_{language}.jsonl"
+                published = (
+                    {paper_id(row["id"]): row for row in read_records(enhanced)}
+                    if enhanced.exists()
+                    else {}
+                )
+                verified_days[day] = originals, published
+            originals, published = verified_days[day]
+            row = originals.get(identifier)
+            if (
+                row is None
+                or abstract_hash(row) != entry["summary_sha256"]
+                or source_hash(row) != entry.get("source_sha256")
+            ):
+                raise ValueError("Selected discovery raw source or abstract changed")
+            saved = checkpoints["records"].get(identifier)
+            if saved and (
+                saved.get("summary_sha256") != abstract_hash(row)
+                or saved.get("source_sha256") != source_hash(row)
+            ):
+                raise ValueError("Selected checkpoint source or abstract changed")
+            if entry["languages"][language] == "complete":
+                existing = published.get(identifier, {})
+                if (
+                    not valid_ai(existing.get("AI"))
+                    or existing.get("summary") != row["summary"]
+                ):
+                    raise ValueError("Selected completed language is absent or invalid")
     groups = {}
     for identifier, entry in state["discoveries"].items():
-        if entry["languages"][language] == "pending":
+        if entry["languages"][language] == "pending" and (
+            selected is None or identifier in selected
+        ):
             groups.setdefault(entry["date"], []).append(identifier)
     stage.manifest.update(completed_ids=[], failures=[])
     for day, ids in sorted(groups.items()):
@@ -205,8 +259,12 @@ def stage_language(source, output, language, generate=process_all_items):
         work = []
         for identifier in ids:
             row = copy.deepcopy(originals[identifier])
-            if abstract_hash(row) != state["discoveries"][identifier]["summary_sha256"]:
-                raise ValueError("Discovery abstract changed")
+            discovery = state["discoveries"][identifier]
+            if abstract_hash(row) != discovery["summary_sha256"] or (
+                discovery.get("source_sha256") is not None
+                and source_hash(row) != discovery["source_sha256"]
+            ):
+                raise ValueError("Discovery source or abstract changed")
             if identifier in published:
                 if (
                     not valid_ai(published[identifier].get("AI"))
@@ -305,8 +363,13 @@ def main():
     parser.add_argument("--date")
     parser.add_argument("--coverage", type=Path)
     parser.add_argument("--language", choices=LANGUAGES)
+    parser.add_argument(
+        "--ids", help="Comma-separated post-baseline IDs for limited AI generation"
+    )
     args = parser.parse_args()
     if args.kind == "raw":
+        if args.ids is not None:
+            parser.error("--ids is only valid for AI staging")
         if not args.raw or not args.date or not args.coverage:
             parser.error("Raw staging requires --raw, --date and --coverage")
         report = stage_raw(args.source, args.raw, args.output, args.date, args.coverage)
@@ -314,7 +377,14 @@ def main():
         if not args.language:
             parser.error("AI staging requires --language")
         validate_credentials()
-        report = stage_language(args.source, args.output, args.language)
+        report = stage_language(
+            args.source,
+            args.output,
+            args.language,
+            ids=tuple(value.strip() for value in args.ids.split(",") if value.strip())
+            if args.ids is not None
+            else None,
+        )
     print(
         json.dumps(
             {key: value for key, value in report.items() if key != "files"}, indent=2

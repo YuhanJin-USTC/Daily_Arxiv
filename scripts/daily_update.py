@@ -88,9 +88,9 @@ def raw_update(source, raw, coverage, day, output, config, publish=None):
     return {"new_papers": len(added)}
 
 
-def language_update(source, output, language, publish=None, generate=None):
+def language_update(source, output, language, publish=None, generate=None, *, ids=None):
     options = {"generate": generate} if generate is not None else {}
-    stage = stage_language(source, output, language, **options)
+    stage = stage_language(source, output, language, ids=ids, **options)
     apply(source, output)
     if publish:
         publish([entry["path"] for entry in stage["files"]])
@@ -126,6 +126,7 @@ def main():
     parser.add_argument("--coverage", type=Path)
     parser.add_argument("--date")
     parser.add_argument("--language", choices=("English", "Chinese"))
+    parser.add_argument("--ids", help="Explicit post-baseline IDs for a bounded AI run")
     parser.add_argument("--publish", action="store_true")
     parser.add_argument("--repository", default=os.environ.get("GITHUB_REPOSITORY"))
     parser.add_argument("--send", action="store_true")
@@ -151,7 +152,13 @@ def main():
         if not args.output or not args.language:
             parser.error("ai requires --output --language")
         validate_credentials()
-        report = language_update(args.source, args.output, args.language, publish)
+        report = language_update(
+            args.source,
+            args.output,
+            args.language,
+            publish,
+            ids=args.ids.split(",") if args.ids is not None else None,
+        )
     else:
         if not args.send or os.environ.get("ALLOW_SMTP_SEND") != "1":
             parser.error(
