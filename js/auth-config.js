@@ -23,10 +23,10 @@ const AUTH_CONFIG = {
     /**
      * LocalStorage key for storing authentication token
      */
-    storageKey: 'arxiv_auth_token',
+    storageKey: 'arxiv_auth:' + window.location.pathname.replace(/[^/]*$/, '') + ':token',
 
     /**
      * LocalStorage key for storing session expiration time
      */
-    storageExpireKey: 'arxiv_auth_expire'
+    storageExpireKey: 'arxiv_auth:' + window.location.pathname.replace(/[^/]*$/, '') + ':expire'
 };

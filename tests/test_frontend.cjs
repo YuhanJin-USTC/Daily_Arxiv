@@ -4,10 +4,8 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
 const source = fs.readFileSync(path.join(__dirname, '../js/app.js'), 'utf8');
-const start = source.indexOf('const AI_ERROR_PLACEHOLDERS');
-const end = source.indexOf('function renderCategoryFilter', start);
 const context = vm.createContext({console});
-vm.runInContext(source.slice(start, end), context);
+vm.runInContext(fs.readFileSync(path.join(__dirname, '../js/papers.js'), 'utf8'), context);
 function parse(rows) { return context.parseJsonlData(rows.map(JSON.stringify).join('\n'), '2026-10-20'); }
 const good = Object.fromEntries(['tldr','motivation','method','result','conclusion'].map(field => [field, `Valid ${field}`]));
 function paper(id, categories, ai=good) { return {id, categories, title:'Test', summary:'Original abstract', AI:ai, authors:['A']}; }
@@ -40,6 +38,35 @@ test('incomplete or empty AI also falls back without showing placeholders',()=>{
     const row=context.uniquePapers(parse([paper('one',['physics.plasm-ph'],ai)]))[0];
     assert.equal(row.aiAvailable,false);assert.equal(row.summary,'Original abstract');
   }
+});
+
+test('date-range duplicates keep earliest date, valid AI and all categories', () => {
+  const late = context.parseJsonlData(JSON.stringify(paper('2610.26164v2', ['physics.optics'])), '2026-10-20');
+  const early = context.parseJsonlData(JSON.stringify(paper('2610.26164', ['physics.plasm-ph'], {})), '2026-10-17');
+  const rows = context.uniquePapers({...late, ...early});
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].date, '2026-10-17');
+  assert.equal(rows[0].summary, 'Valid tldr');
+  assert.deepEqual([...rows[0].category].sort(), ['physics.optics', 'physics.plasm-ph']);
+});
+
+test('statistics uses the shared parser and counts uneven dates accurately', () => {
+  const ctx = vm.createContext({console, document: {addEventListener() {}}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../js/papers.js'), 'utf8'), ctx);
+  const sharedParser = ctx.parseJsonlData;
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../js/statistic.js'), 'utf8'), ctx);
+  assert.equal(ctx.parseJsonlData, sharedParser);
+  const early = ctx.parseJsonlData(JSON.stringify(paper('one', ['physics.plasm-ph'], {})), '2026-10-17');
+  const late = ctx.parseJsonlData(['one', 'two', 'three', 'four'].map(id => JSON.stringify(paper(id, ['physics.optics']))).join('\n'), '2026-10-20');
+  const rows = ctx.uniquePapers({...early, ...late});
+  const {allKeywords, keywordTrends} = ctx.countKeywordsByDate(rows, ['2026-10-17', '2026-10-20'], () => ['plasma']);
+  assert.equal(rows.length, 4);
+  assert.equal(allKeywords.get('plasma'), 4);
+  assert.equal(keywordTrends.get('2026-10-17').get('plasma'), 1);
+  assert.equal(keywordTrends.get('2026-10-20').get('plasma'), 3);
+  assert.equal(ctx.uniquePapers(early)[0].summary, 'Original abstract');
+  const html = fs.readFileSync(path.join(__dirname, '../statistic.html'), 'utf8');
+  assert.ok(html.indexOf('js/papers.js') < html.indexOf('js/statistic.js'));
 });
 
 test('language selection uses the repository edition', () => {

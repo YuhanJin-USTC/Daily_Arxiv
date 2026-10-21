@@ -24,8 +24,17 @@ on:
         description: Generate candidates (false only audits, without an API key)
         default: false
         type: boolean
+      resume_run_id:
+        description: Previous recovery run ID; also provide its artifact name
+        default: ''
+        type: string
+      resume_artifact_name:
+        description: Exact arxiv-recovery-RUN-ATTEMPT artifact name
+        default: ''
+        type: string
 permissions:
   contents: read
+  actions: read
 jobs:
   recovery:
     runs-on: ubuntu-latest
@@ -43,6 +52,29 @@ jobs:
       - uses: astral-sh/setup-uv@v6
       - run: uv sync --frozen
         working-directory: code
+      - name: Validate resume selector and workflow
+        working-directory: code
+        env:
+          RESUME_RUN_ID: ${{ inputs.resume_run_id }}
+          RESUME_ARTIFACT_NAME: ${{ inputs.resume_artifact_name }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          uv run --frozen python scripts/resume_artifact.py --kind repair --check-selector \
+            --run-id "$RESUME_RUN_ID" --name "$RESUME_ARTIFACT_NAME"
+          if [ -n "$RESUME_RUN_ID" ]; then
+            path=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RESUME_RUN_ID" --jq '.path')
+            test "$path" = '.github/workflows/recover.yml'
+            repo=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RESUME_RUN_ID" --jq '.head_repository.full_name')
+            test "$repo" = "$GITHUB_REPOSITORY"
+          fi
+      - uses: actions/download-artifact@v4
+        if: inputs.resume_run_id != ''
+        with:
+          name: ${{ inputs.resume_artifact_name }}
+          run-id: ${{ inputs.resume_run_id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/arxiv-recovery-resume
       - name: Audit selected records
         working-directory: code
         env:
@@ -50,6 +82,7 @@ jobs:
           END: ${{ inputs.end }}
           IDS: ${{ inputs.ids }}
           COUNT: ${{ inputs.expected_count }}
+          RESUME_RUN_ID: ${{ inputs.resume_run_id }}
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/arxiv-recovery"
@@ -59,6 +92,11 @@ jobs:
           uv run --frozen python -m ai.recover --source ../published/data \
             --start "$START" --end "$END" --ids "$IDS" "${extra[@]}" \
             > "$RUNNER_TEMP/arxiv-recovery/plan.json"
+          resume=()
+          if [ -n "$RESUME_RUN_ID" ]; then resume+=(--resume "$RUNNER_TEMP/arxiv-recovery-resume"); fi
+          uv run --frozen python scripts/resume_artifact.py --kind repair --source ../published \
+            --output "$RUNNER_TEMP/arxiv-recovery" --start "$START" --end "$END" \
+            --ids "$IDS" "${extra[@]}" "${resume[@]}"
       - name: Generate candidates
         if: inputs.generate
         working-directory: code
@@ -68,10 +106,12 @@ jobs:
           END: ${{ inputs.end }}
           IDS: ${{ inputs.ids }}
           COUNT: ${{ inputs.expected_count }}
+          RESUME_RUN_ID: ${{ inputs.resume_run_id }}
         run: |
           set -euo pipefail
           extra=()
           if [ -n "$COUNT" ]; then extra+=(--expected-count "$COUNT"); fi
+          if [ -n "$RESUME_RUN_ID" ]; then extra+=(--resume "$RUNNER_TEMP/arxiv-recovery-resume/ready/checkpoints"); fi
           uv run --frozen python -m ai.recover --source ../published/data \
             --start "$START" --end "$END" --ids "$IDS" "${extra[@]}" \
             --generate --output "$RUNNER_TEMP/arxiv-recovery/ready"

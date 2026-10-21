@@ -106,7 +106,7 @@ def process_single_item(chain, item, language):
     return item
 
 
-def process_all_items(data, language, chain=None):
+def process_all_items(data, language, chain=None, progress=None):
     """Sequential requests stop on the first error; no queued batch after 401."""
     if not data:
         raise EnhancementError("Empty input; publication blocked.")
@@ -122,7 +122,11 @@ def process_all_items(data, language, chain=None):
                 safe.completed = completed
                 if safe.record is None:
                     safe.record = copy.deepcopy(item)
+                if progress is not None:
+                    progress(completed, safe.record)
                 raise safe from None
+            if progress is not None:
+                progress(completed, None)
         validate_records(completed)
         return completed
     finally:
@@ -140,6 +144,7 @@ def resume_rows(rows, checkpoint_path, source_hash, language):
     ):
         raise ValueError("Checkpoint belongs to another input or language")
     saved = list(checkpoint.get("completed", []))
+    saved.extend(checkpoint.get("pending", []))
     if checkpoint.get("partial"):
         saved.append(checkpoint["partial"])
     by_id = index_records(saved)
@@ -148,6 +153,8 @@ def resume_rows(rows, checkpoint_path, source_hash, language):
     result = copy.deepcopy(rows)
     for row in result:
         if row["id"] in by_id:
+            if by_id[row["id"]].get("summary") != row.get("summary"):
+                raise ValueError("Checkpoint abstract differs from the raw snapshot")
             row["AI"] = {
                 **valid_fields(by_id[row["id"]].get("AI")),
                 **valid_fields(row.get("AI")),

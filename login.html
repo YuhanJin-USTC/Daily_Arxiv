@@ -148,7 +148,7 @@
         </a>
         <h1>Access Verification</h1>
         <div class="subtitle">Please enter password to continue</div>
-        <form id="loginForm">
+        <form id="loginForm" method="post">
             <div class="input-group">
                 <label for="password">Password</label>
                 <input
@@ -165,8 +165,8 @@
                 <input type="checkbox" id="rememberMe" checked>
                 <label for="rememberMe">Remember me for 7 days</label>
             </div>
-            <button type="submit">Verify Access</button>
-            <div class="error-message" id="errorMessage">
+            <button type="submit" id="loginButton" disabled>Verify Access</button>
+            <div class="error-message" id="errorMessage" role="alert" aria-live="polite">
                 ❌ Invalid password. Please try again.
             </div>
         </form>
@@ -177,46 +177,6 @@
 
     <script src="js/auth-config.js"></script>
     <script src="js/auth.js"></script>
-    <script>
-        const form = document.getElementById('loginForm');
-        const passwordInput = document.getElementById('password');
-        const rememberMe = document.getElementById('rememberMe');
-        const errorMessage = document.getElementById('errorMessage');
-
-        // If already authenticated, redirect to target page
-        if (Auth.isAuthenticated()) {
-            const redirect = new URLSearchParams(window.location.search).get('redirect') || 'index.html';
-            window.location.href = redirect;
-        }
-
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const password = passwordInput.value;
-            const remember = rememberMe.checked;
-
-            if (await Auth.login(password, remember)) {
-                // Login successful, redirect
-                const redirect = new URLSearchParams(window.location.search).get('redirect') || 'index.html';
-                window.location.href = redirect;
-            } else {
-                // Login failed
-                errorMessage.style.display = 'block';
-                passwordInput.value = '';
-                passwordInput.focus();
-
-                // Hide error message after 3 seconds
-                setTimeout(() => {
-                    errorMessage.style.display = 'none';
-                }, 3000);
-            }
-        });
-
-        // Handle Enter key in password field
-        passwordInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                form.dispatchEvent(new Event('submit'));
-            }
-        });
-    </script>
+    <script src="js/login.js"></script>
 </body>
 </html>

@@ -19,6 +19,34 @@ from scripts.build_site import build
 
 
 class InventoryTests(unittest.TestCase):
+    def test_subset_uses_inventory_members_and_skips_already_published(self):
+        inventory = ROOT / "docs/audits/arxiv-2026-10-20.json"
+        items = json.loads(inventory.read_text())["papers"]
+        with tempfile.TemporaryDirectory() as temp:
+            history = Path(temp) / "2026-10-20_AI_enhanced_English.jsonl"
+            history.write_text(json.dumps({"id": items[0]["id"]}) + "\n")
+            selected = items[1]["id"]
+            paper = SimpleNamespace(
+                entry_id="https://arxiv.org/abs/" + selected,
+                title="Paper",
+                summary="Abstract",
+                authors=[],
+                categories=["physics.plasm-ph"],
+                comment=None,
+            )
+            client = Mock(results=Mock(return_value=iter([paper])))
+            with patch("arxiv.Client", return_value=client):
+                rows, audit = crawl.archived_inventory(
+                    inventory, Path(temp), (items[0]["id"], selected)
+                )
+            self.assertEqual([r["id"] for r in rows], [selected])
+            self.assertEqual(client.results.call_args.args[0].id_list, [selected])
+            self.assertEqual(len(audit["remaining_ids"]), 89)
+            for ids in [("9999.99999",), (selected, selected)]:
+                with patch("arxiv.Client") as factory, self.assertRaises(ValueError):
+                    crawl.archived_inventory(inventory, Path(temp), ids)
+                factory.assert_not_called()
+
     def test_archived_inventory_fetches_only_unpublished_ids(self):
         inventory = ROOT / "docs/audits/arxiv-2026-10-20.json"
         items = json.loads(inventory.read_text())["papers"]

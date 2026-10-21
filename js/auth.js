@@ -6,7 +6,22 @@
  * @requires auth-config.js
  */
 
+class AuthStorageError extends Error {
+    constructor() {
+        super('Browser storage is unavailable. Allow site storage and try again.');
+        this.code = 'AUTH_STORAGE_UNAVAILABLE';
+    }
+}
+
 const Auth = {
+    withStorage(callback) {
+        try {
+            return callback(window.localStorage);
+        } catch {
+            throw new AuthStorageError();
+        }
+    },
+
     /**
      * Pure JavaScript SHA-256 implementation (fallback for non-secure contexts)
      * Based on: https://geraintluff.github.io/sha256/
@@ -15,6 +30,7 @@ const Auth = {
      * @returns {string} Hexadecimal hash string
      */
     sha256Fallback(ascii) {
+        ascii = Array.from(new TextEncoder().encode(ascii), byte => String.fromCharCode(byte)).join('');
         function rightRotate(value, amount) {
             return (value >>> amount) | (value << (32 - amount));
         }
@@ -107,16 +123,14 @@ const Auth = {
             try {
                 const encoder = new TextEncoder();
                 const data = encoder.encode(password);
-                const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+                const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
                 const hashArray = Array.from(new Uint8Array(hashBuffer));
                 return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-            } catch (e) {
-                console.warn('crypto.subtle failed, using fallback SHA-256:', e);
+            } catch {
                 return this.sha256Fallback(password);
             }
         } else {
             // Fallback for non-secure contexts (file://, HTTP, etc.)
-            console.warn('crypto.subtle not available, using pure JS SHA-256 implementation');
             return this.sha256Fallback(password);
         }
     },
@@ -138,14 +152,17 @@ const Auth = {
                 ? now + AUTH_CONFIG.sessionDuration
                 : now + 24 * 60 * 60 * 1000;
 
-            localStorage.setItem(AUTH_CONFIG.storageKey, inputHash);
-            localStorage.setItem(AUTH_CONFIG.storageExpireKey, expireTime.toString());
-
-            console.log('Authentication successful');
+            this.withStorage(storage => {
+                storage.setItem(AUTH_CONFIG.storageExpireKey, expireTime.toString());
+                storage.setItem(AUTH_CONFIG.storageKey, inputHash);
+                if (storage.getItem(AUTH_CONFIG.storageKey) !== inputHash ||
+                    storage.getItem(AUTH_CONFIG.storageExpireKey) !== expireTime.toString()) {
+                    throw new AuthStorageError();
+                }
+            });
             return true;
         }
 
-        console.warn('Authentication failed: Invalid password');
         return false;
     },
 
@@ -155,18 +172,12 @@ const Auth = {
      * @returns {boolean} True if valid session exists
      */
     isAuthenticated() {
-        const token = localStorage.getItem(AUTH_CONFIG.storageKey);
-        const expireTime = localStorage.getItem(AUTH_CONFIG.storageExpireKey);
+        const [token, expireTime] = this.withStorage(storage => [
+            storage.getItem(AUTH_CONFIG.storageKey),
+            Number(storage.getItem(AUTH_CONFIG.storageExpireKey))
+        ]);
 
-        if (!token || !expireTime) {
-            return false;
-        }
-
-        const now = Date.now();
-        if (now > parseInt(expireTime)) {
-            // Session expired
-            console.log('Session expired');
-            this.logout();
+        if (!token || !Number.isFinite(expireTime) || expireTime <= Date.now()) {
             return false;
         }
 
@@ -177,9 +188,15 @@ const Auth = {
      * Logout user and redirect to login page
      */
     logout() {
-        localStorage.removeItem(AUTH_CONFIG.storageKey);
-        localStorage.removeItem(AUTH_CONFIG.storageExpireKey);
-        console.log('Logged out');
+        try {
+            this.withStorage(storage => {
+                storage.removeItem(AUTH_CONFIG.storageKey);
+                storage.removeItem(AUTH_CONFIG.storageExpireKey);
+            });
+        } catch {
+            window.location.href = 'login.html?error=storage';
+            return;
+        }
         window.location.href = 'login.html';
     },
 
@@ -206,12 +223,14 @@ const Auth = {
             return;
         }
 
-        // Password protection is enabled, check authentication
-        if (!this.isAuthenticated()) {
-            const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-            console.log('Authentication required, redirecting to login page');
-            window.location.href = `login.html?redirect=${currentPage}`;
+        let storageFailed = false;
+        try {
+            if (this.isAuthenticated()) return;
+        } catch {
+            storageFailed = true;
         }
+        const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+        window.location.href = `login.html?redirect=${encodeURIComponent(currentPage)}${storageFailed ? '&error=storage' : ''}`;
     },
 
     /**
@@ -220,9 +239,8 @@ const Auth = {
      * @returns {number} Milliseconds until session expires
      */
     getSessionTimeLeft() {
-        const expireTime = localStorage.getItem(AUTH_CONFIG.storageExpireKey);
-        if (!expireTime) return 0;
-        return Math.max(0, parseInt(expireTime) - Date.now());
+        const expireTime = this.withStorage(storage => Number(storage.getItem(AUTH_CONFIG.storageExpireKey)));
+        return Number.isFinite(expireTime) ? Math.max(0, expireTime - Date.now()) : 0;
     },
 
     /**
@@ -252,8 +270,7 @@ const Auth = {
      * @returns {Date|null} Expiration date or null if not authenticated
      */
     getSessionExpireDate() {
-        const expireTime = localStorage.getItem(AUTH_CONFIG.storageExpireKey);
-        if (!expireTime) return null;
-        return new Date(parseInt(expireTime));
+        const expireTime = this.withStorage(storage => Number(storage.getItem(AUTH_CONFIG.storageExpireKey)));
+        return Number.isFinite(expireTime) && expireTime > 0 ? new Date(expireTime) : null;
     }
 };

@@ -292,20 +292,12 @@ async function loadPapersByDateRange(startDate, endDate) {
           allPaperData[category] = [];
         }
         allPaperData[category] = allPaperData[category].concat(dataPapers[category]);
-        // 将论文添加到全局数组
-        allPapersData = allPapersData.concat(dataPapers[category]);
       });
     }
     
     paperData = allPaperData;
 
-    // 提取所有论文标题
-    const allTitle = [];
-    Object.keys(paperData).forEach(category => {
-      paperData[category].forEach(paper => {
-        allTitle.push(paper.title);
-      });
-    });
+    allPapersData = uniquePapers(paperData);
 
     // 提取关键词并进行总结
     const extractKeywords = (text) => {
@@ -378,29 +370,9 @@ async function loadPapersByDateRange(startDate, endDate) {
         .map(([term]) => term);
     };
 
-    // 处理所有摘要
-    const allKeywords = new Map();
-    const keywordTrends = new Map(); // 添加关键词趋势数据结构
-    
-    // 初始化日期数据结构
-    validDatesInRange.forEach(date => {
-      keywordTrends.set(date, new Map());
-    });
-    
-    // 按日期统计关键词
-    allTitle.forEach((abstract, index) => {
-      const date = validDatesInRange[Math.floor(index / (allTitle.length / validDatesInRange.length))];
-      const keywords = extractKeywords(abstract);
-      
-      keywords.forEach(keyword => {
-        // 更新总体统计
-        allKeywords.set(keyword, (allKeywords.get(keyword) || 0) + 1);
-        
-        // 更新日期维度统计
-        const dateStats = keywordTrends.get(date);
-        dateStats.set(keyword, (dateStats.get(keyword) || 0) + 1);
-      });
-    });
+    const {allKeywords, keywordTrends} = countKeywordsByDate(
+      allPapersData, validDatesInRange, extractKeywords
+    );
 
     // 生成关键词云数据
     const keywordCloudData = Array.from(allKeywords.entries())
@@ -708,51 +680,6 @@ async function loadPapersByDateRange(startDate, endDate) {
   }
 }
 
-function parseJsonlData(jsonlText, date) {
-  const result = {};
-  
-  const lines = jsonlText.trim().split('\n');
-  
-  lines.forEach(line => {
-    try {
-      const paper = JSON.parse(line);
-      
-      if (!paper.categories) {
-        return;
-      }
-      
-      let allCategories = Array.isArray(paper.categories) ? paper.categories : [paper.categories];
-      
-      const primaryCategory = allCategories[0];
-      
-      if (!result[primaryCategory]) {
-        result[primaryCategory] = [];
-      }
-      
-      const summary = paper.AI && paper.AI.tldr ? paper.AI.tldr : paper.summary;
-      
-      result[primaryCategory].push({
-        title: paper.title,
-        url: paper.abs || paper.pdf || `https://arxiv.org/abs/${paper.id}`,
-        authors: Array.isArray(paper.authors) ? paper.authors.join(', ') : paper.authors,
-        category: allCategories,
-        summary: summary,
-        details: paper.summary || '',
-        date: date,
-        id: paper.id,
-        motivation: paper.AI && paper.AI.motivation ? paper.AI.motivation : '',
-        method: paper.AI && paper.AI.method ? paper.AI.method : '',
-        result: paper.AI && paper.AI.result ? paper.AI.result : '',
-        conclusion: paper.AI && paper.AI.conclusion ? paper.AI.conclusion : ''
-      });
-    } catch (error) {
-      console.error('解析JSON行失败:', error, line);
-    }
-  });
-  
-  return result;
-}
-
 function formatDate(dateString) {
   const date = new Date(dateString);
   return date.toLocaleDateString('en-US', {
@@ -786,6 +713,7 @@ function showRelatedPapers(keyword) {
             <div class="paper-categories">
                 ${paper.category.map(cat => `<span class="category-tag">${cat}</span>`).join('')}
             </div>
+            ${!paper.aiAvailable ? '<p class="ai-summary-status">AI summary unavailable; showing the original abstract.</p>' : ''}
             <div class="paper-summary">${paper.summary}</div>
         </div>
     `).join('');
@@ -803,4 +731,18 @@ function showRelatedPapers(keyword) {
 function closeSidebar() {
   const sidebar = document.getElementById('paperSidebar');
   sidebar.classList.remove('active');
+}
+
+function countKeywordsByDate(papers, dates, extractKeywords) {
+  const allKeywords = new Map();
+  const keywordTrends = new Map(dates.map(date => [date, new Map()]));
+  papers.forEach(paper => {
+    const dateStats = keywordTrends.get(paper.date);
+    if (!dateStats) return;
+    extractKeywords(paper.title).forEach(keyword => {
+      allKeywords.set(keyword, (allKeywords.get(keyword) || 0) + 1);
+      dateStats.set(keyword, (dateStats.get(keyword) || 0) + 1);
+    });
+  });
+  return {allKeywords, keywordTrends};
 }
