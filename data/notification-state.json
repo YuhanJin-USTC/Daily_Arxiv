@@ -7034,12 +7034,32 @@
       },
       "date": "2026-10-21",
       "site_url": "https://yuhanjin-ustc.github.io/daily-arxiv/",
-      "sender": "jinyuhan@mail.ustc.edu.cn",
+      "sender": "1786527728@qq.com",
       "message_id": "<daily-arxiv-release-4caba5c4dbd0cb5d216178789bd1f5a9@yuhanjin-ustc.github.io>",
       "status": "failed",
       "attempts": 1,
       "last_error": "smtp_explicit_failure",
-      "resolutions": []
+      "resolutions": [
+        {
+          "date": "2026-10-21",
+          "resolution": "sender_change",
+          "note": "User selected QQ sender 1786527728@qq.com after definite failed probe run 39622988942. Auth diagnostic 39625137192 and network diagnostic 39626172494 show USTC connection failure before authentication. Preserve prior failure, attempt count, recipient and Message-ID; this action sends no mail.",
+          "prior": {
+            "probe_id": "initial-release-v1",
+            "recipient": {
+              "id": "yuhanjin",
+              "email": "jinyuhan@mail.ustc.edu.cn"
+            },
+            "date": "2026-10-21",
+            "site_url": "https://yuhanjin-ustc.github.io/daily-arxiv/",
+            "sender": "jinyuhan@mail.ustc.edu.cn",
+            "message_id": "<daily-arxiv-release-4caba5c4dbd0cb5d216178789bd1f5a9@yuhanjin-ustc.github.io>",
+            "status": "failed",
+            "attempts": 1,
+            "last_error": "smtp_explicit_failure"
+          }
+        }
+      ]
     }
   }
 }
