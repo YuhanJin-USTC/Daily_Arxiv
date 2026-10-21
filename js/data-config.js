@@ -3,6 +3,7 @@ const DATA_CONFIG = {
   repoOwner: "__OWNER__",
   repoName: "__REPOSITORY__",
   language: "__LANGUAGE__",
+  categories: "__CATEGORIES__",
   dataBranch: 'data',
   getDataBaseUrl() {
     return `https://raw.githubusercontent.com/${this.repoOwner}/${this.repoName}/${this.dataBranch}`;

@@ -2,14 +2,13 @@
 
 from datetime import datetime
 import json
-import os
 from pathlib import Path
 import re
-import tomllib
 from urllib.parse import urlencode
 
 import scrapy
 
+from ai.config import subscribed_categories
 from daily_arxiv.history import load_history_ids, paper_id
 
 
@@ -22,19 +21,7 @@ class ArxivSpider(scrapy.Spider):
         self, target_date=None, history_dir=None, audit_path=None, *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
-        root = Path(__file__).resolve().parents[3]
-        defaults = tomllib.loads((root / "pyproject.toml").read_text())["tool"][
-            "daily_arxiv"
-        ]["categories"]
-        supplied = os.environ.get("CATEGORIES", "").strip()
-        categories = supplied.split(",") if supplied else defaults
-        self.target_categories = {
-            category.strip() for category in categories if category.strip()
-        }
-        if not self.target_categories or any(
-            not re.fullmatch(r"[A-Za-z][A-Za-z.-]+", c) for c in self.target_categories
-        ):
-            raise ValueError("CATEGORIES must contain arXiv category names")
+        self.target_categories = set(subscribed_categories())
         self.target_date = (
             datetime.strptime(target_date, "%Y-%m-%d").date() if target_date else None
         )

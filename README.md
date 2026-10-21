@@ -13,7 +13,7 @@ Daily arXiv announcements with validated AI summaries and a static GitHub Pages 
 - Use DeepSeek's reviewed maximum profile: `deepseek-flash`, thinking enabled, effort `max`, 393,216 output tokens maximum, native 1M context. Input remains the paper abstract.
 - Recover missing structured fields with at most two repair attempts. Keep accepted fields, reject placeholders, stop the batch on authentication/provider failures, and retain partial checkpoints separately.
 - Publish only complete validated candidates. Preserve existing records byte-for-byte on same-day appends. Stage historical repairs for review instead of automatically overwriting archives.
-- Show the original abstract with an explicit unavailable status when historical AI fields are invalid. Secondary-category filters include cross-listed papers; the overall count remains unique.
+- Show the original abstract with an explicit unavailable status when historical AI fields are invalid. Show only the configured subscription filters, including zero counts; cross-listed papers count in each matching filter while the overall count remains unique.
 
 ## Configuration
 
@@ -24,7 +24,7 @@ Public settings live in `pyproject.toml`. The editions differ only in:
 language = "English" # Chinese in the Chinese repository
 ```
 
-Default categories: `physics.plasm-ph`, `physics.acc-ph`, `physics.optics`, `physics.flu-dyn`, `physics.atom-ph`, and `physics.comp-ph`. A nonempty Actions variable `CATEGORIES` overrides daily crawling. The reviewed October 20 backfill inventory uses those six original categories.
+Edit `[tool.daily_arxiv].categories` in `pyproject.toml` to add, remove, or reorder subscriptions in both editions. Defaults are `physics.plasm-ph`, `physics.acc-ph`, `physics.optics`, `physics.flu-dyn`, `physics.atom-ph`, and `physics.comp-ph`. A nonempty repository Actions variable `CATEGORIES` overrides this list for both daily crawling and website filters; update that override too, or intentionally clear it to use the file. Merging a file change into `main` automatically runs **Deploy website**. Changing only the variable requires running **Deploy website** manually. Do not edit generated `js/data-config.js`. The reviewed October 20 backfill inventory still uses its original six categories.
 
 The model uses the repository Actions secret **`OPENAI_API_KEY`**, containing a valid official DeepSeek credential. Old `MODEL_NAME`, `OPENAI_BASE_URL`, and `LANGUAGE` environment/Actions variables do not override the versioned settings. No credential belongs in source, a command argument, an issue, or a log. An offline format check cannot prove a credential is active.
 

@@ -1,3 +1,5 @@
+const DEFAULT_SUBSCRIBED_CATEGORIES = "__DEFAULT_CATEGORIES__";
+
 const AI_ERROR_PLACEHOLDERS = new Set([
   'summary generation failed', 'motivation analysis unavailable',
   'method extraction failed', 'result analysis unavailable',
@@ -90,16 +92,18 @@ function parseJsonlData(jsonlText, date) {
 }
 
 // 获取所有类别并按偏好排序
-function getAllCategories(data) {
+function getAllCategories(data, subscribedCategories) {
   const papers = uniquePapers(data);
-  const categoryCounts = {};
+  const configured = Array.isArray(subscribedCategories) ? subscribedCategories : DEFAULT_SUBSCRIBED_CATEGORIES;
+  const categories = Array.isArray(configured) ? [...new Set(configured)] : [];
+  const categoryCounts = Object.fromEntries(categories.map(category => [category, 0]));
   papers.forEach(paper => {
     new Set(paper.allCategories || paper.category || []).forEach(category => {
-      categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+      if (Object.hasOwn(categoryCounts, category)) categoryCounts[category]++;
     });
   });
   return {
-    sortedCategories: Object.keys(categoryCounts).sort((a, b) => a.localeCompare(b)),
+    sortedCategories: categories,
     categoryCounts,
     totalCount: papers.length
   };
