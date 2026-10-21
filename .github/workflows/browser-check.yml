@@ -1,10 +1,14 @@
 name: Verify deployed website
 on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/browser-check.yml]
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
   browser:
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

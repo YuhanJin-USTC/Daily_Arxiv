@@ -1,5 +1,8 @@
 name: Release checks
 on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/release-check.yml]
   workflow_dispatch:
     inputs:
       phase:
@@ -18,6 +21,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   check:
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
