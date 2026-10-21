@@ -32,7 +32,7 @@ The model uses the repository Actions secret **`OPENAI_API_KEY`**, containing a 
 
 Researchers use stable IDs, enabled flags, full display names, `aliases` (confirmed), and `suspected_aliases` (unconfirmed). Initial abbreviated names are suspected only; they never trigger mail. Browser author filters are personal and do not control repository notifications. Name-only matching cannot establish identity.
 
-Mail defaults to USTC SMTP SSL, port 465, with `SMTP_USERNAME` and `SMTP_PASSWORD` supplied as Secrets or environment variables; use a client-specific password. `notifications.smtp` also supports Gmail SSL or STARTTLS without code changes. Recipient email addresses are intentionally public in configuration, but are excluded from website bundles. Never put credentials in TOML or chat. See [.env.example](.env.example) and [operations](docs/bilingual-operation.md).
+Mail uses QQ SMTP SSL on port 465, with `SMTP_USERNAME` and `SMTP_PASSWORD` supplied as Secrets or environment variables; use the QQ client authorization code. The configured QQ sender delivers to the USTC recipient. `notifications.smtp` supports other SSL or STARTTLS providers without transport changes. Mail addresses are intentionally public in configuration, but are excluded from website bundles. Never put credentials in TOML or chat. See [.env.example](.env.example) and [operations](docs/bilingual-operation.md).
 
 ## Local development
 

@@ -18,6 +18,7 @@
 - Freeze raw discovery, researcher evidence and recipient cohort together before publication. Stable recipient ID plus normalized paper ID deduplicates mail. Persist/push sending state before SMTP; uncertain or interrupted delivery requires manual evidence and resolution, not automatic resend.
 - Release probes are explicit manual checks: one source-bound post-baseline paper for AI, and one durable infrastructure email distinct from paper notifications. Never reinterpret historical gaps as new discoveries to satisfy a live test. Preserve release_probes alongside ordinary delivery state.
 - Diagnose SMTP connection/auth failures with the manual auth-only check before another send. Keep diagnostics allowlisted; never record server response text, credentials or authentication payloads.
+- Changing a frozen release-probe sender requires an explicit audited rebind from failed state. Preserve attempts, recipient and Message-ID; never rebind sent, sending or uncertain probes. Confirm replacement SMTP Secrets before authenticating with a new provider.
 - All data workflows share `concurrency.group: arxiv-data`, `cancel-in-progress: false`; verify remote data HEAD before writes. Never force-push to recover a conflict. Configuration refresh updates highlights only, never historic mail.
 - Keep mail recipients/SMTP configuration out of site bundles; credentials only in Secrets/environment. Do not infer authentication from recipient addresses. Preserve repository-specific authentication and Pages subpaths.
 

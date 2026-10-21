@@ -5,10 +5,14 @@ on:
       phase:
         description: Explicit release check; each phase preserves prior results
         type: choice
-        options: [crawl, ai, smtp-auth, mail]
+        options: [crawl, ai, smtp-auth, mail-sender, mail]
         required: true
       paper_id:
         description: One genuinely new post-baseline arXiv ID for the AI probe
+        type: string
+        default: ''
+      evidence_note:
+        description: Public evidence for a failed probe sender change; never credentials
         type: string
         default: ''
 permissions:
@@ -115,6 +119,15 @@ jobs:
           uv run --frozen python scripts/release_probe.py --source ../published \
             --repository "$GITHUB_REPOSITORY" --recipient yuhanjin --date "$DAY" \
             --send --publish
+      - name: Rebind a confirmed failed probe to the configured sender
+        if: inputs.phase == 'mail-sender'
+        working-directory: code
+        env:
+          EVIDENCE_NOTE: ${{ inputs.evidence_note }}
+        run: |
+          uv run --frozen python scripts/release_probe.py --source ../published \
+            --repository "$GITHUB_REPOSITORY" --rebind-sender \
+            --note "$EVIDENCE_NOTE" --publish
       - name: Save persistent state evidence
         if: always() && inputs.phase != 'smtp-auth'
         run: |

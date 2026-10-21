@@ -92,10 +92,10 @@ email = "jinyuhan@mail.ustc.edu.cn"
 enabled = true
 
 [tool.daily_arxiv.notifications.smtp]
-host = "mail.ustc.edu.cn"
+host = "smtp.qq.com"
 port = 465
 security = "ssl"
-sender = "jinyuhan@mail.ustc.edu.cn"
+sender = "1786527728@qq.com"
 username_env = "SMTP_USERNAME"
 password_env = "SMTP_PASSWORD"
 timeout = 30

@@ -182,6 +182,9 @@ def dispatch_probe(
         if configured != record["recipient"]:
             report["blocked"].append("recipient_changed")
             return report
+        if record["sender"] != mail["smtp"]["sender"]:
+            report["blocked"].append("sender_changed")
+            return report
     else:
         record = probe_record(config, recipient_id, day)
     maximum = mail["smtp"]["max_attempts"]
@@ -263,6 +266,30 @@ def resolve_probe(state, resolution, note, day=None):
     return state
 
 
+def rebind_sender(state, config, note, day=None):
+    validate_state(state)
+    if not note.strip():
+        raise ValueError("Sender change requires an operator evidence note")
+    record = validate_probe(state["release_probes"][PROBE_ID])
+    if record["status"] != "failed":
+        raise ValueError("Only definitively failed probes may change sender")
+    sender = config["notifications"]["smtp"]["sender"]
+    if record["sender"] == sender:
+        raise ValueError("Probe sender already matches configuration")
+    day = day or date.today().isoformat()
+    date.fromisoformat(day)
+    prior = {
+        key: copy.deepcopy(value)
+        for key, value in record.items()
+        if key != "resolutions"
+    }
+    record["resolutions"].append(
+        {"date": day, "resolution": "sender_change", "note": note, "prior": prior}
+    )
+    record["sender"] = sender
+    return state
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source", type=Path)
@@ -281,6 +308,11 @@ def main():
         help="One SMTP authentication diagnostic; no message, publication or queue access",
     )
     action.add_argument("--resolve", choices=("sent", "retry", "cancelled"))
+    action.add_argument(
+        "--rebind-sender",
+        action="store_true",
+        help="Rebind a failed probe to the configured sender, retaining failed status, attempts and last error",
+    )
     parser.add_argument("--note", default="")
     args = parser.parse_args()
     config = settings()
@@ -296,21 +328,28 @@ def main():
         parser.error("--source is required for preview, send or resolution")
     state_path = args.source / QUEUE
     state = validate_state(json.loads(state_path.read_text()))
-    if args.note and not args.resolve:
-        parser.error("--note requires --resolve")
-    if not args.send and not args.resolve:
+    if args.note and not (args.resolve or args.rebind_sender):
+        parser.error("--note requires --resolve or --rebind-sender")
+    if not args.send and not args.resolve and not args.rebind_sender:
         if args.publish:
             parser.error("Preview does not publish state")
         print(preview(state, config, args.recipient, args.date.isoformat()))
         return 0
     if not args.publish:
-        parser.error("Sending or resolution requires --publish for durable state")
+        parser.error(
+            "Sending, resolution or sender change requires --publish for durable state"
+        )
     publisher = Publisher(args.source, args.repository)
 
     def persist(value):
         write_json(state_path, value)
         publisher([QUEUE])
 
+    if args.rebind_sender:
+        rebind_sender(state, config, args.note, args.date.isoformat())
+        persist(state)
+        print(json.dumps({"probe_id": PROBE_ID, "resolution": "sender_change"}))
+        return 0
     if args.resolve:
         resolve_probe(state, args.resolve, args.note, args.date.isoformat())
         persist(state)
