@@ -38,6 +38,10 @@ class ArxivSpider(scrapy.Spider):
         for category in sorted(self.target_categories):
             yield self.list_request(category, 0)
 
+    async def start(self):
+        for request in self.start_requests():
+            yield request
+
     def list_request(self, category, skip):
         query = urlencode({"skip": skip, "show": 2000})
         return scrapy.Request(

@@ -3,10 +3,12 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from ai.config import settings
-from ai.quality import FIELDS
+from ai.enhance import process_all_items, resume_rows
+from ai.errors import EnhancementError
+from ai.quality import FIELDS, read_records
 from ai.recover import plan_recovery, stage_recovery
 from ai.storage import digest, write_bytes, write_json, write_jsonl
 from scripts.resume_artifact import INVENTORY, checked_file, prepare, selector
@@ -234,6 +236,52 @@ class ArtifactTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "coverage"):
             self.snapshot(ids)
         self.assertFalse(self.output.exists())
+
+    def test_metadata_partial_checkpoint_resumes_without_metadata_inputs(self):
+        raw, rows = self.metadata()
+        ids = tuple(row["id"] for row in rows)
+        self.snapshot(ids)
+
+        def interrupted(items, language, progress):
+            completed = [{**items[0], "AI": GOOD}]
+            partial = {**items[1], "AI": {"tldr": "Keep accepted TLDR"}}
+            progress(completed, partial)
+            error = EnhancementError("Synthetic interruption", partial)
+            error.completed = completed
+            raise error
+
+        with self.assertRaises(EnhancementError):
+            stage(
+                self.source,
+                self.output / raw.name,
+                self.output / "ready",
+                str(DAY),
+                interrupted,
+            )
+        self.assertFalse(
+            json.loads((self.output / "ready/manifest.json").read_text())["complete"]
+        )
+        resumed = self.root / "resumed"
+        prepare("append", self.source, resumed, resume=self.output, ids=ids)
+        previous = json.loads((self.output / "request.json").read_text())
+        current = json.loads((resumed / "request.json").read_text())
+        self.assertEqual(current, previous)
+        restored = resume_rows(
+            read_records(resumed / raw.name),
+            self.output / "ready/checkpoint.json",
+            digest(resumed / raw.name),
+            self.language,
+        )
+        chain = Mock()
+        chain.invoke.return_value = GOOD
+        with (
+            patch("ai.enhance.is_sensitive", return_value=False),
+            patch("ai.enhance.check_github_code", return_value={}),
+        ):
+            completed = process_all_items(restored, self.language, chain)
+        chain.invoke.assert_called_once()
+        self.assertEqual(completed[0]["AI"], GOOD)
+        self.assertEqual(completed[1]["AI"]["tldr"], "Keep accepted TLDR")
 
     def test_metadata_rejects_generated_artifacts_and_ai_in_raw(self):
         self.backfill()
