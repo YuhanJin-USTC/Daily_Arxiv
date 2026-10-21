@@ -10,6 +10,7 @@ from ai.enhance import process_all_items, resume_rows
 from ai.errors import EnhancementError
 from ai.quality import FIELDS, read_records, valid_ai
 from ai.recover import load_checkpoints, plan_recovery, stage_recovery
+from ai.reuse import generation_provenance
 from ai.storage import digest, write_json
 from scripts.apply_staged import apply
 from scripts.stage_daily import stage
@@ -150,6 +151,7 @@ class RepairTests(unittest.TestCase):
             {
                 "id": "2610.26164",
                 "language": self.language,
+                "provenance": generation_provenance(),
                 "source_sha256": "stale",
                 "AI": GOOD,
             },
@@ -217,8 +219,14 @@ class RepairTests(unittest.TestCase):
         original = b"".join(json.dumps(r).encode() + b"\r\n" for r in self.rows)
         self.enhanced.write_bytes(original)
         incoming = self.root / "new.jsonl"
-        incoming.write_text(json.dumps(row(999)) + "\n")
-        generated = Mock(side_effect=lambda rows, language, **kwargs: rows)
+        incoming.write_text(
+            json.dumps({k: v for k, v in row(999).items() if k != "AI"}) + "\n"
+        )
+        generated = Mock(
+            side_effect=lambda rows, language, **kwargs: [
+                {**r, "AI": GOOD} for r in rows
+            ]
+        )
         stage(self.source, incoming, self.output, str(DAY), generated)
         self.assertTrue(
             (self.output / "data" / self.enhanced.name)
@@ -233,7 +241,9 @@ class RepairTests(unittest.TestCase):
 
     def test_backfill_refuses_old_failed_data_before_any_generation(self):
         incoming = self.root / "new.jsonl"
-        incoming.write_text(json.dumps(row(999)) + "\n")
+        incoming.write_text(
+            json.dumps({k: v for k, v in row(999).items() if k != "AI"}) + "\n"
+        )
         generated = Mock()
         with self.assertRaises(ValueError):
             stage(self.source, incoming, self.output, str(DAY), generated)
@@ -253,6 +263,7 @@ class RepairTests(unittest.TestCase):
         write_json(
             checkpoint,
             {
+                "provenance": generation_provenance(),
                 "source_sha256": digest(incoming),
                 "language": self.language,
                 "completed": [],
@@ -278,6 +289,7 @@ class RepairTests(unittest.TestCase):
         write_json(
             checkpoint,
             {
+                "provenance": generation_provenance(),
                 "source_sha256": digest(self.raw),
                 "language": self.language,
                 "completed": [{**self.rows[0], "AI": GOOD}],
@@ -388,6 +400,7 @@ class RepairTests(unittest.TestCase):
             {
                 "id": "2610.26164",
                 "language": self.language,
+                "provenance": generation_provenance(),
                 "source_sha256": digest(self.enhanced),
                 "AI": GOOD,
             },
@@ -409,6 +422,7 @@ class RepairTests(unittest.TestCase):
         write_json(
             previous,
             {
+                "provenance": generation_provenance(),
                 "source_sha256": digest(incoming),
                 "language": self.language,
                 "completed": [{**r, "AI": GOOD} for r in rows[:2]],
@@ -448,6 +462,7 @@ class RepairTests(unittest.TestCase):
                 {
                     "id": item["id"],
                     "language": self.language,
+                    "provenance": generation_provenance(),
                     "source_sha256": digest(self.enhanced),
                     "AI": GOOD if index < 2 else {"tldr": "Keep partial"},
                 },

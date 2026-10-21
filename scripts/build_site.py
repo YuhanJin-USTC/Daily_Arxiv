@@ -11,10 +11,12 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+sys.path.insert(1, str(ROOT / "daily_arxiv"))
 from ai.config import settings, subscribed_categories
+from daily_arxiv.researchers import config_digest
 
 
-def build(output, repository):
+def build(output, repository, data_base_url=""):
     if output.exists():
         raise ValueError("Site output must be a new directory")
     if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repository):
@@ -35,6 +37,12 @@ def build(output, repository):
         "__REPOSITORY__": name,
         "__LANGUAGE__": language,
         "__CATEGORIES__": categories,
+        "__LANGUAGES__": config.get("languages", ["English", "Chinese"]),
+        "__NAMESPACE__": "daily-arxiv:" + repository.lower(),
+        "__RESEARCHERS_DIGEST__": config_digest(
+            config.get("researchers", []), categories
+        ),
+        "__DATA_BASE_URL__": data_base_url,
     }.items():
         script = script.replace(json.dumps(key), json.dumps(value))
     (output / "js/data-config.js").write_text(script)
@@ -88,13 +96,14 @@ def build(output, repository):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--data-base-url", default="", help="Local preview data URL")
     parser.add_argument(
         "--repository",
         default=os.environ.get("GITHUB_REPOSITORY"),
         required=not os.environ.get("GITHUB_REPOSITORY"),
     )
     args = parser.parse_args()
-    build(args.output, args.repository)
+    build(args.output, args.repository, args.data_base_url)
 
 
 if __name__ == "__main__":

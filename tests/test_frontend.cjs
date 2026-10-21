@@ -99,16 +99,10 @@ test('statistics uses the shared parser and counts uneven dates accurately', () 
   assert.ok(html.indexOf('js/papers.js') < html.indexOf('js/statistic.js'));
 });
 
-test('language selection uses the repository edition', () => {
-  for(const page of [source, fs.readFileSync(path.join(__dirname, '../js/statistic.js'), 'utf8')]) {
-  const first=page.indexOf('function getPreferredLanguage()');
-  const last=page.indexOf('async function fetchAvailableDates()',first);
-  for(const language of ['English','Chinese']) {
-    const ctx=vm.createContext({DATA_CONFIG:{language},window:{dateLanguageMap:new Map([['2026-10-20',['English','Chinese']]])}});
-    vm.runInContext(page.slice(first,last),ctx);
-    assert.equal(ctx.getPreferredLanguage(),language);
-    assert.equal(ctx.selectLanguageForDate('2026-10-20'),language);
-    assert.equal(ctx.selectLanguageForDate('missing'),language);
-  }
+test('both pages use shared language selection without a language fallback', () => {
+  for (const page of [source, fs.readFileSync(path.join(__dirname, '../js/statistic.js'), 'utf8')]) {
+    assert.doesNotMatch(page, /function getPreferredLanguage|function selectLanguageForDate/);
+    assert.match(page, /initLanguageSelector/);
+    assert.match(page, /loadPaperDates/);
   }
 });

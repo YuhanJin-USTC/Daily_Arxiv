@@ -10,10 +10,11 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(1, str(ROOT / "daily_arxiv"))
-from ai.config import settings, validate_credentials
+from ai.config import validate_credentials, validate_language
 from ai.enhance import process_all_items, resume_rows
 from ai.errors import EnhancementError, safe_failure
 from ai.quality import read_records, valid_ai, validate_records
+from ai.reuse import generation_provenance
 from ai.storage import digest, write_bytes, write_json, write_jsonl
 from ai.structured_output import valid_fields
 from daily_arxiv.merge_published import merge_published
@@ -21,16 +22,29 @@ from to_md.convert import convert
 
 
 def stage(
-    source, raw, output, day, generate=process_all_items, resume=None, coverage=None
+    source,
+    raw,
+    output,
+    day,
+    generate=process_all_items,
+    resume=None,
+    coverage=None,
+    language=None,
 ):
     if output.exists():
         raise ValueError("Staging directory must be new")
     rows = read_records(raw)
     if not rows:
         return None
-    language = settings()["language"]
+    if any("AI" in row or "AI_status" in row for row in rows):
+        raise ValueError("Raw staging input contains unbound AI fields")
+    language = validate_language(language)
     source_hash = digest(raw)
-    names = [f"{day}.jsonl", f"{day}_AI_enhanced_{language}.jsonl", f"{day}.md"]
+    names = [
+        f"{day}.jsonl",
+        f"{day}_AI_enhanced_{language}.jsonl",
+        f"{day}_{language}.md",
+    ]
     paths = ["data/" + name for name in names] + ["assets/file-list.txt"]
     before = {
         name: digest(source / name) if (source / name).exists() else None
@@ -69,6 +83,7 @@ def stage(
             output / "checkpoint.json",
             {
                 "source_sha256": source_hash,
+                "provenance": generation_provenance(),
                 "language": language,
                 "completed": [row for row in saved if valid_ai(row.get("AI"))],
                 "pending": [
@@ -141,6 +156,7 @@ def main():
     parser.add_argument(
         "--coverage", type=Path, help="Verified archived inventory audit"
     )
+    parser.add_argument("--language", choices=("English", "Chinese"))
     args = parser.parse_args()
     try:
         validate_credentials()
@@ -151,6 +167,7 @@ def main():
             args.date.isoformat(),
             resume=args.resume,
             coverage=json.loads(args.coverage.read_text()) if args.coverage else None,
+            language=args.language,
         )
         return 0
     except Exception as error:

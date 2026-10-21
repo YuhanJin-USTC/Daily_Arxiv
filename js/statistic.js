@@ -1,4 +1,8 @@
 let currentDate = '';
+let selectedStartDate = '';
+let selectedEndDate = '';
+let paperRequest = 0;
+let selectedRelatedKeyword = null;
 let availableDates = [];
 let paperData = {};
 let flatpickrInstance = null;
@@ -27,6 +31,9 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('resize', checkScreenSize);
 
   initEventListeners();
+  initLanguageSelector(() => {
+    if (selectedStartDate) loadPapersByDateRange(selectedStartDate, selectedEndDate);
+  });
   fetchGitHubStats();
   
   fetchAvailableDates().then(() => {
@@ -39,7 +46,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function fetchGitHubStats() {
   try {
-    const response = await fetch('https://api.github.com/repos/dw-dengwei/daily-arXiv-ai-enhanced');
+    const response = await fetch(DATA_CONFIG.getRepositoryApiUrl());
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
     const starCount = data.stargazers_count;
     const forkCount = data.forks_count;
@@ -62,7 +70,7 @@ function toggleDatePicker() {
     
     // 重新初始化日期选择器以确保它反映最新的可用日期
     if (flatpickrInstance) {
-      flatpickrInstance.setDate(currentDate, false);
+      flatpickrInstance.setDate(selectedStartDate === selectedEndDate ? selectedStartDate : [selectedStartDate, selectedEndDate], false);
     }
   } else {
     document.body.style.overflow = '';
@@ -106,77 +114,22 @@ function initEventListeners() {
     const isClickOnKeyword = event.target.closest('.keyword-item') || 
                             event.target.closest('.keyword-cloud text');
     
-    if (!isClickInside && !isClickOnKeyword && sidebar.classList.contains('active')) {
+    if (!isClickInside && !isClickOnKeyword && !event.target.closest('[data-ai-language]') && sidebar.classList.contains('active')) {
       closeSidebar();
     }
   });
 }
 
-// Function to detect preferred language based on browser settings
-function getPreferredLanguage() {
-  return DATA_CONFIG.language === 'Chinese' ? 'Chinese' : 'English';
-}
-
-// Function to select the best available language for a date
-function selectLanguageForDate(date, preferredLanguage = null) {
-  const availableLanguages = window.dateLanguageMap?.get(date) || [];
-  
-  if (availableLanguages.length === 0) {
-    return getPreferredLanguage(); // repository edition
-  }
-  
-  // Use provided preference or detect from browser
-  const preferred = preferredLanguage || getPreferredLanguage();
-  
-  // If preferred language is available, use it
-  if (availableLanguages.includes(preferred)) {
-    return preferred;
-  }
-  
-  // Fallback: prefer English if available, otherwise use the first available
-  return availableLanguages.includes(getPreferredLanguage()) ? getPreferredLanguage() : availableLanguages[0];
-}
-
 async function fetchAvailableDates() {
   try {
-    // 从 data 分支获取文件列表
-    const fileListUrl = DATA_CONFIG.getDataUrl('assets/file-list.txt');
-    const response = await fetch(fileListUrl);
-    if (!response.ok) {
-      console.error('Error fetching file list:', response.status);
-      return [];
-    }
-    const text = await response.text();
-    const files = text.trim().split('\n');
-
-    const dateRegex = /(\d{4}-\d{2}-\d{2})_AI_enhanced_(English|Chinese)\.jsonl/;
-    const dateLanguageMap = new Map(); // Store date -> available languages
-    const dates = [];
-    
-    files.forEach(file => {
-      const match = file.match(dateRegex);
-      if (match && match[1] && match[2]) {
-        const date = match[1];
-        const language = match[2];
-        
-        if (!dateLanguageMap.has(date)) {
-          dateLanguageMap.set(date, []);
-          dates.push(date);
-        }
-        dateLanguageMap.get(date).push(language);
-      }
-    });
-    
-    // Store the language mapping globally for later use
-    window.dateLanguageMap = dateLanguageMap;
-    availableDates = [...new Set(dates)];
-    availableDates.sort((a, b) => new Date(b) - new Date(a));
-
-    initDatePicker(); // Assuming this function uses availableDates
-
+    const response = await fetch(DATA_CONFIG.getDataUrl('assets/file-list.txt'));
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    availableDates = datesFromInventory(await response.text());
+    initDatePicker();
     return availableDates;
   } catch (error) {
-    console.error('获取可用日期失败:', error);
+    console.error('Available dates unavailable:', error);
+    return [];
   }
 }
 
@@ -243,10 +196,15 @@ function toggleRangeMode() {
   
   if (flatpickrInstance) {
     flatpickrInstance.set('mode', isRangeMode ? 'range' : 'single');
+    flatpickrInstance.clear(false);
   }
 }
 
 async function loadPapersByDateRange(startDate, endDate) {
+  selectedStartDate = startDate;
+  selectedEndDate = endDate;
+  const request = ++paperRequest;
+  const language = getPreferredLanguage();
   // 获取日期范围内的所有有效日期
   const validDatesInRange = availableDates.filter(date => {
     return date >= startDate && date <= endDate;
@@ -274,30 +232,11 @@ async function loadPapersByDateRange(startDate, endDate) {
   `;
   
   try {
-    // 加载所有日期的论文数据
-    const allPaperData = {};
-    allPapersData = []; // 重置全局论文数据
-    
-    for (const date of validDatesInRange) {
-      const selectedLanguage = selectLanguageForDate(date);
-      // 从 data 分支获取数据文件
-      const dataUrl = DATA_CONFIG.getDataUrl(`data/${date}_AI_enhanced_${selectedLanguage}.jsonl`);
-      const response = await fetch(dataUrl);
-      const text = await response.text();
-      const dataPapers = parseJsonlData(text, date);
-      
-      // 合并数据
-      Object.keys(dataPapers).forEach(category => {
-        if (!allPaperData[category]) {
-          allPaperData[category] = [];
-        }
-        allPaperData[category] = allPaperData[category].concat(dataPapers[category]);
-      });
-    }
-    
-    paperData = allPaperData;
-
+    const loaded = await loadPaperDates(validDatesInRange, language);
+    if (request !== paperRequest) return;
+    paperData = loaded;
     allPapersData = uniquePapers(paperData);
+    if (selectedRelatedKeyword !== null) showRelatedPapers(selectedRelatedKeyword);
 
     // 提取关键词并进行总结
     const extractKeywords = (text) => {
@@ -670,11 +609,12 @@ async function loadPapersByDateRange(startDate, endDate) {
     }
     
   } catch (error) {
+    if (request !== paperRequest) return;
     console.error('加载论文数据失败:', error);
     container.innerHTML = `
       <div class="loading-container">
         <p>Loading data fails. Please retry.</p>
-        <p>Error messages: ${error.message}</p>
+        <p>Error messages: ${escapeHtml(error.message)}</p>
       </div>
     `;
   }
@@ -691,6 +631,7 @@ function formatDate(dateString) {
 
 // 修改 showRelatedPapers 函数中生成论文卡片的部分
 function showRelatedPapers(keyword) {
+    selectedRelatedKeyword = keyword;
     const sidebar = document.getElementById('paperSidebar');
     const selectedKeywordElement = document.getElementById('selectedKeyword');
     const relatedPapersContainer = document.getElementById('relatedPapers');
@@ -700,7 +641,7 @@ function showRelatedPapers(keyword) {
     
     // 查找包含关键词的论文
     const relatedPapers = allPapersData.filter(paper => {
-        const searchText = (paper.title + ' ' + paper.summary).toLowerCase();
+        const searchText = (paper.title + ' ' + paper.details).toLowerCase();
         return searchText.includes(keyword.toLowerCase());
     });
     
@@ -708,13 +649,13 @@ function showRelatedPapers(keyword) {
     const papersHTML = relatedPapers.map((paper, index) => `
         <div class="paper-card">
             <div class="paper-number">${index + 1}</div>
-            <a href="${paper.url}" target="_blank" class="paper-title">${paper.title}</a>
-            <div class="paper-authors">${paper.authors}</div>
+            <a href="${escapeHtml(safeHttpUrl(paper.url))}" target="_blank" class="paper-title">${escapeHtml(paper.title)}</a>
+            <div class="paper-authors">${formatPaperAuthors(paper, [], true)}</div>
             <div class="paper-categories">
-                ${paper.category.map(cat => `<span class="category-tag">${cat}</span>`).join('')}
+                ${paper.category.map(cat => `<span class="category-tag">${escapeHtml(cat)}</span>`).join('')}
             </div>
-            ${!paper.aiAvailable ? '<p class="ai-summary-status">AI summary unavailable; showing the original abstract.</p>' : ''}
-            <div class="paper-summary">${paper.summary}</div>
+            ${!paper.aiAvailable ? `<p class="ai-summary-status">${escapeHtml(aiUnavailableMessage(paper))}</p>` : ''}
+            <div class="paper-summary">${escapeHtml(paper.summary)}</div>
         </div>
     `).join('');
     
@@ -729,6 +670,7 @@ function showRelatedPapers(keyword) {
 
 // 添加新函数：关闭侧边栏
 function closeSidebar() {
+  selectedRelatedKeyword = null;
   const sidebar = document.getElementById('paperSidebar');
   sidebar.classList.remove('active');
 }

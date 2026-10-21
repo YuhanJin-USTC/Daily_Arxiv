@@ -1,0 +1,35 @@
+name: Refresh researcher highlights
+on:
+  push:
+    branches: [main]
+    paths:
+      - pyproject.toml
+      - daily_arxiv/daily_arxiv/researchers.py
+      - scripts/daily_update.py
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: arxiv-data
+  cancel-in-progress: false
+jobs:
+  refresh:
+    if: vars.ENABLE_DATA_WRITES == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: code
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: data
+          path: published
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --frozen
+        working-directory: code
+      - name: Rebuild historical highlights without enqueueing mail
+        working-directory: code
+        env:
+          CATEGORIES: ${{ vars.CATEGORIES }}
+        run: uv run --frozen python scripts/daily_update.py index --source ../published --publish

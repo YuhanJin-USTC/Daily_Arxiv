@@ -18,7 +18,7 @@ function loadKeywordPreferences() {
   selectedKeywordsContainer.innerHTML = '';
   
   // 获取保存的关键词，如果没有则使用默认关键词
-  let savedKeywords = localStorage.getItem('preferredKeywords');
+  let savedKeywords = readPreference('preferredKeywords', true);
   let keywords = []; // 默认无关键词
   
   if (savedKeywords) {
@@ -46,7 +46,7 @@ function loadAuthorPreferences() {
   selectedAuthorsContainer.innerHTML = '';
   
   // 获取保存的作者，如果没有则为空数组
-  let savedAuthors = localStorage.getItem('preferredAuthors');
+  let savedAuthors = readPreference('preferredAuthors', true);
   let authors = []; // 默认无作者
   
   if (savedAuthors) {
@@ -127,7 +127,7 @@ function addKeywordTag(keyword) {
   // 创建新的关键词标签
   const tagElement = document.createElement('span');
   tagElement.className = 'category-button tag-appear';
-  tagElement.innerHTML = `${keyword} <button class="remove-tag">×</button>`;
+  tagElement.innerHTML = `${escapeHtml(keyword)} <button class="remove-tag">×</button>`;
   
   // 添加删除按钮事件
   const removeButton = tagElement.querySelector('.remove-tag');
@@ -180,7 +180,7 @@ function addAuthorTag(author) {
   // 创建新的作者标签
   const tagElement = document.createElement('span');
   tagElement.className = 'category-button tag-appear';
-  tagElement.innerHTML = `${author} <button class="remove-tag">×</button>`;
+  tagElement.innerHTML = `${escapeHtml(author)} <button class="remove-tag">×</button>`;
   
   // 添加删除按钮事件
   const removeButton = tagElement.querySelector('.remove-tag');
@@ -292,8 +292,12 @@ function saveSettings() {
   });
   
   // 保存设置到localStorage
-  localStorage.setItem('preferredKeywords', JSON.stringify(keywords));
-  localStorage.setItem('preferredAuthors', JSON.stringify(authors));
+  const keywordsSaved = savePreference('preferredKeywords', JSON.stringify(keywords));
+  const authorsSaved = savePreference('preferredAuthors', JSON.stringify(authors));
+  if (!keywordsSaved || !authorsSaved) {
+    showNotification('Browser storage is unavailable. Settings could not be saved.', 'error');
+    return;
+  }
   
   // 显示保存成功提示，添加成功图标
   showNotification('Settings saved successfully!', 'success');
@@ -381,7 +385,8 @@ function showNotification(message, type = 'success') {
 // 获取GitHub统计数据
 async function fetchGitHubStats() {
   try {
-    const response = await fetch('https://api.github.com/repos/dw-dengwei/daily-arXiv-ai-enhanced');
+    const response = await fetch(DATA_CONFIG.getRepositoryApiUrl());
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
     const starCount = data.stargazers_count;
     const forkCount = data.forks_count;

@@ -8,10 +8,12 @@ import re
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from ai.config import settings
+sys.path.insert(1, str(Path(__file__).resolve().parents[1] / "daily_arxiv"))
+from ai.config import validate_language
 from ai.quality import validate_records
 from ai.recover import check_sources, verify_repair
 from ai.storage import digest, write_bytes
+from daily_arxiv.history import paper_id
 
 
 def staged_files(source, staged, manifest):
@@ -24,14 +26,14 @@ def staged_files(source, staged, manifest):
             if language not in ("English", "Chinese") or (
                 entry["file"] != f"{day}_AI_enhanced_{language}.jsonl"
                 or entry["raw_file"] != f"{day}.jsonl"
-                or (entry["failed"] and entry["markdown_file"] != f"{day}.md")
+                or (
+                    entry["failed"] and entry["markdown_file"] != f"{day}_{language}.md"
+                )
             ):
                 raise ValueError("Invalid repair manifest path")
         check_sources(source / "data", manifest["entries"])
         files = []
         for entry in manifest["entries"]:
-            if entry["language"] != settings()["language"]:
-                raise ValueError("Stage belongs to the other language edition")
             if not entry["failed"]:
                 continue
             verify_repair(
@@ -52,8 +54,10 @@ def staged_files(source, staged, manifest):
                 },
             ]
         return files
-    if manifest["kind"] != "append" or manifest["language"] != settings()["language"]:
-        raise ValueError("Unknown stage type or wrong language")
+    if manifest["kind"] not in ("append", "raw", "language"):
+        raise ValueError("Unknown stage type")
+    if manifest["kind"] != "raw":
+        validate_language(manifest["language"])
     return manifest["files"]
 
 
@@ -67,10 +71,35 @@ def apply(source, staged, verify_only=False):
     for entry in files:
         name = entry["path"]
         if name in seen or not re.fullmatch(
-            r"(?:data/\d{4}-\d{2}-\d{2}(?:_AI_enhanced_(?:English|Chinese))?\.(?:jsonl|md)|assets/file-list\.txt)",
+            r"(?:data/\d{4}-\d{2}-\d{2}(?:(?:_AI_enhanced_(?:English|Chinese))?\.jsonl|_(?:English|Chinese)\.md)|data/(?:pipeline-state|notification-state)\.json|data/ai-checkpoints/(?:English|Chinese)\.json|assets/(?:file-list\.txt|researcher-index\.json))",
             name,
         ):
             raise ValueError("Invalid or repeated staged path")
+        if manifest["kind"] == "raw" and (
+            "_AI_enhanced_" in name
+            or name.endswith(".md")
+            or "/ai-checkpoints/" in name
+        ):
+            raise ValueError("Raw stage contains language output")
+        if (
+            manifest["kind"] == "language"
+            and name.startswith("data/")
+            and name != "data/pipeline-state.json"
+        ):
+            language = manifest["language"]
+            if not (
+                name.endswith(f"_AI_enhanced_{language}.jsonl")
+                or name.endswith(f"_{language}.md")
+                or name == f"data/ai-checkpoints/{language}.json"
+            ):
+                raise ValueError("Language stage contains another language or raw data")
+        if (
+            name in ("data/notification-state.json", "assets/researcher-index.json")
+            and manifest["kind"] != "raw"
+        ):
+            raise ValueError(
+                "Only raw staging may include notification cohorts or matching index"
+            )
         seen.add(name)
         target, candidate = source / name, staged / name
         if not target.resolve().is_relative_to(
@@ -80,20 +109,36 @@ def apply(source, staged, verify_only=False):
         current = digest(target) if target.exists() else None
         if current != entry["before"] or digest(candidate) != entry["after"]:
             raise ValueError("Source or candidate hash changed; refusing overwrite")
-        if manifest["kind"] == "append" and name.endswith(".jsonl"):
+        if name == "data/notification-state.json":
+            from daily_arxiv.notifications import validate_state
+
+            validate_state(json.loads(candidate.read_text()))
+        if name == "assets/researcher-index.json":
+            index = json.loads(candidate.read_text())
+            if (
+                index.get("schema_version") != 1
+                or not re.fullmatch(r"[0-9a-f]{64}", index.get("config_digest", ""))
+                or not isinstance(index.get("papers"), dict)
+            ):
+                raise ValueError("Invalid researcher index")
+        if manifest["kind"] in ("append", "raw", "language") and name.endswith(
+            ".jsonl"
+        ):
             old = target.read_bytes() if target.exists() else b""
             new = candidate.read_bytes()
             if not new.startswith(old):
                 raise ValueError("Published bytes were replaced")
             old_ids = {
-                json.loads(line)["id"] for line in old.splitlines() if line.strip()
+                paper_id(json.loads(line)["id"])
+                for line in old.splitlines()
+                if line.strip()
             }
             added = [
                 json.loads(line)
                 for line in new[len(old) :].splitlines()
                 if line.strip()
             ]
-            added_ids = [row["id"] for row in added]
+            added_ids = [paper_id(row["id"]) for row in added]
             if old_ids.intersection(added_ids) or len(added_ids) != len(set(added_ids)):
                 raise ValueError("Append contains duplicate/published IDs")
             if "_AI_enhanced_" in name:

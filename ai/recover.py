@@ -7,15 +7,16 @@ import json
 from pathlib import Path
 import sys
 
-from .config import settings, validate_credentials
+from .config import validate_credentials, validate_language
 from .errors import EnhancementError, safe_failure
 from .quality import index_records, read_records, valid_ai, validate_records
-from .reuse import SuccessfulSummaries
+from .reuse import SuccessfulSummaries, generation_provenance
 from .storage import digest, write_bytes, write_json
 from .structured_output import valid_fields
 
 
 def plan_recovery(source, start, end, language, ids=(), expected_count=None):
+    language = validate_language(language)
     if start > end:
         raise ValueError("Invalid date range")
     if ids and start != end:
@@ -133,6 +134,10 @@ def load_checkpoints(directory, entries):
                 raise ValueError("Unsafe checkpoint path")
             checkpoints[name] = json.loads(path.read_text())
     for name, saved in checkpoints.items():
+        if saved.get("provenance") != generation_provenance():
+            raise ValueError(
+                "Checkpoint model or prompt provenance is absent or changed"
+            )
         if not isinstance(saved, dict) or any(
             saved.get(key) != value for key, value in bindings[name].items()
         ):
@@ -202,6 +207,7 @@ def stage_recovery(source, output, entries, generate, resume=None, success_sourc
                 "id": row["id"],
                 "language": entry["language"],
                 "source_sha256": entry["source_sha256"],
+                "provenance": generation_provenance(),
             }
             if name in checkpoints:
                 checkpoint = checkpoints[name]
@@ -291,13 +297,14 @@ def main(argv=None):
         type=Path,
         help="Same-language archive for identical-abstract reuse",
     )
+    parser.add_argument("--language", choices=("English", "Chinese"))
     args = parser.parse_args(argv)
     try:
         entries = plan_recovery(
             args.source,
             args.start,
             args.end,
-            settings()["language"],
+            validate_language(args.language),
             tuple(value.strip() for value in args.ids.split(",") if value.strip()),
             args.expected_count,
         )

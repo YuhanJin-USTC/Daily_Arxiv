@@ -17,11 +17,12 @@ dependencies = [
     "requests>=2.32.3",
     "python-dotenv>=1.0.1",
 ]
-license = "Apache-2.0"
+license = {file = "LICENSE"}
 
 
 [tool.daily_arxiv]
-language = "Chinese"
+language = "English"
+languages = ["English", "Chinese"]
 categories = ["physics.plasm-ph", "physics.acc-ph", "physics.optics", "physics.flu-dyn", "physics.atom-ph", "physics.comp-ph"]
 
 [tool.daily_arxiv.deepseek]
@@ -31,6 +32,74 @@ base_url = "https://api.deepseek.com"
 reasoning_effort = "max"
 max_tokens = 393216
 context_window = "1M"
+
+[[tool.daily_arxiv.researchers]]
+id = "alexey-arefiev"
+display_name = "Alexey Arefiev"
+enabled = true
+aliases = []
+suspected_aliases = ["A. Arefiev", "A. V. Arefiev"]
+
+[[tool.daily_arxiv.researchers]]
+id = "yutong-he"
+display_name = "Yutong He"
+enabled = true
+aliases = []
+suspected_aliases = ["Y. He"]
+
+[[tool.daily_arxiv.researchers]]
+id = "liangliang-ji"
+display_name = "Liangliang Ji"
+enabled = true
+aliases = []
+suspected_aliases = ["L. Ji"]
+
+[[tool.daily_arxiv.researchers]]
+id = "yin-shi"
+display_name = "Yin Shi"
+enabled = true
+aliases = []
+suspected_aliases = ["Y. Shi"]
+
+[[tool.daily_arxiv.researchers]]
+id = "zheng-gong"
+display_name = "Zheng Gong"
+enabled = true
+aliases = []
+suspected_aliases = ["Z. Gong"]
+
+[[tool.daily_arxiv.researchers]]
+id = "baifei-shen"
+display_name = "Baifei Shen"
+enabled = true
+aliases = []
+suspected_aliases = ["B. Shen"]
+
+[[tool.daily_arxiv.researchers]]
+id = "jorge-vieira"
+display_name = "Jorge Vieira"
+enabled = true
+aliases = []
+suspected_aliases = ["J. Vieira"]
+
+[tool.daily_arxiv.notifications]
+enabled = true
+site_url = "https://yuhanjin-ustc.github.io/daily-arxiv/"
+
+[[tool.daily_arxiv.notifications.recipients]]
+id = "yuhanjin"
+email = "jinyuhan@mail.ustc.edu.cn"
+enabled = true
+
+[tool.daily_arxiv.notifications.smtp]
+host = "mail.ustc.edu.cn"
+port = 465
+security = "ssl"
+sender = "jinyuhan@mail.ustc.edu.cn"
+username_env = "SMTP_USERNAME"
+password_env = "SMTP_PASSWORD"
+timeout = 30
+max_attempts = 3
 
 [dependency-groups]
 dev = [

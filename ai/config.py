@@ -5,16 +5,28 @@ from pathlib import Path
 import re
 import tomllib
 
+from .public_config import validate_public_config
+
 ROOT = Path(__file__).resolve().parents[1]
+LANGUAGES = ("English", "Chinese")
 
 
 def settings():
     config = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))[
         "tool"
     ]["daily_arxiv"]
-    if config["language"] not in ("English", "Chinese"):
+    if config["language"] not in LANGUAGES:
         raise ValueError("Unsupported project language")
-    return config
+    if tuple(config.get("languages", LANGUAGES)) != LANGUAGES:
+        raise ValueError("Supported languages must be English and Chinese")
+    return validate_public_config(config)
+
+
+def validate_language(language=None):
+    language = settings()["language"] if language is None else language
+    if language not in LANGUAGES:
+        raise ValueError("Unsupported AI language")
+    return language
 
 
 def validate_credentials():

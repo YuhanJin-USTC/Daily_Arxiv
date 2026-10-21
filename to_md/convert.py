@@ -3,7 +3,7 @@
 import argparse
 from pathlib import Path
 
-from ai.config import settings
+from ai.config import settings, validate_language
 from ai.quality import read_records, validate_records
 from ai.storage import write_bytes
 
@@ -13,7 +13,9 @@ def convert(source, language=None):
     rows = read_records(source)
     validate_records(rows)
     config = settings()
-    language = language or config["language"]
+    language = validate_language(language)
+    if not source.stem.endswith("_AI_enhanced_" + language):
+        raise ValueError("Input filename does not match the requested language")
     preferred = config["categories"]
     template = (Path(__file__).parent / "paper_template.md").read_text()
     if language == "Chinese":
@@ -60,7 +62,9 @@ def convert(source, language=None):
                     **row["AI"],
                 )
             )
-    target = source.with_name(source.stem.split("_AI_enhanced_", 1)[0] + ".md")
+    target = source.with_name(
+        source.stem.split("_AI_enhanced_", 1)[0] + "_" + language + ".md"
+    )
     write_bytes(target, ("\n\n".join(parts) + "\n").encode())
     return target
 
@@ -68,8 +72,9 @@ def convert(source, language=None):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--data", required=True, type=Path)
+    parser.add_argument("--language", choices=("English", "Chinese"))
     args = parser.parse_args()
-    convert(args.data)
+    convert(args.data, language=args.language)
 
 
 if __name__ == "__main__":

@@ -9,11 +9,12 @@ import sys
 
 import requests
 
-from .config import settings, validate_credentials
+from .config import validate_credentials, validate_language
 from .deepseek import DeepSeekSummaryChain
 from .errors import AuthenticationFailure, EnhancementError, safe_failure
 from .quality import index_records, read_records, validate_records
 from .storage import digest, write_json, write_jsonl
+from .reuse import generation_provenance
 from .structured_output import enhance_fields
 from .structured_output import valid_fields
 
@@ -69,6 +70,7 @@ def check_github_code(content):
 
 
 def process_single_item(chain, item, language):
+    language = validate_language(language)
     item = copy.deepcopy(item)
     if is_sensitive(item.get("summary", "")):
         raise EnhancementError(
@@ -143,6 +145,8 @@ def resume_rows(rows, checkpoint_path, source_hash, language):
         or checkpoint.get("language") != language
     ):
         raise ValueError("Checkpoint belongs to another input or language")
+    if checkpoint.get("provenance") != generation_provenance():
+        raise ValueError("Checkpoint model or prompt provenance is absent or changed")
     saved = list(checkpoint.get("completed", []))
     saved.extend(checkpoint.get("pending", []))
     if checkpoint.get("partial"):
@@ -170,6 +174,7 @@ def main(argv=None):
     parser.add_argument(
         "--resume", type=Path, help="Reuse a partial checkpoint for this exact raw file"
     )
+    parser.add_argument("--language", choices=("English", "Chinese"))
     args = parser.parse_args(argv)
     if not args.check_config and args.data is None:
         parser.error("--data is required")
@@ -180,7 +185,7 @@ def main(argv=None):
 
             load_dotenv(Path(__file__).resolve().parents[1] / ".env", override=False)
         validate_credentials()
-        language = settings()["language"]
+        language = validate_language(args.language)
         if args.check_config:
             print(
                 "Configuration format checks passed; credentials were not tested or displayed."
@@ -191,6 +196,11 @@ def main(argv=None):
         target = args.output or source.with_name(
             f"{source.stem}_AI_enhanced_{language}.jsonl"
         )
+        if target.suffix != ".jsonl" or (
+            "_AI_enhanced_" in target.stem
+            and not target.stem.endswith("_AI_enhanced_" + language)
+        ):
+            raise ValueError("Output filename does not match the requested language")
         if target.resolve() == source.resolve():
             raise ValueError("Input and output must differ")
         source_hash = digest(source)
@@ -199,6 +209,10 @@ def main(argv=None):
                 read_records(source), allow_identical_duplicates=True
             ).values()
         )
+        if any("AI" in row or "AI_status" in row for row in data):
+            raise ValueError(
+                "Raw input contains unbound AI fields; use a verified checkpoint"
+            )
         if args.resume:
             data = resume_rows(data, args.resume, source_hash, language)
         try:
@@ -209,6 +223,7 @@ def main(argv=None):
                 target.with_suffix(".partial.json"),
                 {
                     "source_sha256": source_hash,
+                    "provenance": generation_provenance(),
                     "language": language,
                     "completed": getattr(error, "completed", []),
                     "partial": error.record,

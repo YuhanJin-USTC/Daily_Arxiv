@@ -2,6 +2,12 @@ name: Stage historical AI repairs
 on:
   workflow_dispatch:
     inputs:
+      language:
+        description: AI interpretation language
+        type: choice
+        options: [English, Chinese]
+        default: English
+        required: true
       start:
         description: First archived date (YYYY-MM-DD)
         default: '2026-10-20'
@@ -32,6 +38,11 @@ on:
         description: Exact arxiv-recovery-RUN-ATTEMPT artifact name
         default: ''
         type: string
+concurrency:
+  group: arxiv-data
+  cancel-in-progress: false
+env:
+  AI_LANGUAGE: ${{ inputs.language }}
 permissions:
   contents: read
   actions: read
@@ -60,7 +71,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          uv run --frozen python scripts/resume_artifact.py --kind repair --check-selector \
+          uv run --frozen python scripts/resume_artifact.py --language "$AI_LANGUAGE" --kind repair --check-selector \
             --run-id "$RESUME_RUN_ID" --name "$RESUME_ARTIFACT_NAME"
           if [ -n "$RESUME_RUN_ID" ]; then
             path=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RESUME_RUN_ID" --jq '.path')
@@ -89,12 +100,12 @@ jobs:
           git -C ../published rev-parse HEAD > "$RUNNER_TEMP/arxiv-recovery/source-commit.txt"
           extra=()
           if [ -n "$COUNT" ]; then extra+=(--expected-count "$COUNT"); fi
-          uv run --frozen python -m ai.recover --source ../published/data \
+          uv run --frozen python -m ai.recover --language "$AI_LANGUAGE" --source ../published/data \
             --start "$START" --end "$END" --ids "$IDS" "${extra[@]}" \
             > "$RUNNER_TEMP/arxiv-recovery/plan.json"
           resume=()
           if [ -n "$RESUME_RUN_ID" ]; then resume+=(--resume "$RUNNER_TEMP/arxiv-recovery-resume"); fi
-          uv run --frozen python scripts/resume_artifact.py --kind repair --source ../published \
+          uv run --frozen python scripts/resume_artifact.py --language "$AI_LANGUAGE" --kind repair --source ../published \
             --output "$RUNNER_TEMP/arxiv-recovery" --start "$START" --end "$END" \
             --ids "$IDS" "${extra[@]}" "${resume[@]}"
       - name: Generate candidates
@@ -112,9 +123,9 @@ jobs:
           extra=()
           if [ -n "$COUNT" ]; then extra+=(--expected-count "$COUNT"); fi
           if [ -n "$RESUME_RUN_ID" ]; then extra+=(--resume "$RUNNER_TEMP/arxiv-recovery-resume/ready/checkpoints"); fi
-          uv run --frozen python -m ai.recover --source ../published/data \
+          uv run --frozen python -m ai.recover --language "$AI_LANGUAGE" --source ../published/data \
             --start "$START" --end "$END" --ids "$IDS" "${extra[@]}" \
-            --generate --output "$RUNNER_TEMP/arxiv-recovery/ready"
+            --generate --output "$RUNNER_TEMP/arxiv-recovery/ready" "${extra[@]}"
       - uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -10,6 +10,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   daily:
+    if: vars.ENABLE_DAILY == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     steps:
@@ -25,8 +26,8 @@ jobs:
       - name: Install locked dependencies
         working-directory: code
         run: uv sync --frozen
-      - name: Crawl and verify coverage
-        id: crawl
+      - name: Crawl once and publish verified raw discoveries
+        id: raw
         working-directory: code
         env:
           CATEGORIES: ${{ vars.CATEGORIES }}
@@ -35,45 +36,46 @@ jobs:
           day=$(date -u +%F)
           work="$RUNNER_TEMP/arxiv-daily"
           mkdir -p "$work"
-          git -C ../published rev-parse HEAD > "$work/source-commit.txt"
           uv run --frozen python daily_arxiv/crawl.py --output "$work/$day.jsonl" \
             --history-dir ../published/data --audit "$work/coverage.json"
+          uv run --frozen python scripts/daily_update.py raw --source ../published \
+            --raw "$work/$day.jsonl" --coverage "$work/coverage.json" --date "$day" \
+            --output "$work/raw-ready" --publish
           echo "day=$day" >> "$GITHUB_OUTPUT"
-          if [ -s "$work/$day.jsonl" ]; then
-            echo 'has_new=true' >> "$GITHUB_OUTPUT"
-          else
-            echo 'has_new=false' >> "$GITHUB_OUTPUT"
-          fi
-      - name: Generate and stage complete data
-        id: stage
-        if: steps.crawl.outputs.has_new == 'true'
+      - name: Notify reliable researcher matches before AI
+        id: notify
+        if: vars.ENABLE_EMAIL == 'true'
+        continue-on-error: true
+        working-directory: code
+        env:
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          ALLOW_SMTP_SEND: '1'
+          DAY: ${{ steps.raw.outputs.day }}
+          CATEGORIES: ${{ vars.CATEGORIES }}
+        run: |
+          uv run --frozen python scripts/daily_update.py notify --source ../published \
+            --date "$DAY" --send --publish
+      - name: Generate or resume English
+        id: english
+        if: vars.ENABLE_AI == 'true'
+        continue-on-error: true
         working-directory: code
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          DAY: ${{ steps.crawl.outputs.day }}
         run: |
-          set -euo pipefail
-          uv run --frozen python -m ai.enhance --check-config
-          uv run --frozen python scripts/stage_daily.py --source ../published \
-            --raw "$RUNNER_TEMP/arxiv-daily/$DAY.jsonl" --date "$DAY" \
-            --output "$RUNNER_TEMP/arxiv-daily/ready"
-      - name: Verify and commit data only
-        if: success() && steps.stage.outcome == 'success'
+          uv run --frozen python scripts/daily_update.py ai --source ../published \
+            --language English --output "$RUNNER_TEMP/arxiv-daily/English" --publish
+      - name: Generate or resume Chinese
+        id: chinese
+        if: vars.ENABLE_AI == 'true'
+        continue-on-error: true
         working-directory: code
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          set -euo pipefail
-          git -C ../published fetch origin data
-          test "$(git -C ../published rev-parse HEAD)" = "$(git -C ../published rev-parse origin/data)"
-          uv run --frozen python scripts/apply_staged.py --source ../published \
-            --staged "$RUNNER_TEMP/arxiv-daily/ready"
-          cd ../published
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -- data assets/file-list.txt
-          if ! git diff --cached --quiet; then
-            git commit -m 'data: publish validated arXiv summaries'
-            git push origin HEAD:data
-          fi
+          uv run --frozen python scripts/daily_update.py ai --source ../published \
+            --language Chinese --output "$RUNNER_TEMP/arxiv-daily/Chinese" --publish
       - name: Preserve coverage and recovery evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -82,3 +84,14 @@ jobs:
           path: ${{ runner.temp }}/arxiv-daily/
           if-no-files-found: ignore
           retention-days: 14
+      - name: Report independent failures
+        if: always()
+        env:
+          RAW: ${{ steps.raw.outcome }}
+          EMAIL: ${{ steps.notify.outcome }}
+          ENGLISH: ${{ steps.english.outcome }}
+          CHINESE: ${{ steps.chinese.outcome }}
+        run: |
+          for phase in "$RAW" "$EMAIL" "$ENGLISH" "$CHINESE"; do
+            if [ "$phase" = failure ]; then exit 1; fi
+          done

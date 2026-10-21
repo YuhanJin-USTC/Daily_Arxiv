@@ -11,7 +11,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(1, str(ROOT / "daily_arxiv"))
-from ai.config import settings
+from ai.config import settings, validate_language
 from ai.enhance import resume_rows
 from ai.quality import read_records
 from ai.recover import load_checkpoints, plan_recovery
@@ -45,8 +45,8 @@ def checked_file(root, name):
     return path
 
 
-def request(kind, source, start, end, ids, expected_count):
-    config = settings()
+def request(kind, source, start, end, ids, expected_count, language=None):
+    config = {**settings(), "language": validate_language(language)}
     base = {
         "version": 1,
         "kind": kind,
@@ -81,7 +81,7 @@ def request(kind, source, start, end, ids, expected_count):
         names = [
             f"data/{day}.jsonl",
             f"data/{day}_AI_enhanced_{config['language']}.jsonl",
-            f"data/{day}.md",
+            f"data/{day}_{config['language']}.md",
             "assets/file-list.txt",
         ]
         base.update(
@@ -194,6 +194,7 @@ def prepare(
     snapshot=None,
     metadata_run_id="",
     metadata_name="",
+    language=None,
 ):
     if snapshot is not None and (
         kind != "append"
@@ -207,7 +208,7 @@ def prepare(
     selector(kind, "", "", metadata_run_id, metadata_name)
     if len(ids) != len(set(ids)):
         raise ValueError("Requested IDs must be unique")
-    binding = request(kind, source, start, end, ids, expected_count)
+    binding = request(kind, source, start, end, ids, expected_count, language)
     origin = resume if resume is not None else snapshot
     if origin is not None:
         if (
@@ -302,6 +303,7 @@ def main():
     parser.add_argument("--end", type=date.fromisoformat)
     parser.add_argument("--ids", default="")
     parser.add_argument("--expected-count", type=int)
+    parser.add_argument("--language", choices=("English", "Chinese"))
     args = parser.parse_args()
     selector(
         args.kind, args.run_id, args.name, args.metadata_run_id, args.metadata_name
@@ -329,6 +331,7 @@ def main():
         snapshot=args.snapshot,
         metadata_run_id=args.metadata_run_id,
         metadata_name=args.metadata_name,
+        language=args.language,
     )
 
 

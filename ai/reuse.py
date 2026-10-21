@@ -58,3 +58,18 @@ class SuccessfulSummaries:
             {"file": source, "sha256": self.source_hashes.get(source)}
             for source in sorted({source for _, source in candidates})
         ] if reused else []
+
+
+def generation_provenance():
+    from pathlib import Path
+
+    from .config import settings
+
+    root = Path(__file__).resolve().parent
+    return {
+        "profile": settings()["deepseek"],
+        "prompt_sha256": {
+            name: digest(root / name)
+            for name in ("system.txt", "template.txt", "structure.py")
+        },
+    }

@@ -1,4 +1,6 @@
-# 两个仓库统一升级与补录：按顺序操作
+# 两个仓库统一升级与补录：历史记录
+
+> 本文记录合并前的双仓库升级流程，不再作为当前项目的维护指令。当前配置、恢复、发布与回退以 [双语操作指南](bilingual-operation.md) 为准；两个旧项目保持保留状态，不能按本文步骤自动更改。
 
 这套教程适用于英文 `YuhanJin-USTC/daily-arXiv-ai-enhanced` 和中文 `YuhanJin-USTC/daily-arXiv-ai-enhanced-chinese`。两个压缩包是同一版实现，不要叠加之前的 `fix.patch`、`deepseek-update.patch` 或中文旧补丁。新版迁移工具会检查文件哈希，替换已知旧版本并移除被取代的旧脚本/报告；遇到未知修改会停止，避免覆盖你的工作。
 
@@ -56,7 +58,7 @@ git push -u origin codex/unified-arxiv
 
 1. **Settings → Secrets and variables → Actions → Secrets → OPENAI_API_KEY**：确认它是官方 DeepSeek 账户当前有效的 key。英文 401 需要在这里修正。只在 GitHub secret 编辑框中输入，不要粘贴到聊天、代码、命令或日志。中文原 key 若有效不必更换。不要拿 `TOKEN_GITHUB` 或 `GITHUB_TOKEN` 当模型 key。
 2. 模型、端点、思考强度与语言已写入 `pyproject.toml`，不需要设置 `MODEL_NAME`、`OPENAI_BASE_URL`、`LANGUAGE` 变量。旧值不再被新流程读取。
-3. 日后增减或调整分类顺序，在两个仓库的 `pyproject.toml` 中修改 `[tool.daily_arxiv]` 下的 `categories` 数组。**若 Settings → Secrets and variables → Actions → Variables 的 `CATEGORIES` 非空，它优先于文件，同时控制日常抓取与网页菜单**；这时只改文件不会生效，应同步调整变量，或由你决定清空覆盖后使用文件。不要擅自删除自定义值。文件修改合并到 `main` 后自动触发 **Deploy website**；只改变量时需手动重跑此工作流。不要手改生成的 `js/data-config.js`。菜单只显示预设分类，零篇仍保留，交叉分类可重复计数但 All 按论文去重。历史 91-ID 清单仍只代表当时六分类，不能对不同订阅强行凑数。
+3. 当时增减或调整分类顺序，需要分别编辑两个仓库的 `pyproject.toml` 中修改 `[tool.daily_arxiv]` 下的 `categories` 数组。**若 Settings → Secrets and variables → Actions → Variables 的 `CATEGORIES` 非空，它优先于文件，同时控制日常抓取与网页菜单**；这时只改文件不会生效，应同步调整变量，或由你决定清空覆盖后使用文件。不要擅自删除自定义值。文件修改合并到 `main` 后自动触发 **Deploy website**；只改变量时需手动重跑此工作流。不要手改生成的 `js/data-config.js`。菜单只显示预设分类，零篇仍保留，交叉分类可重复计数但 All 按论文去重。历史 91-ID 清单仍只代表当时六分类，不能对不同订阅强行凑数。
 4. **Settings → Actions → General → Workflow permissions**：允许工作流按声明写入仓库内容，供日常任务推送 `data`。历史恢复与补抓工作流仍只有读取权限，不会自动推送或合并。
 5. **Settings → Pages → Build and deployment → Source → GitHub Actions**。这是新版网站发布方式，必须切换，不能继续直接发布含配置占位符的源码分支。
 6. 运行 **Actions → Deploy website → Run workflow → main**。它按仓库身份和语言生成网站配置；原有 `ACCESS_PASSWORD` 如存在会继续使用。确认网站从正确仓库读取数据，历史失败摘要显示“AI summary unavailable”并回退到原始 abstract。
@@ -152,6 +154,6 @@ git -C ../daily-arxiv-english-data push -u origin HEAD
 
 ## 8. 保持两个项目长期一致
 
-今后共享代码修复同时移植到两边，并运行相同 CI。不要再分别维护两套 `enhance.py` 或模型适配器。保留两份 `pyproject.toml` 的语言差异，其余共享文件应一致；仓库身份由网站构建自动注入。
+当前只维护合并后的 Daily-Arxiv 仓库，不再向两个旧项目移植代码。English/Chinese 共用明确传入语言的实现与 CI，仓库身份由网站构建自动注入；旧源码与历史成果保留用于追溯。
 
 `.venv`、`__pycache__`、`.ruff_cache`、`.env`、`_site` 和运行 artifacts 已纳入忽略规则。临时写入文件会自动清理。工作流 artifacts 保留 14 天，失败 checkpoint 是可恢复证据，确认不再需要后再删除；不要把它们复制到源码仓库。

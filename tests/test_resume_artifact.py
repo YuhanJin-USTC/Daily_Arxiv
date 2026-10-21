@@ -10,6 +10,7 @@ from ai.enhance import process_all_items, resume_rows
 from ai.errors import EnhancementError
 from ai.quality import FIELDS, read_records
 from ai.recover import plan_recovery, stage_recovery
+from ai.reuse import generation_provenance
 from ai.storage import digest, write_bytes, write_json, write_jsonl
 from scripts.resume_artifact import INVENTORY, checked_file, prepare, selector
 from scripts.stage_daily import stage
@@ -67,6 +68,7 @@ class ArtifactTests(unittest.TestCase):
             self.artifact / "ready/checkpoint.json",
             {
                 "source_sha256": digest(raw),
+                "provenance": generation_provenance(),
                 "language": self.language,
                 "completed": [{**self.row, "AI": GOOD}],
                 "partial": None,

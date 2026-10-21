@@ -89,7 +89,7 @@
     overflow-y: auto;
 }
 
-.author-item {
+.authors-list .author-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -97,7 +97,7 @@
     border-bottom: 1px solid #e5e7eb;
 }
 
-.author-item:last-child {
+.authors-list .author-item:last-child {
     border-bottom: none;
 }
 
@@ -1005,4 +1005,29 @@ input:checked + .toggle-slider:before {
   to {
     opacity: 1;
   }
-} 
+}
+.paper-sidebar {
+  max-width: 100vw;
+}
+
+.sidebar-header .header-content {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.paper-sidebar {
+  display: flex;
+  flex-direction: column;
+}
+
+.paper-sidebar .sidebar-header {
+  flex-shrink: 0;
+}
+
+.paper-sidebar .sidebar-content {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+}

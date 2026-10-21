@@ -3,12 +3,29 @@ const DATA_CONFIG = {
   repoOwner: "__OWNER__",
   repoName: "__REPOSITORY__",
   language: "__LANGUAGE__",
+  languages: "__LANGUAGES__",
+  namespace: "__NAMESPACE__",
+  researchersDigest: "__RESEARCHERS_DIGEST__",
+  dataBaseUrl: "__DATA_BASE_URL__",
   categories: "__CATEGORIES__",
   dataBranch: 'data',
+  getRepositoryUrl() {
+    return `https://github.com/${this.repoOwner}/${this.repoName}`;
+  },
+  getRepositoryApiUrl() {
+    return `https://api.github.com/repos/${this.repoOwner}/${this.repoName}`;
+  },
   getDataBaseUrl() {
+    if (this.dataBaseUrl) return this.dataBaseUrl;
     return `https://raw.githubusercontent.com/${this.repoOwner}/${this.repoName}/${this.dataBranch}`;
   },
   getDataUrl(path) {
     return `${this.getDataBaseUrl()}/${path}`;
   }
 };
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('[data-repository-link]').forEach(link => {
+    link.href = DATA_CONFIG.getRepositoryUrl();
+  });
+});

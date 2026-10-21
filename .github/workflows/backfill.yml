@@ -2,6 +2,12 @@ name: Stage missing 2026-10-20 papers
 on:
   workflow_dispatch:
     inputs:
+      language:
+        description: AI interpretation language
+        type: choice
+        options: [English, Chinese]
+        default: English
+        required: true
       generate:
         description: Generate candidates after crawling missing IDs (false only crawls and audits)
         default: false
@@ -26,6 +32,11 @@ on:
         description: Exact audit-only arxiv-backfill-RUN-ATTEMPT artifact name; excludes resume
         default: ''
         type: string
+concurrency:
+  group: arxiv-data
+  cancel-in-progress: false
+env:
+  AI_LANGUAGE: ${{ inputs.language }}
 permissions:
   contents: read
   actions: read
@@ -56,7 +67,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          uv run --frozen python scripts/resume_artifact.py --kind append --check-selector \
+          uv run --frozen python scripts/resume_artifact.py --language "$AI_LANGUAGE" --kind append --check-selector \
             --run-id "$RESUME_RUN_ID" --name "$RESUME_ARTIFACT_NAME" \
             --metadata-run-id "$METADATA_RUN_ID" --metadata-name "$METADATA_ARTIFACT_NAME"
           artifact_run="$RESUME_RUN_ID"
@@ -109,7 +120,7 @@ jobs:
               --output "$RUNNER_TEMP/arxiv-backfill/2026-10-20.jsonl" \
               --audit "$RUNNER_TEMP/arxiv-backfill/coverage.json"
           fi
-          uv run --frozen python scripts/resume_artifact.py --kind append --source ../published \
+          uv run --frozen python scripts/resume_artifact.py --language "$AI_LANGUAGE" --kind append --source ../published \
             --output "$RUNNER_TEMP/arxiv-backfill" --ids "$IDS" "${resume[@]}"
           if [ -s "$RUNNER_TEMP/arxiv-backfill/2026-10-20.jsonl" ]; then
             echo 'has_new=true' >> "$GITHUB_OUTPUT"
@@ -126,7 +137,7 @@ jobs:
           set -euo pipefail
           resume=()
           if [ -n "$RESUME_RUN_ID" ]; then resume+=(--resume "$RUNNER_TEMP/arxiv-backfill-resume/ready/checkpoint.json"); fi
-          uv run --frozen python scripts/stage_daily.py --source ../published --date 2026-10-20 \
+          uv run --frozen python scripts/stage_daily.py --language "$AI_LANGUAGE" --source ../published --date 2026-10-20 \
             --raw "$RUNNER_TEMP/arxiv-backfill/2026-10-20.jsonl" \
             --output "$RUNNER_TEMP/arxiv-backfill/ready" \
             --coverage "$RUNNER_TEMP/arxiv-backfill/coverage.json" "${resume[@]}"
