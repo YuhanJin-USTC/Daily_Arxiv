@@ -45,9 +45,27 @@ def build(output, repository):
     auth = re.sub(
         r"passwordHash:\s*'[^']*'", "passwordHash: '" + password_hash + "'", auth
     )
+    namespace = "arxiv_auth:" + repository.lower()
+    for key, suffix in (("storageKey", "token"), ("storageExpireKey", "expire")):
+        auth = re.sub(
+            rf"(?m)^    {key}:.*$",
+            f"    {key}: {json.dumps(namespace + ':' + suffix)},",
+            auth,
+        )
     (output / "js/auth-config.js").write_text(auth)
+    versions = {
+        path.relative_to(output).as_posix(): hashlib.sha256(
+            path.read_bytes()
+        ).hexdigest()[:16]
+        for path in (output / "js").glob("*.js")
+    }
     for page in output.glob("*.html"):
         content = page.read_text()
+        content = re.sub(
+            r'(src=")(js/[^"?]+\.js)(?:\?[^\"]*)?(")',
+            lambda match: match[1] + match[2] + "?v=" + versions[match[2]] + match[3],
+            content,
+        )
         content = re.sub(
             r"https://github.com/yuhanjin-ustc/daily-arXiv-ai-enhanced(?:-chinese)?",
             "https://github.com/" + repository,

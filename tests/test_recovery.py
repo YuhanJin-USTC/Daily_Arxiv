@@ -3,13 +3,13 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from ai.config import settings
-from ai.enhance import resume_rows
+from ai.enhance import process_all_items, resume_rows
 from ai.errors import EnhancementError
-from ai.quality import FIELDS, read_records
-from ai.recover import plan_recovery, stage_recovery
+from ai.quality import FIELDS, read_records, valid_ai
+from ai.recover import load_checkpoints, plan_recovery, stage_recovery
 from ai.storage import digest, write_json
 from scripts.apply_staged import apply
 from scripts.stage_daily import stage
@@ -218,7 +218,7 @@ class RepairTests(unittest.TestCase):
         self.enhanced.write_bytes(original)
         incoming = self.root / "new.jsonl"
         incoming.write_text(json.dumps(row(999)) + "\n")
-        generated = Mock(side_effect=lambda rows, language: rows)
+        generated = Mock(side_effect=lambda rows, language, **kwargs: rows)
         stage(self.source, incoming, self.output, str(DAY), generated)
         self.assertTrue(
             (self.output / "data" / self.enhanced.name)
@@ -260,7 +260,7 @@ class RepairTests(unittest.TestCase):
             },
         )
         generated = Mock(
-            side_effect=lambda rows, language: [
+            side_effect=lambda rows, language, **kwargs: [
                 {**r, "AI": {**GOOD, **r.get("AI", {})}} for r in rows
             ]
         )
@@ -289,3 +289,186 @@ class RepairTests(unittest.TestCase):
         for key, lang in [("stale", self.language), (digest(self.raw), "other")]:
             with self.assertRaises(ValueError):
                 resume_rows(self.rows, checkpoint, key, lang)
+
+    def test_backfill_checkpoints_each_success_before_the_next_request(self):
+        checkpoint = self.root / "progress.json"
+        items = [row(10), row(11)]
+
+        def process(chain, item, language):
+            if item["id"] == items[1]["id"]:
+                saved = json.loads(checkpoint.read_text())
+                self.assertEqual(saved["completed"], [items[0]])
+                raise KeyboardInterrupt("simulated cancellation")
+            return item
+
+        with patch("ai.enhance.process_single_item", side_effect=process):
+            with self.assertRaises(KeyboardInterrupt):
+                process_all_items(
+                    items,
+                    self.language,
+                    chain=Mock(),
+                    progress=lambda completed, partial: write_json(
+                        checkpoint, {"completed": completed, "partial": partial}
+                    ),
+                )
+        self.assertEqual(json.loads(checkpoint.read_text())["completed"], [items[0]])
+
+    def test_checkpoint_write_failure_stops_before_another_model_request(self):
+        process = Mock(side_effect=lambda chain, item, language: item)
+        with patch("ai.enhance.process_single_item", process):
+            with self.assertRaises(OSError):
+                process_all_items(
+                    [row(10), row(11)],
+                    self.language,
+                    chain=Mock(),
+                    progress=Mock(side_effect=OSError("disk full")),
+                )
+        self.assertEqual(process.call_count, 1)
+
+    def test_success_source_reuses_only_matching_abstract_and_language(self):
+        archive = self.root / "successes"
+        archive.mkdir()
+        matched = {**self.rows[41], "AI": GOOD}
+        (archive / f"2026-10-19_AI_enhanced_{self.language}.jsonl").write_text(
+            json.dumps(matched) + "\n"
+        )
+        manifest = self.run_stage(success_source=archive)
+        self.generate.assert_not_called()
+        self.assertEqual(manifest["entries"][0]["reused_ids"], ["2610.26164"])
+        self.assertEqual(manifest["entries"][0]["model_paper_ids"], [])
+        self.assertEqual(apply(self.source, self.output, True), 2)
+        self.output = self.root / "different-abstract"
+        matched["summary"] = "A changed abstract"
+        (archive / f"2026-10-19_AI_enhanced_{self.language}.jsonl").write_text(
+            json.dumps(matched) + "\n"
+        )
+        other = "English" if self.language == "Chinese" else "Chinese"
+        (archive / f"2026-10-19_AI_enhanced_{other}.jsonl").write_text(
+            json.dumps({**matched, "summary": "Abstract"}) + "\n"
+        )
+        self.run_stage(success_source=archive)
+        self.generate.assert_called_once()
+
+    def test_conflicts_only_block_requested_missing_fields(self):
+        archive = self.root / "successes"
+        archive.mkdir()
+        for day, conclusion in [(18, "First"), (19, "Second")]:
+            (archive / f"2026-10-{day}_AI_enhanced_{self.language}.jsonl").write_text(
+                json.dumps({**self.rows[41], "AI": {**GOOD, "conclusion": conclusion}})
+                + "\n"
+            )
+        with self.assertRaises(ValueError):
+            self.run_stage(success_source=archive)
+        self.generate.assert_not_called()
+        for day in (18, 19):
+            (archive / f"2026-10-{day}_AI_enhanced_{self.language}.jsonl").write_text(
+                json.dumps({**self.rows[41], "AI": {**GOOD, "tldr": str(day)}}) + "\n"
+            )
+        self.run_stage(success_source=archive)
+        self.generate.assert_not_called()
+        self.assertEqual(
+            read_records(self.output / "data" / self.enhanced.name)[41]["AI"], GOOD
+        )
+
+    def test_same_batch_reuses_completed_identical_paper_on_later_date(self):
+        tomorrow = date(2026, 10, 21)
+        (self.source / "data" / f"{tomorrow}.jsonl").write_bytes(self.raw.read_bytes())
+        (
+            self.source / "data" / f"{tomorrow}_AI_enhanced_{self.language}.jsonl"
+        ).write_bytes(self.original)
+        self.plan = plan_recovery(self.source / "data", DAY, tomorrow, self.language)
+        manifest = self.run_stage()
+        self.generate.assert_called_once()
+        self.assertEqual(manifest["entries"][1]["reused_ids"], ["2610.26164"])
+
+    def test_complete_repair_checkpoint_skips_model(self):
+        checkpoint = self.root / "complete-checkpoint"
+        write_json(
+            checkpoint / f"{DAY}-2610.26164.json",
+            {
+                "id": "2610.26164",
+                "language": self.language,
+                "source_sha256": digest(self.enhanced),
+                "AI": GOOD,
+            },
+        )
+        manifest = self.run_stage(resume=checkpoint)
+        self.generate.assert_not_called()
+        self.assertEqual(
+            manifest["entries"][0]["checkpoint_reused_ids"], ["2610.26164"]
+        )
+
+    def test_second_backfill_interruption_keeps_all_inherited_fields(self):
+        self.enhanced.write_text(
+            "".join(json.dumps({**r, "AI": GOOD}) + "\n" for r in self.rows)
+        )
+        incoming = self.root / "three.jsonl"
+        rows = [{k: v for k, v in row(i).items() if k != "AI"} for i in (999, 998, 997)]
+        incoming.write_text("".join(json.dumps(r) + "\n" for r in rows))
+        previous = self.root / "old-checkpoint.json"
+        write_json(
+            previous,
+            {
+                "source_sha256": digest(incoming),
+                "language": self.language,
+                "completed": [{**r, "AI": GOOD} for r in rows[:2]],
+                "partial": {**rows[2], "AI": {"tldr": "Keep partial"}},
+            },
+        )
+
+        def interrupted(items, language, progress):
+            self.assertTrue(valid_ai(items[0]["AI"]))
+            progress([items[0]], None)
+            raise KeyboardInterrupt("second cancellation")
+
+        with self.assertRaises(KeyboardInterrupt):
+            stage(
+                self.source,
+                incoming,
+                self.output,
+                str(DAY),
+                interrupted,
+                resume=previous,
+            )
+        restored = resume_rows(
+            rows, self.output / "checkpoint.json", digest(incoming), self.language
+        )
+        self.assertTrue(all(valid_ai(r["AI"]) for r in restored[:2]))
+        self.assertEqual(restored[2]["AI"], {"tldr": "Keep partial"})
+
+    def test_second_repair_interruption_keeps_unvisited_checkpoints(self):
+        rows = [{**row(i), "AI": {}} for i in (10, 11, 12)]
+        self.enhanced.write_text("".join(json.dumps(r) + "\n" for r in rows))
+        self.raw.write_text("".join(json.dumps(r) + "\n" for r in rows))
+        self.plan = plan_recovery(self.source / "data", DAY, DAY, self.language)
+        previous = self.root / "old-checkpoints"
+        for index, item in enumerate(rows):
+            write_json(
+                previous / f"{DAY}-{item['id']}.json",
+                {
+                    "id": item["id"],
+                    "language": self.language,
+                    "source_sha256": digest(self.enhanced),
+                    "AI": GOOD if index < 2 else {"tldr": "Keep partial"},
+                },
+            )
+
+        def interrupted_write(path, value):
+            write_json(path, value)
+            if path.name == f"{DAY}-{rows[0]['id']}.json":
+                raise KeyboardInterrupt("second cancellation")
+
+        with (
+            patch("ai.recover.write_json", side_effect=interrupted_write),
+            self.assertRaises(KeyboardInterrupt),
+        ):
+            self.run_stage(resume=previous)
+        self.generate.assert_not_called()
+        saved = load_checkpoints(self.output / "checkpoints", self.plan)
+        self.assertEqual(len(saved), 3)
+        self.assertTrue(valid_ai(saved[f"{DAY}-{rows[1]['id']}.json"]["AI"]))
+        resumed = self.output / "checkpoints"
+        self.output = self.root / "third-attempt"
+        self.run_stage(resume=resumed)
+        self.generate.assert_called_once()
+        self.assertEqual(self.generate.call_args.args[0]["id"], rows[2]["id"])

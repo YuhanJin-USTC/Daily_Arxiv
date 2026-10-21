@@ -30,15 +30,27 @@ The model uses the repository Actions secret **`OPENAI_API_KEY`**, containing a 
 
 ## Local development
 
-Requirements: Python 3.12, uv, and Node.js 22 or newer for frontend tests.
+Requirements: Python 3.12 or newer and Node.js 22 or newer. Use a virtual environment without activating it. This repository has dependency declarations, not an installable package configuration; install the declared runtime and development dependencies directly:
 
 ```bash
-uv sync --frozen
-uv run --frozen ruff check ai daily_arxiv scripts to_md tests
-uv run --frozen ruff format --check ai daily_arxiv scripts to_md tests
-uv run --frozen python -m unittest discover -s tests -v
-node --test tests/test_frontend.cjs
+python3 -m venv .venv
+.venv/bin/python - <<'PY'
+import subprocess
+import sys
+import tomllib
+from pathlib import Path
+
+config = tomllib.loads(Path("pyproject.toml").read_text())
+dependencies = config["project"]["dependencies"] + config["dependency-groups"]["dev"]
+subprocess.check_call([sys.executable, "-m", "pip", "install", *dependencies])
+PY
+.venv/bin/python -m ruff check ai daily_arxiv scripts to_md tests
+.venv/bin/python -m ruff format --check ai daily_arxiv scripts to_md tests
+.venv/bin/python -m unittest discover -s tests -v
+node --test tests/*.cjs
 ```
+
+These are Bash/WSL commands; Windows virtual environments use `.venv/Scripts/python.exe`. Pip resolves the declarations and does **not** guarantee the exact versions in `uv.lock`. GitHub Actions installs uv itself and continues to use `uv sync --frozen`. Local `run.sh` uses `.venv/bin/python`; set `ARXIV_PYTHON` to another virtual environment's interpreter when needed.
 
 No keys or live model calls are needed for tests. `bash run.sh DATA_CHECKOUT NEW_OUTPUT` stages a local daily candidate and never publishes. Without a configured model key it stops after validated crawling. The data checkout must be a separate checkout of the repository's `data` branch.
 
@@ -59,6 +71,10 @@ Set **Settings → Pages → Source → GitHub Actions**. Website configuration 
 `ai/` owns provider access, structured recovery, quality checks, and archived repair. `daily_arxiv/` owns crawling and coverage. `to_md/` renders validated records. `scripts/` stages and verifies data and builds the website. `tests/` and `docs/` contain regression tests and operating instructions. Runtime artifacts stay outside the code checkout; temporary atomic-write files are removed in `finally` blocks.
 
 See [architecture](docs/architecture.md), [verified incident findings](docs/incidents-2026-10-21.md), and the [step-by-step guide](docs/upgrade-guide.zh.md). Recovery artifacts include source/candidate hashes and expire after 14 days; retain a reviewed manifest with the data PR. Existing valid summaries and paper metadata must not be regenerated to fix unrelated failures.
+
+The recovery and backfill workflows accept `resume_run_id` together with `resume_artifact_name`. They download only a matching artifact from the same repository and workflow, verify its request, language, model profile and source hashes, then reuse its checkpoints. Backfill resumes the exact saved raw snapshot. Completed and partial fields survive repeated interruptions; older complete artifacts remain publishable with `apply_staged.py`.
+
+Backfill `ids` selects a subset of the reviewed inventory for a one-paper live check. Publish that complete candidate before fetching the remaining IDs. Historical repairs reuse complete same-language summaries only for the same ID and exact abstract; conflicting values for requested fields stop the operation. Manifest `model_paper_ids` counts papers sent for generation, not HTTP requests or field-repair attempts; `reused_ids`, `checkpoint_reused_ids` and source hashes explain avoided regeneration.
 
 ## License and attribution
 

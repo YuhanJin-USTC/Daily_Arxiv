@@ -12,7 +12,7 @@ from daily_arxiv.history import load_history_ids, paper_id
 from daily_arxiv.validate_crawl import validate
 
 
-def archived_inventory(path, history_dir):
+def archived_inventory(path, history_dir, ids=()):
     """Use a reviewed dated inventory even after arXiv's recent window expires."""
     import arxiv
 
@@ -28,6 +28,12 @@ def archived_inventory(path, history_dir):
         raise ValueError("Duplicate inventory IDs")
     history = load_history_ids(history_dir)
     selected = set(all_ids) - history
+    requested = [paper_id(identifier) for identifier in ids]
+    if len(requested) != len(set(requested)) or not set(requested) <= set(all_ids):
+        raise ValueError("Requested IDs must be unique members of the inventory")
+    missing = set(selected)
+    if requested:
+        selected &= set(requested)
     rows = []
     if selected:
         client = arxiv.Client(page_size=100, delay_seconds=3, num_retries=3)
@@ -53,6 +59,9 @@ def archived_inventory(path, history_dir):
         "excluded_published_ids": sorted(set(all_ids) & history),
         "inventory_date": inventory["announcement_date"],
         "scope": "reviewed archived inventory",
+        "inventory_count": len(all_ids),
+        "requested_ids": sorted(requested),
+        "remaining_ids": sorted(missing - selected),
     }
     return rows, audit
 
@@ -98,10 +107,17 @@ def main():
     group.add_argument(
         "--inventory", type=Path, help="Reviewed archived inventory JSON"
     )
+    parser.add_argument("--ids", default="", help="Comma-separated inventory subset")
     args = parser.parse_args()
     try:
+        if args.ids and not args.inventory:
+            raise ValueError("--ids requires a reviewed inventory")
         rows, audit = (
-            archived_inventory(args.inventory, args.history_dir)
+            archived_inventory(
+                args.inventory,
+                args.history_dir,
+                tuple(filter(None, (value.strip() for value in args.ids.split(",")))),
+            )
             if args.inventory
             else recent(str(args.history_dir), args.date)
         )
