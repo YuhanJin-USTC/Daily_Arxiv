@@ -2,6 +2,7 @@
 
 import os
 from pathlib import Path
+import re
 import tomllib
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -20,3 +21,14 @@ def validate_credentials():
     key = os.environ.get("OPENAI_API_KEY", "")
     if not key or any(char.isspace() for char in key):
         raise ValueError("OPENAI_API_KEY is missing or malformed; values suppressed")
+
+
+def subscribed_categories():
+    supplied = os.environ.get("CATEGORIES", "").strip()
+    values = supplied.split(",") if supplied else settings()["categories"]
+    categories = list(dict.fromkeys(value.strip() for value in values if value.strip()))
+    if not categories or any(
+        not re.fullmatch(r"[A-Za-z][A-Za-z.-]+", category) for category in categories
+    ):
+        raise ValueError("CATEGORIES must contain arXiv category names")
+    return categories

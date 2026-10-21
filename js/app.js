@@ -687,7 +687,7 @@ async function loadPapersByDate(date) {
     
     paperData = parseJsonlData(text, date);
     
-    const categories = getAllCategories(paperData);
+    const categories = getAllCategories(paperData, DATA_CONFIG.categories);
     
     renderCategoryFilter(categories);
     
@@ -1443,7 +1443,7 @@ async function loadPapersByDateRange(startDate, endDate) {
     
     paperData = allPaperData;
     
-    const categories = getAllCategories(paperData);
+    const categories = getAllCategories(paperData, DATA_CONFIG.categories);
     
     renderCategoryFilter(categories);
     

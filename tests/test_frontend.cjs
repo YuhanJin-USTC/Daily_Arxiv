@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
 const source = fs.readFileSync(path.join(__dirname, '../js/app.js'), 'utf8');
+const categories = ['physics.plasm-ph', 'physics.acc-ph', 'physics.optics', 'physics.flu-dyn', 'physics.atom-ph', 'physics.comp-ph'];
 const context = vm.createContext({console});
 vm.runInContext(fs.readFileSync(path.join(__dirname, '../js/papers.js'), 'utf8'), context);
 function parse(rows) { return context.parseJsonlData(rows.map(JSON.stringify).join('\n'), '2026-10-20'); }
@@ -24,12 +25,41 @@ test('valid AI keeps enhanced summary',()=>{
 test('cross-listed paper appears in secondary category',()=>{
   const data=parse([paper('one',['cond-mat.mtrl-sci','physics.plasm-ph'])]);
   assert.equal(context.papersForCategory(data,'physics.plasm-ph').length,1);
-  assert.equal(context.getAllCategories(data).categoryCounts['physics.plasm-ph'],1);
+  assert.equal(context.getAllCategories(data, categories).categoryCounts['physics.plasm-ph'],1);
+});
+test('category menu contains only the configured subscriptions in their order', () => {
+  const data = parse([
+    paper('one', ['astro-ph.SR', 'physics.plasm-ph', 'physics.optics']),
+    paper('two', ['cs.AI', 'physics.optics']),
+    paper('one', ['astro-ph.SR', 'physics.plasm-ph', 'physics.optics'])
+  ]);
+  const before = JSON.stringify(data);
+  const counts = context.getAllCategories(data, categories);
+  assert.deepEqual([...counts.sortedCategories], categories);
+  assert.deepEqual(Object.keys(counts.categoryCounts), categories);
+  assert.equal(counts.categoryCounts['physics.plasm-ph'], 1);
+  assert.equal(counts.categoryCounts['physics.optics'], 2);
+  assert.equal(counts.categoryCounts['physics.acc-ph'], 0);
+  assert.equal(counts.totalCount, 2);
+  assert.equal(context.papersForCategory(data, 'physics.plasm-ph').length, 1);
+  assert.equal(JSON.stringify(data), before);
+  const custom = context.getAllCategories(data, ['physics.optics', 'physics.plasm-ph']);
+  assert.deepEqual([...custom.sortedCategories], ['physics.optics', 'physics.plasm-ph']);
+  assert.equal(custom.totalCount, counts.totalCount);
+});
+test('missing browser settings use build defaults without discovering extra filters', () => {
+  const code = fs.readFileSync(path.join(__dirname, '../js/papers.js'), 'utf8');
+  const built = vm.createContext({console});
+  vm.runInContext(code.replace('"__DEFAULT_CATEGORIES__"', JSON.stringify(categories)), built);
+  const data = parse([paper('one', ['cs.AI', 'physics.plasm-ph'])]);
+  assert.deepEqual([...built.getAllCategories(data).sortedCategories], categories);
+  assert.equal(built.getAllCategories(data).totalCount, 1);
+  assert.deepEqual([...context.getAllCategories(data).sortedCategories], []);
 });
 test('all count is unique while category counts may overlap',()=>{
   const data=parse([paper('one',['physics.plasm-ph','physics.optics']),paper('two',['physics.optics']),paper('one',['physics.plasm-ph','physics.optics'])]);
   assert.equal(context.papersForCategory(data,'all').length,2);
-  const counts=context.getAllCategories(data);
+  const counts=context.getAllCategories(data, categories);
   assert.equal(counts.totalCount,2);assert.equal(counts.categoryCounts['physics.optics'],2);
   assert.equal(counts.categoryCounts['physics.plasm-ph'],1);
 });

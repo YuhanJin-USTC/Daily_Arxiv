@@ -26,6 +26,7 @@ jobs:
       - name: Build static website
         env:
           ACCESS_PASSWORD: ${{ secrets.ACCESS_PASSWORD }}
+          CATEGORIES: ${{ vars.CATEGORIES }}
         run: python scripts/build_site.py --output _site
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4

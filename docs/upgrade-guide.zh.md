@@ -56,7 +56,7 @@ git push -u origin codex/unified-arxiv
 
 1. **Settings → Secrets and variables → Actions → Secrets → OPENAI_API_KEY**：确认它是官方 DeepSeek 账户当前有效的 key。英文 401 需要在这里修正。只在 GitHub secret 编辑框中输入，不要粘贴到聊天、代码、命令或日志。中文原 key 若有效不必更换。不要拿 `TOKEN_GITHUB` 或 `GITHUB_TOKEN` 当模型 key。
 2. 模型、端点、思考强度与语言已写入 `pyproject.toml`，不需要设置 `MODEL_NAME`、`OPENAI_BASE_URL`、`LANGUAGE` 变量。旧值不再被新流程读取。
-3. 保留已有 `CATEGORIES` 自定义订阅。为空时使用 pyproject.toml 默认六分类；历史 91-ID 清单只代表当时六分类，不能对不同订阅强行凑数或擅自清空变量。
+3. 日后增减或调整分类顺序，在两个仓库的 `pyproject.toml` 中修改 `[tool.daily_arxiv]` 下的 `categories` 数组。**若 Settings → Secrets and variables → Actions → Variables 的 `CATEGORIES` 非空，它优先于文件，同时控制日常抓取与网页菜单**；这时只改文件不会生效，应同步调整变量，或由你决定清空覆盖后使用文件。不要擅自删除自定义值。文件修改合并到 `main` 后自动触发 **Deploy website**；只改变量时需手动重跑此工作流。不要手改生成的 `js/data-config.js`。菜单只显示预设分类，零篇仍保留，交叉分类可重复计数但 All 按论文去重。历史 91-ID 清单仍只代表当时六分类，不能对不同订阅强行凑数。
 4. **Settings → Actions → General → Workflow permissions**：允许工作流按声明写入仓库内容，供日常任务推送 `data`。历史恢复与补抓工作流仍只有读取权限，不会自动推送或合并。
 5. **Settings → Pages → Build and deployment → Source → GitHub Actions**。这是新版网站发布方式，必须切换，不能继续直接发布含配置占位符的源码分支。
 6. 运行 **Actions → Deploy website → Run workflow → main**。它按仓库身份和语言生成网站配置；原有 `ACCESS_PASSWORD` 如存在会继续使用。确认网站从正确仓库读取数据，历史失败摘要显示“AI summary unavailable”并回退到原始 abstract。

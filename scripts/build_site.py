@@ -11,7 +11,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from ai.config import settings
+from ai.config import settings, subscribed_categories
 
 
 def build(output, repository):
@@ -25,16 +25,25 @@ def build(output, repository):
             shutil.copytree(ROOT / directory, output / directory)
     for file in ROOT.glob("*.html"):
         shutil.copyfile(file, output / file.name)
-    language = settings()["language"]
+    config = settings()
+    language = config["language"]
+    categories = subscribed_categories()
     owner, name = repository.split("/")
     script = (ROOT / "js/data-config.js").read_text()
     for key, value in {
         "__OWNER__": owner,
         "__REPOSITORY__": name,
         "__LANGUAGE__": language,
+        "__CATEGORIES__": categories,
     }.items():
         script = script.replace(json.dumps(key), json.dumps(value))
     (output / "js/data-config.js").write_text(script)
+    papers = output / "js/papers.js"
+    papers.write_text(
+        papers.read_text().replace(
+            json.dumps("__DEFAULT_CATEGORIES__"), json.dumps(categories)
+        )
+    )
     password = os.environ.get("ACCESS_PASSWORD", "")
     password_hash = (
         hashlib.sha256(password.encode()).hexdigest()
