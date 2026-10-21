@@ -2,7 +2,7 @@
 
 [![Tests](../../actions/workflows/test.yml/badge.svg)](../../actions/workflows/test.yml)
 
-Daily arXiv announcements with validated AI summaries and a static GitHub Pages reader. One repository stores shared raw metadata and separate English and Chinese AI interpretations. English is the default; EN / 中文 switches only the AI content. The two legacy projects remain historical sources.
+Daily arXiv announcements with validated AI summaries and a static GitHub Pages reader. One repository stores shared raw metadata and separate English and Chinese AI interpretations. English is the default; EN / ZH switches only the AI content. The two legacy projects remain historical sources.
 
 **双语配置、迁移与发布：[docs/bilingual-operation.md](docs/bilingual-operation.md)。** The [older incident guide](docs/upgrade-guide.zh.md) documents the previous two-repository rollout.
 

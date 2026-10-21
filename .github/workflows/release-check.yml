@@ -1,0 +1,128 @@
+name: Release checks
+on:
+  workflow_dispatch:
+    inputs:
+      phase:
+        description: Explicit release check; each phase preserves prior results
+        type: choice
+        options: [crawl, ai, mail]
+        required: true
+      paper_id:
+        description: One genuinely new post-baseline arXiv ID for the AI probe
+        type: string
+        default: ''
+permissions:
+  contents: write
+concurrency:
+  group: arxiv-data
+  cancel-in-progress: false
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: code
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: data
+          path: published
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --frozen
+        working-directory: code
+      - name: Prepare evidence
+        id: prepare
+        run: |
+          mkdir -p "$RUNNER_TEMP/arxiv-release"
+          git -C published rev-parse HEAD > "$RUNNER_TEMP/arxiv-release/source-commit.txt"
+          echo "day=$(date -u +%F)" >> "$GITHUB_OUTPUT"
+      - name: Crawl once and publish only verified raw discoveries
+        id: crawl
+        if: inputs.phase == 'crawl'
+        working-directory: code
+        env:
+          CATEGORIES: ${{ vars.CATEGORIES }}
+          DAY: ${{ steps.prepare.outputs.day }}
+        run: |
+          set -euo pipefail
+          work="$RUNNER_TEMP/arxiv-release"
+          uv run --frozen python daily_arxiv/crawl.py --history-dir ../published/data \
+            --output "$work/$DAY.jsonl" --audit "$work/coverage.json"
+          uv run --frozen python scripts/daily_update.py raw --source ../published \
+            --raw "$work/$DAY.jsonl" --coverage "$work/coverage.json" --date "$DAY" \
+            --output "$work/raw-ready" --publish
+      - name: Check one-paper selection before paid requests
+        if: inputs.phase == 'ai'
+        env:
+          PAPER_ID: ${{ inputs.paper_id }}
+        run: |
+          python - <<'PY'
+          import os
+          import re
+          value = os.environ['PAPER_ID']
+          if not re.fullmatch(r'(?:\d{4}\.\d{4,5}|[a-zA-Z.-]+/\d{7})(?:v\d+)?', value):
+              raise SystemExit('Supply exactly one post-baseline paper ID')
+          PY
+      - name: Generate only selected English interpretation
+        id: english
+        if: inputs.phase == 'ai'
+        continue-on-error: true
+        working-directory: code
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          PAPER_ID: ${{ inputs.paper_id }}
+        run: |
+          uv run --frozen python scripts/daily_update.py ai --source ../published \
+            --language English --ids "$PAPER_ID" \
+            --output "$RUNNER_TEMP/arxiv-release/English" --publish
+      - name: Generate only selected Chinese interpretation
+        id: chinese
+        if: inputs.phase == 'ai'
+        continue-on-error: true
+        working-directory: code
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          PAPER_ID: ${{ inputs.paper_id }}
+        run: |
+          uv run --frozen python scripts/daily_update.py ai --source ../published \
+            --language Chinese --ids "$PAPER_ID" \
+            --output "$RUNNER_TEMP/arxiv-release/Chinese" --publish
+      - name: Send one durable English infrastructure probe
+        id: mail
+        if: inputs.phase == 'mail'
+        working-directory: code
+        env:
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          ALLOW_SMTP_SEND: '1'
+          DAY: ${{ steps.prepare.outputs.day }}
+        run: |
+          uv run --frozen python scripts/release_probe.py --source ../published \
+            --repository "$GITHUB_REPOSITORY" --recipient yuhanjin --date "$DAY" \
+            --send --publish
+      - name: Save persistent state evidence
+        if: always()
+        run: |
+          for name in pipeline-state.json notification-state.json; do
+            if [ -f "published/data/$name" ]; then
+              cp "published/data/$name" "$RUNNER_TEMP/arxiv-release/$name"
+            fi
+          done
+      - name: Preserve release evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arxiv-release-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/arxiv-release/
+          if-no-files-found: error
+          retention-days: 30
+      - name: Report language failures
+        if: always() && inputs.phase == 'ai'
+        env:
+          ENGLISH: ${{ steps.english.outcome }}
+          CHINESE: ${{ steps.chinese.outcome }}
+        run: |
+          test "$ENGLISH" = success
+          test "$CHINESE" = success

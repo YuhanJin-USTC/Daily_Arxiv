@@ -216,7 +216,8 @@ test('homepage and detail render safe content and the same researcher marks', ()
 test('language controls use native buttons and preferences explain their local scope', () => {
   for (const page of ['index.html', 'statistic.html']) {
     assert.match(read(page), /<button type="button" data-ai-language="English" aria-pressed=/);
-    assert.match(read(page), /<button type="button" data-ai-language="Chinese" aria-pressed=/);
+    assert.match(read(page), /<button type="button" data-ai-language="Chinese" aria-pressed="(?:true|false)" title="Chinese AI summaries">ZH<\/button>/);
+    assert.doesNotMatch(read(page), />中文<\/button>/);
   }
   assert.match(read('settings.html'), /only in this browser/);
   assert.doesNotMatch(read('js/app.js') + read('js/statistic.js') + read('js/settings.js'), /api.github.com\/repos\/dw-dengwei/);
@@ -231,4 +232,22 @@ test('changing date mode clears the previous day before a new range is chosen', 
     ctx.toggleRangeMode();
     assert.deepEqual(JSON.parse(vm.runInContext('JSON.stringify(pickerCalls)', ctx)), [['mode', 'range'], ['clear', false]]);
   }
+});
+
+test('AI-only files cannot publish papers when the authoritative raw file is absent', async () => {
+  const {ctx} = browser({fetch: async url => {
+    if (url.endsWith('researcher-index.json')) return response(JSON.stringify(index()));
+    if (url.includes('_AI_enhanced_')) return response(jsonl([raw('one', {AI: good})]));
+    return response('', 404);
+  }});
+  assert.equal(rows(ctx, await ctx.loadPaperDate('2026-10-21', 'English')).length, 0);
+});
+
+test('raw fetch failures fail explicitly even when valid AI files exist', async () => {
+  const {ctx} = browser({fetch: async url => {
+    if (url.endsWith('researcher-index.json')) return response(JSON.stringify(index()));
+    if (url.includes('_AI_enhanced_')) return response(jsonl([raw('one', {AI: good})]));
+    return response('', 503);
+  }});
+  await assert.rejects(ctx.loadPaperDate('2026-10-21', 'English'), /Raw papers unavailable.*503/);
 });

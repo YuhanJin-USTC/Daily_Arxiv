@@ -66,9 +66,9 @@ class BilingualTests(unittest.TestCase):
         apply(self.source, output)
         return report
 
-    def language(self, language, generator=generate):
+    def language(self, language, generator=generate, ids=None):
         output = self.output()
-        report = stage_language(self.source, output, language, generator)
+        report = stage_language(self.source, output, language, generator, ids=ids)
         apply(self.source, output)
         return report
 
@@ -97,6 +97,83 @@ class BilingualTests(unittest.TestCase):
         )
         self.assertTrue((self.source / f"data/{DAY}_English.md").exists())
         self.assertTrue((self.source / f"data/{DAY}_Chinese.md").exists())
+
+    def test_limited_ids_keep_unselected_pending_and_checkpoints_in_both_languages(
+        self,
+    ):
+        rows = [paper(), paper("2610.00002"), paper("2610.00003")]
+        self.raw(rows)
+
+        def interrupt(items, language, progress):
+            self.assertEqual(len(items), 1)
+            raise EnhancementError(
+                "Synthetic failure", {**items[0], "AI": {"tldr": "Keep partial"}}
+            )
+
+        self.language("English", interrupt, ids=(rows[0]["id"],))
+        checkpoint = self.source / "data/ai-checkpoints/English.json"
+        retained = json.loads(checkpoint.read_text())["records"][rows[0]["id"]]
+        calls = []
+
+        def limited(items, language, progress):
+            calls.append((language, [row["id"] for row in items]))
+            self.assertEqual([row["id"] for row in items], [rows[1]["id"]])
+            return generate(items, language, progress)
+
+        report = self.language("English", limited, ids=(rows[1]["id"] + "v2",))
+        self.assertEqual(report["selected_ids"], [rows[1]["id"]])
+        self.assertEqual(
+            json.loads(checkpoint.read_text())["records"][rows[0]["id"]], retained
+        )
+        self.language("Chinese", interrupt, ids=(rows[1]["id"],))
+        self.raw([])
+        self.language("Chinese", limited, ids=(rows[1]["id"],))
+        self.assertEqual(
+            calls, [("English", [rows[1]["id"]]), ("Chinese", [rows[1]["id"]])]
+        )
+        state = load_state(self.source)
+        for row in (rows[0], rows[2]):
+            self.assertEqual(
+                state["discoveries"][row["id"]]["languages"],
+                {"English": "pending", "Chinese": "pending"},
+            )
+        generator = Mock(side_effect=AssertionError("Selected paper is complete"))
+        for language in ("English", "Chinese"):
+            self.language(language, generator, ids=(rows[1]["id"],))
+        generator.assert_not_called()
+
+    def test_limited_ids_reject_history_unknown_empty_duplicates_and_changed_raw(self):
+        historical = paper("2610.00009")
+        write_jsonl(self.source / "data/2026-10-20.jsonl", [historical])
+        self.raw([paper()])
+        generator = Mock()
+        for ids in (
+            (historical["id"],),
+            ("2610.00008",),
+            (),
+            (paper()["id"], paper()["id"] + "v2"),
+        ):
+            with self.subTest(ids=ids), self.assertRaises(ValueError):
+                stage_language(
+                    self.source, self.output(), "English", generator, ids=ids
+                )
+        raw = self.source / f"data/{DAY}.jsonl"
+        write_jsonl(raw, [{**paper(), "summary": "Changed abstract"}])
+        with self.assertRaisesRegex(ValueError, "source or abstract"):
+            stage_language(
+                self.source, self.output(), "English", generator, ids=(paper()["id"],)
+            )
+        write_jsonl(raw, [{**paper(), "title": "Changed title"}])
+        with self.assertRaisesRegex(ValueError, "source or abstract"):
+            stage_language(
+                self.source, self.output(), "English", generator, ids=(paper()["id"],)
+            )
+        write_jsonl(raw, [])
+        with self.assertRaisesRegex(ValueError, "source or abstract"):
+            stage_language(
+                self.source, self.output(), "English", generator, ids=(paper()["id"],)
+            )
+        generator.assert_not_called()
 
     def test_partial_failure_persists_success_and_retries_without_new_papers(self):
         rows = [paper(), paper("2610.00002")]
