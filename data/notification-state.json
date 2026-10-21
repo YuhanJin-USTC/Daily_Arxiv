@@ -7034,7 +7034,7 @@
       },
       "date": "2026-10-21",
       "site_url": "https://yuhanjin-ustc.github.io/daily-arxiv/",
-      "sender": "1786527728@qq.com",
+      "sender": "yhjin1005@qq.com",
       "message_id": "<daily-arxiv-release-4caba5c4dbd0cb5d216178789bd1f5a9@yuhanjin-ustc.github.io>",
       "status": "failed",
       "attempts": 1,
@@ -7053,6 +7053,25 @@
             "date": "2026-10-21",
             "site_url": "https://yuhanjin-ustc.github.io/daily-arxiv/",
             "sender": "jinyuhan@mail.ustc.edu.cn",
+            "message_id": "<daily-arxiv-release-4caba5c4dbd0cb5d216178789bd1f5a9@yuhanjin-ustc.github.io>",
+            "status": "failed",
+            "attempts": 1,
+            "last_error": "smtp_explicit_failure"
+          }
+        },
+        {
+          "date": "2026-10-21",
+          "resolution": "sender_change",
+          "note": "User changed the same QQ mailbox to sender alias yhjin1005@qq.com and confirmed SMTP username Secret updated. Auth-only run 39631804291 succeeded. Prior probe remains definitely failed with one attempt; preserve original failures and Message-ID. This rebind sends no mail.",
+          "prior": {
+            "probe_id": "initial-release-v1",
+            "recipient": {
+              "id": "yuhanjin",
+              "email": "jinyuhan@mail.ustc.edu.cn"
+            },
+            "date": "2026-10-21",
+            "site_url": "https://yuhanjin-ustc.github.io/daily-arxiv/",
+            "sender": "1786527728@qq.com",
             "message_id": "<daily-arxiv-release-4caba5c4dbd0cb5d216178789bd1f5a9@yuhanjin-ustc.github.io>",
             "status": "failed",
             "attempts": 1,
