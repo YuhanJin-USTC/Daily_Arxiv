@@ -73,14 +73,16 @@ python scripts/notify.py --state DATA_CHECKOUT/data/notification-state.json --pr
 
 `mail` 阶段通过 `release_probe.py` 发送独立的英文 SMTP 基础设施测试，只发给配置的一个收件人，不包含历史论文通知。固定探针 `initial-release-v1` 与 Message-ID 保存在 `notification-state.json.release_probes`；发送前持久推送 sending，sent/cancelled 不重发，sending/uncertain 需要人工核验。明确失败也受次数上限约束。服务端接受不等于收件箱已确认送达。
 
+连接或认证失败时，先手动运行 `smtp-auth` 阶段。它调用 `release_probe.py --check-auth`，使用与正常发送相同的连接、TLS 和登录流程，仅诊断一次，不发送邮件、不读取或修改通知队列，也不消耗发送次数。输出仅包含脱敏的阶段、错误类别和数字 SMTP 状态码，不记录服务器原文或凭据；查明原因后再决定是否重试 `mail`。
+
 科大邮箱网页二次验证不影响 SMTP 自动化；`SMTP_PASSWORD` 必须使用在“设置 → 安全设置 → 客户端专用密码”生成的专用密码（去掉显示空格），不是网页登录密码或短信验证码，SMTP_USERNAME 使用完整邮箱地址。参见[科大官方说明](https://email.ustc.edu.cn/notice/2fa/)与[客户端设置](https://mail.ustc.edu.cn/coremail/help/index.jsp?locale=zh_CN)。不要在日志或本地浏览器测试文件中复制 Secrets。
 
 ## 发布与回退
 
-本地成果完成不代表已发布。本阶段不创建远端仓库、不 push、不部署、不真实发信/调用付费模型、不更改旧站。
+本地成果完成不代表已发布。创建远端、push、部署、真实发信/调用付费模型和旧站修改须在用户授权的发布范围内执行。
 
 1. 用户验收代码、测试、迁移报告、网页/邮件预览；所有源项目继续保留。
-2. 用户另行授权创建 `yuhanjin-ustc/daily-arxiv` 并推送源码及审核的数据分支。先核对目标名称归属/内容；目标存在冲突则停止。目标当前本地 origin 指向中文源，发布时必须显式改为已确认的新 GitHub 远端，绝不能向原本地源 push。
+2. 用户授权后创建 `yuhanjin-ustc/daily-arxiv` 并推送源码及审核的数据分支。先核对目标名称归属/内容；目标存在冲突则停止。发布时确认 origin 指向该 GitHub 仓库；克隆时继承的本地源远端只能保留作来源，绝不能向它 push。
 3. 配置 Secrets：`OPENAI_API_KEY`、`ACCESS_PASSWORD`、`SMTP_USERNAME`、`SMTP_PASSWORD`。配置 Pages 使用 GitHub Actions。缺少 ACCESS_PASSWORD 时，既有鉴权逻辑会开放阅读；为保持旧站密码访问行为，必须先配置该 Secret 再部署。
 4. 经单独授权，实测邮件和少量真正新论文的双语生成。检查 durable queue、各语言恢复和费用，不用迁移历史作自动补发。优先手动运行，暂不同时打开两套定时任务。
 5. 启用 `ENABLE_PAGES=true`、`ENABLE_DATA_WRITES=true` 后，手动 dispatch Deploy website 与 Refresh researcher highlights（变量变化本身不会重跑先前跳过的任务），核对仓库链接、GitHub Pages 子路径、鉴权、缺译、匹配版本及三种屏幕宽度。按授权启用 `ENABLE_AI`、`ENABLE_EMAIL`。
