@@ -1,256 +1,222 @@
+"""Generate complete summaries, keeping failures separate from publishable output."""
+
+import argparse
+import copy
 import os
-import json
-import sys
+from pathlib import Path
 import re
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import List, Dict
-from queue import Queue
-from threading import Lock
-# INSERT_YOUR_CODE
+import sys
+
 import requests
 
-import dotenv
-import argparse
-from tqdm import tqdm
+from .config import settings, validate_credentials
+from .deepseek import DeepSeekSummaryChain
+from .errors import AuthenticationFailure, EnhancementError, safe_failure
+from .quality import index_records, read_records, validate_records
+from .storage import digest, write_json, write_jsonl
+from .structured_output import enhance_fields
+from .structured_output import valid_fields
 
-import langchain_core.exceptions
-from langchain_openai import ChatOpenAI
-from langchain.prompts import (
-    ChatPromptTemplate,
-    SystemMessagePromptTemplate,
-    HumanMessagePromptTemplate,
-)
-from structure import Structure
 
-if os.path.exists('.env'):
-    dotenv.load_dotenv()
-template = open("template.txt", "r").read()
-system = open("system.txt", "r").read()
-
-def parse_args():
-    """解析命令行参数"""
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--data", type=str, required=True, help="jsonline data file")
-    parser.add_argument("--max_workers", type=int, default=1, help="Maximum number of parallel workers")
-    return parser.parse_args()
-
-def process_single_item(chain, item: Dict, language: str) -> Dict:
-    def is_sensitive(content: str) -> bool:
-        """
-        调用 spam.dw-dengwei.workers.dev 接口检测内容是否包含敏感词。
-        返回 True 表示触发敏感词，False 表示未触发。
-        """
-        try:
-            resp = requests.post(
-                "https://spam.dw-dengwei.workers.dev",
-                json={"text": content},
-                timeout=5
-            )
-            if resp.status_code == 200:
-                result = resp.json()
-                # 约定接口返回 {"sensitive": true/false, ...}
-                return result.get("sensitive", True)
-            else:
-                # 如果接口异常，默认不触发敏感词
-                print(f"Sensitive check failed with status {resp.status_code}", file=sys.stderr)
-                return True
-        except Exception as e:
-            print(f"Sensitive check error: {e}", file=sys.stderr)
-            return True
-
-    def check_github_code(content: str) -> Dict:
-        """提取并验证 GitHub 链接"""
-        code_info = {}
-
-        # 1. 优先匹配 github.com/owner/repo 格式
-        github_pattern = r"https?://github\.com/([a-zA-Z0-9-_]+)/([a-zA-Z0-9-_\.]+)"
-        match = re.search(github_pattern, content)
-        
-        if match:
-            owner, repo = match.groups()
-            # 清理 repo 名称，去掉可能的 .git 后缀或末尾的标点
-            repo = repo.rstrip(".git").rstrip(".,)")
-            
-            full_url = f"https://github.com/{owner}/{repo}"
-            code_info["code_url"] = full_url
-            
-            # 尝试调用 GitHub API 获取信息
-            github_token = os.environ.get("TOKEN_GITHUB")
-            headers = {"Accept": "application/vnd.github.v3+json"}
-            if github_token:
-                headers["Authorization"] = f"token {github_token}"
-            
-            try:
-                api_url = f"https://api.github.com/repos/{owner}/{repo}"
-                resp = requests.get(api_url, headers=headers, timeout=5)
-                if resp.status_code == 200:
-                    data = resp.json()
-                    code_info["code_stars"] = data.get("stargazers_count", 0)
-                    code_info["code_last_update"] = data.get("pushed_at", "")[:10]
-            except Exception:
-                # API 调用失败不影响主流程
-                pass
-            return code_info
-
-        # 2. 如果没有 github.com，尝试匹配 github.io
-        github_io_pattern = r"https?://[a-zA-Z0-9-_]+\.github\.io(?:/[a-zA-Z0-9-_\.]+)*"
-        match_io = re.search(github_io_pattern, content)
-        
-        if match_io:
-            url = match_io.group(0)
-            # 清理末尾标点
-            url = url.rstrip(".,)")
-            code_info["code_url"] = url
-            # github.io 不进行 star 和 update 判断
-                
-        return code_info
-
-    # 检查 summary 字段
-    if is_sensitive(item.get("summary", "")):
-        return None
-
-    # 检测代码可用性
-    code_info = check_github_code(item.get("summary", ""))
-    if code_info:
-        item.update(code_info)
-
-    """处理单个数据项"""
-    # Default structure with meaningful fallback values
-    default_ai_fields = {
-        "tldr": "Summary generation failed",
-        "motivation": "Motivation analysis unavailable",
-        "method": "Method extraction failed",
-        "result": "Result analysis unavailable",
-        "conclusion": "Conclusion extraction failed"
-    }
-    
+def is_sensitive(content):
     try:
-        response: Structure = chain.invoke({
-            "language": language,
-            "content": item['summary']
-        })
-        item['AI'] = response.model_dump()
-    except langchain_core.exceptions.OutputParserException as e:
-        # 尝试从错误信息中提取 JSON 字符串并修复
-        error_msg = str(e)
-        partial_data = {}
-        
-        if "Function Structure arguments:" in error_msg:
-            try:
-                # 提取 JSON 字符串
-                json_str = error_msg.split("Function Structure arguments:", 1)[1].strip().split('are not valid JSON')[0].strip()
-                # 预处理 LaTeX 数学符号 - 使用四个反斜杠来确保正确转义
-                json_str = json_str.replace('\\', '\\\\')
-                # 尝试解析修复后的 JSON
-                partial_data = json.loads(json_str)
-            except Exception as json_e:
-                print(f"Failed to parse JSON for {item.get('id', 'unknown')}: {json_e}", file=sys.stderr)
-        
-        # Merge partial data with defaults to ensure all fields exist
-        item['AI'] = {**default_ai_fields, **partial_data}
-        print(f"Using partial AI data for {item.get('id', 'unknown')}: {list(partial_data.keys())}", file=sys.stderr)
-    except Exception as e:
-        # Catch any other exceptions and provide default values
-        print(f"Unexpected error for {item.get('id', 'unknown')}: {e}", file=sys.stderr)
-        item['AI'] = default_ai_fields
-    
-    # Final validation to ensure all required fields exist
-    for field in default_ai_fields.keys():
-        if field not in item['AI']:
-            item['AI'][field] = default_ai_fields[field]
+        response = requests.post(
+            "https://spam.dw-dengwei.workers.dev", json={"text": content}, timeout=5
+        )
+        response.raise_for_status()
+        result = response.json()
+        if not isinstance(result, dict) or type(result.get("sensitive")) is not bool:
+            raise ValueError("Invalid moderation response")
+        return result["sensitive"]
+    except Exception:
+        # Unavailability is not a positive moderation decision and must not erase rows.
+        raise EnhancementError(
+            "Content-check service failed; publication blocked."
+        ) from None
 
-    # 检查 AI 生成的所有字段
-    for v in item.get("AI", {}).values():
-        if is_sensitive(str(v)):
-            return None
+
+def check_github_code(content):
+    match = re.search(
+        r"https?://github\.com/([a-zA-Z0-9_-]+)/([a-zA-Z0-9_.-]+)", content
+    )
+    if match:
+        owner, repo = match.groups()
+        repo = repo.rstrip(".,)").removesuffix(".git")
+        result = {"code_url": f"https://github.com/{owner}/{repo}"}
+        headers = {"Accept": "application/vnd.github.v3+json"}
+        token = os.environ.get("TOKEN_GITHUB")
+        if token:
+            headers["Authorization"] = f"token {token}"
+        try:
+            response = requests.get(
+                f"https://api.github.com/repos/{owner}/{repo}",
+                headers=headers,
+                timeout=5,
+            )
+            if response.status_code == 200:
+                data = response.json()
+                result.update(
+                    code_stars=data.get("stargazers_count", 0),
+                    code_last_update=data.get("pushed_at", "")[:10],
+                )
+        except Exception:
+            pass  # Optional repository metadata does not affect summary quality.
+        return result
+    match = re.search(
+        r"https?://[a-zA-Z0-9_-]+\.github\.io(?:/[a-zA-Z0-9_.-]+)*", content
+    )
+    return {"code_url": match.group(0).rstrip(".,)")} if match else {}
+
+
+def process_single_item(chain, item, language):
+    item = copy.deepcopy(item)
+    if is_sensitive(item.get("summary", "")):
+        raise EnhancementError(
+            "Content check rejected a paper; manual review required.", item
+        )
+    item.update(check_github_code(item.get("summary", "")))
+    outcome = enhance_fields(chain, item["summary"], language, existing=item.get("AI"))
+    item["AI"] = outcome.fields
+    if not outcome.complete:
+        item["AI_status"] = {
+            "status": "incomplete",
+            "missing_fields": list(outcome.missing),
+            "attempts": outcome.attempts,
+            "error_type": outcome.error_type,
+        }
+        error = (
+            AuthenticationFailure
+            if outcome.error_type == "AuthenticationFailure"
+            else EnhancementError
+        )
+        raise error(
+            "AI incomplete: "
+            + ", ".join(outcome.missing)
+            + "; "
+            + str(outcome.error_type),
+            item,
+        )
+    item.pop("AI_status", None)
+    try:
+        if any(is_sensitive(value) for value in item["AI"].values()):
+            raise EnhancementError("Generated content needs manual review.", item)
+    except EnhancementError as error:
+        error.record = item
+        raise
     return item
 
-def process_all_items(data: List[Dict], model_name: str, language: str, max_workers: int) -> List[Dict]:
-    """并行处理所有数据项"""
-    llm = ChatOpenAI(model=model_name).with_structured_output(Structure, method="function_calling")
-    print('Connect to:', model_name, file=sys.stderr)
-    
-    prompt_template = ChatPromptTemplate.from_messages([
-        SystemMessagePromptTemplate.from_template(system),
-        HumanMessagePromptTemplate.from_template(template=template)
-    ])
 
-    chain = prompt_template | llm
-    
-    # 使用线程池并行处理
-    processed_data = [None] * len(data)  # 预分配结果列表
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        # 提交所有任务
-        future_to_idx = {
-            executor.submit(process_single_item, chain, item, language): idx
-            for idx, item in enumerate(data)
-        }
-        
-        # 使用tqdm显示进度
-        for future in tqdm(
-            as_completed(future_to_idx),
-            total=len(data),
-            desc="Processing items"
-        ):
-            idx = future_to_idx[future]
+def process_all_items(data, language, chain=None):
+    """Sequential requests stop on the first error; no queued batch after 401."""
+    if not data:
+        raise EnhancementError("Empty input; publication blocked.")
+    owned = chain is None
+    chain = chain or DeepSeekSummaryChain()
+    completed = []
+    try:
+        for item in data:
             try:
-                result = future.result()
-                processed_data[idx] = result
-            except Exception as e:
-                print(f"Item at index {idx} generated an exception: {e}", file=sys.stderr)
-                # Add default AI fields to ensure consistency
-                processed_data[idx] = data[idx]
-                processed_data[idx]['AI'] = {
-                    "tldr": "Processing failed",
-                    "motivation": "Processing failed",
-                    "method": "Processing failed",
-                    "result": "Processing failed",
-                    "conclusion": "Processing failed"
-                }
-    
-    return processed_data
+                completed.append(process_single_item(chain, item, language))
+            except Exception as error:
+                safe = safe_failure(error)
+                safe.completed = completed
+                if safe.record is None:
+                    safe.record = copy.deepcopy(item)
+                raise safe from None
+        validate_records(completed)
+        return completed
+    finally:
+        if owned:
+            chain.close()
 
-def main():
-    args = parse_args()
-    model_name = os.environ.get("MODEL_NAME", 'deepseek-chat')
-    language = os.environ.get("LANGUAGE", 'Chinese')
 
-    # 检查并删除目标文件
-    target_file = args.data.replace('.jsonl', f'_AI_enhanced_{language}.jsonl')
-    if os.path.exists(target_file):
-        os.remove(target_file)
-        print(f'Removed existing file: {target_file}', file=sys.stderr)
+def resume_rows(rows, checkpoint_path, source_hash, language):
+    import json
 
-    # 读取数据
-    data = []
-    with open(args.data, "r") as f:
-        for line in f:
-            data.append(json.loads(line))
+    checkpoint = json.loads(checkpoint_path.read_text())
+    if (
+        checkpoint.get("source_sha256") != source_hash
+        or checkpoint.get("language") != language
+    ):
+        raise ValueError("Checkpoint belongs to another input or language")
+    saved = list(checkpoint.get("completed", []))
+    if checkpoint.get("partial"):
+        saved.append(checkpoint["partial"])
+    by_id = index_records(saved)
+    if not by_id.keys() <= {row["id"] for row in rows}:
+        raise ValueError("Checkpoint contains unknown paper IDs")
+    result = copy.deepcopy(rows)
+    for row in result:
+        if row["id"] in by_id:
+            row["AI"] = {
+                **valid_fields(by_id[row["id"]].get("AI")),
+                **valid_fields(row.get("AI")),
+            }
+    return result
 
-    # 去重
-    seen_ids = set()
-    unique_data = []
-    for item in data:
-        if item['id'] not in seen_ids:
-            seen_ids.add(item['id'])
-            unique_data.append(item)
 
-    data = unique_data
-    print('Open:', args.data, file=sys.stderr)
-    
-    # 并行处理所有数据
-    processed_data = process_all_items(
-        data,
-        model_name,
-        language,
-        args.max_workers
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--data", type=Path)
+    parser.add_argument("--output", type=Path)
+    parser.add_argument("--check-config", action="store_true")
+    parser.add_argument(
+        "--resume", type=Path, help="Reuse a partial checkpoint for this exact raw file"
     )
-    
-    # 保存结果
-    with open(target_file, "w") as f:
-        for item in processed_data:
-            if item is not None:
-                f.write(json.dumps(item) + "\n")
+    args = parser.parse_args(argv)
+    if not args.check_config and args.data is None:
+        parser.error("--data is required")
+    source = args.data
+    try:
+        if not os.environ.get("GITHUB_ACTIONS"):
+            from dotenv import load_dotenv
+
+            load_dotenv(Path(__file__).resolve().parents[1] / ".env", override=False)
+        validate_credentials()
+        language = settings()["language"]
+        if args.check_config:
+            print(
+                "Configuration format checks passed; credentials were not tested or displayed."
+            )
+            return 0
+        if source.suffix != ".jsonl" or "_AI_enhanced_" in source.stem:
+            raise ValueError("Expected raw JSONL input")
+        target = args.output or source.with_name(
+            f"{source.stem}_AI_enhanced_{language}.jsonl"
+        )
+        if target.resolve() == source.resolve():
+            raise ValueError("Input and output must differ")
+        source_hash = digest(source)
+        data = list(
+            index_records(
+                read_records(source), allow_identical_duplicates=True
+            ).values()
+        )
+        if args.resume:
+            data = resume_rows(data, args.resume, source_hash, language)
+        try:
+            result = process_all_items(data, language)
+        except EnhancementError as error:
+            # A checkpoint is not publishable output; the previous target survives.
+            write_json(
+                target.with_suffix(".partial.json"),
+                {
+                    "source_sha256": source_hash,
+                    "language": language,
+                    "completed": getattr(error, "completed", []),
+                    "partial": error.record,
+                },
+            )
+            raise
+        if digest(source) != source_hash:
+            raise ValueError("Source changed during generation")
+        validate_records(result)
+        write_jsonl(target, result)
+        return 0
+    except Exception as error:
+        print(str(safe_failure(error)), file=sys.stderr)
+        return 1
+
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

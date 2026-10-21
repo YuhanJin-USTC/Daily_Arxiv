@@ -12,3 +12,14 @@ ai/.env
 test/*
 .idea/
 .cursorrules
+# Credentials and generated runtime artifacts
+.env
+.env.*
+!.env.example
+_site/
+artifacts/
+*.partial.json
+.pytest_cache/
+.coverage
+.DS_Store
+.ruff_cache/

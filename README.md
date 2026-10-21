@@ -1,135 +1,65 @@
-# 🚀 daily-arXiv-ai-enhanced
+# daily-arXiv AI enhanced
 
-> [!CAUTION]
-> 若您所在法域对学术数据有审查要求，谨慎运行本代码；任何二次分发版本必须履行合规审查（包括但不限于原始论文合规性、AI合规性）义务，否则一切法律后果由下游自行承担。
+[![Tests](../../actions/workflows/test.yml/badge.svg)](../../actions/workflows/test.yml)
 
-> [!CAUTION]
-> If your jurisdiction has censorship requirements for academic data, run this code with caution; any secondary distribution version must remove the entrance accessible to China and fulfill the content review obligations, otherwise all legal consequences will be borne by the downstream.
+Daily arXiv announcements with validated AI summaries and a static GitHub Pages reader. The English and Chinese repositories use the same implementation; only `tool.daily_arxiv.language` in `pyproject.toml` differs.
 
+**中文升级与历史修复教程：[docs/upgrade-guide.zh.md](docs/upgrade-guide.zh.md)。**
 
-This innovative tool transforms how you stay updated with arXiv papers by combining automated crawling with AI-powered summarization.
+## Behavior
 
+- Track the configured categories, including cross-listed papers. Validate pagination, listing totals, metadata coverage, and unique IDs.
+- Look back through arXiv's recent announcement window and skip IDs already published on `data` before model calls. This covers new submissions and cross-list announcements in the selected categories, not the entire arXiv archive or replacement-only revisions.
+- Use DeepSeek's reviewed maximum profile: `deepseek-flash`, thinking enabled, effort `max`, 393,216 output tokens maximum, native 1M context. Input remains the paper abstract.
+- Recover missing structured fields with at most two repair attempts. Keep accepted fields, reject placeholders, stop the batch on authentication/provider failures, and retain partial checkpoints separately.
+- Publish only complete validated candidates. Preserve existing records byte-for-byte on same-day appends. Stage historical repairs for review instead of automatically overwriting archives.
+- Show the original abstract with an explicit unavailable status when historical AI fields are invalid. Secondary-category filters include cross-listed papers; the overall count remains unique.
 
-## ✨ Key Features
+## Configuration
 
-🎯 **Zero Infrastructure Required**
-- Leverages GitHub Actions and Pages - no server needed
-- Completely free to deploy and use
+Public settings live in `pyproject.toml`. The editions differ only in:
 
-🤖 **Smart AI Summarization**
-- Daily paper crawling with DeepSeek-powered summaries
-- Cost-effective: Only ~0.2 CNY per day
+```toml
+[tool.daily_arxiv]
+language = "English" # Chinese in the Chinese repository
+```
 
-💫 **Smart Reading Experience**
-- Personalized paper highlighting based on your interests
-- Cross-device compatibility (desktop & mobile)
-- Local preference storage for privacy
-- Flexible date range filtering
+Default categories: `physics.plasm-ph`, `physics.acc-ph`, `physics.optics`, `physics.flu-dyn`, `physics.atom-ph`, and `physics.comp-ph`. A nonempty Actions variable `CATEGORIES` overrides daily crawling. The reviewed October 20 backfill inventory uses those six original categories.
 
-👉 **[Try it now!](https://dw-dengwei.github.io/daily-arXiv-ai-enhanced/)** - No installation required
+The model uses the repository Actions secret **`OPENAI_API_KEY`**, containing a valid official DeepSeek credential. Old `MODEL_NAME`, `OPENAI_BASE_URL`, and `LANGUAGE` environment/Actions variables do not override the versioned settings. No credential belongs in source, a command argument, an issue, or a log. An offline format check cannot prove a credential is active.
 
+## Local development
 
+Requirements: Python 3.12, uv, and Node.js 22 or newer for frontend tests.
 
-https://github.com/user-attachments/assets/b25712a4-fb8d-484f-863d-e8da6922f9d7
+```bash
+uv sync --frozen
+uv run --frozen ruff check ai daily_arxiv scripts to_md tests
+uv run --frozen ruff format --check ai daily_arxiv scripts to_md tests
+uv run --frozen python -m unittest discover -s tests -v
+node --test tests/test_frontend.cjs
+```
 
+No keys or live model calls are needed for tests. `bash run.sh DATA_CHECKOUT NEW_OUTPUT` stages a local daily candidate and never publishes. Without a configured model key it stops after validated crawling. The data checkout must be a separate checkout of the repository's `data` branch.
 
+## Workflows
 
+| Workflow | Purpose | Can publish? |
+| --- | --- | --- |
+| Tests | Offline Python, frontend, formatting and lint checks | No |
+| Daily arXiv | Crawl, validate, enhance, merge and commit complete data | `data` only |
+| Stage historical AI repairs | Audit or repair selected archived dates/IDs | No; artifact only |
+| Stage missing 2026-10-20 papers | Fetch only missing IDs from the reviewed 91-paper inventory | No; artifact only |
+| Deploy website | Build public settings and deploy the static reader | GitHub Pages only |
 
-# How to use
-This repo will daily crawl arXiv papers about **cs.CV, cs.GR, cs.CL and cs.AI**, and use **DeepSeek** to summarize the papers in **Chinese**.
-If you wish to crawl other arXiv categories, use other LLMs, or other languages, please follow the instructions.
-Otherwise, you can directly use this repo in https://dw-dengwei.github.io/daily-arXiv-ai-enhanced/. Please star it if you like :)
+Set **Settings → Pages → Source → GitHub Actions**. Website configuration is generated in the Pages artifact; scheduled jobs no longer commit generated settings to `main`. The reader fetches current data directly from `data`, so a new data commit does not need a website rebuild. Existing `ACCESS_PASSWORD` behavior is retained during the website build.
 
-**Instructions:**
-1. Fork this repo to your own account and delete my own information in [by-me-a-coffee](./buy-me-a-coffee/README.md).
-2. Go to: your-own-repo -> Settings -> Secrets and variables -> Actions
-3. Go to Secrets. Secrets are encrypted and used for sensitive data
-4. Create two repository secrets named `OPENAI_API_KEY` and `OPENAI_BASE_URL`, and input corresponding values.
-5. [Optional] Set a password in `secrets.ACCESS_PASSWORD` if you do not wish others to access your page. (see https://github.com/dw-dengwei/daily-arXiv-ai-enhanced/pull/64)
-6. Go to Variables. Variables are shown as plain text and are used for non-sensitive data
-7. Create the following repository variables:
-   1. `CATEGORIES`: separate the categories with ",", such as "cs.CL, cs.CV"
-   2. `LANGUAGE`: such as "Chinese" or "English"
-   3. `MODEL_NAME`: such as "deepseek-chat"
-   4. `EMAIL`: your email for push to GitHub
-   5. `NAME`: your name for push to GitHub
-8. Go to your-own-repo -> Actions -> arXiv-daily-ai-enhanced
-9. You can manually click **Run workflow** to test if it works well (it may take about one hour). By default, this action will automatically run every day. You can modify it in `.github/workflows/run.yml`
-10. Set up GitHub pages: Go to your own repo -> Settings -> Pages. In `Build and deployment`, set `Source="Deploy from a branch"`, `Branch="main", "/(root)"`. Wait for a few minutes, go to https://\<username\>.github.io/daily-arXiv-ai-enhanced/. Please see this [issue](https://github.com/dw-dengwei/daily-arXiv-ai-enhanced/issues/14) for more precise instructions.
+## Layout and recovery
 
-# Plans
-See https://github.com/users/dw-dengwei/projects/3
+`ai/` owns provider access, structured recovery, quality checks, and archived repair. `daily_arxiv/` owns crawling and coverage. `to_md/` renders validated records. `scripts/` stages and verifies data and builds the website. `tests/` and `docs/` contain regression tests and operating instructions. Runtime artifacts stay outside the code checkout; temporary atomic-write files are removed in `finally` blocks.
 
-# Contributors
-Thanks to the following special contributors for contributing code, discovering bugs, and sharing useful ideas for this project!!!
-<table>
-  <tbody>
-    <tr>
-      <td align="center" valign="top">
-        <a href="https://github.com/JianGuanTHU"><img src="https://avatars.githubusercontent.com/u/44895708?v=4" width="100px;" alt="JianGuanTHU"/><br /><sub><b>JianGuanTHU</b></sub></a><br />
-      </td>
-      <td align="center" valign="top">
-        <a href="https://github.com/Chi-hong22"><img src="https://avatars.githubusercontent.com/u/75403952?v=4" width="100px;" alt="Chi-hong22"/><br /><sub><b>Chi-hong22</b></sub></a><br />
-      </td>
-      <td align="center" valign="top">
-        <a href="https://github.com/chaozg"><img src="https://avatars.githubusercontent.com/u/69794131?v=4" width="100px;" alt="chaozg"/><br /><sub><b>chaozg</b></sub></a><br />
-      </td>
-      <td align="center" valign="top">
-        <a href="https://github.com/quantum-ctrl"><img src="https://avatars.githubusercontent.com/u/16505311?v=4" width="100px;" alt="quantum-ctrl"/><br /><sub><b>quantum-ctrl</b></sub></a><br />
-      </td>
-      <td align="center" valign="top">
-        <a href="https://github.com/Zhao2z"><img src="https://avatars.githubusercontent.com/u/141019403?v=4" width="100px;" alt="Zhao2z"/><br /><sub><b>Zhao2z</b></sub></a><br />
-      </td>
-      <td align="center" valign="top">
-        <a href="https://github.com/eclipse0922"><img src="https://avatars.githubusercontent.com/u/6214316?v=4" width="100px;" alt="eclipse0922"/><br /><sub><b>eclipse0922</b></sub></a><br />
-      </td>
-    </tr>
+See [architecture](docs/architecture.md), [verified incident findings](docs/incidents-2026-10-21.md), and the [step-by-step guide](docs/upgrade-guide.zh.md). Recovery artifacts include source/candidate hashes and expire after 14 days; retain a reviewed manifest with the data PR. Existing valid summaries and paper metadata must not be regenerated to fix unrelated failures.
 
+## License and attribution
 
-  </tbody>
-  <tbody>
-   <tr>
-      <td align="center" valign="top">
-        <a href="https://github.com/xuemian168"><img src="https://avatars.githubusercontent.com/u/38741078?v=4" width="100px;" alt="xuemian168"/><br /><sub><b>xuemian168</b></sub></a><br />
-      </td>
-      <td align="center" valign="top">
-        <a href="https://github.com/Lrrrr549"><img src="https://avatars.githubusercontent.com/u/71866027?v=4" width="100px;" alt="Lrrrr549"/><br /><sub><b>Lrrrr549</b></sub></a><br />
-      </td>
-      <td align="center" valign="top">
-        <a href="https://github.com/AinzRimuru"><img src="https://avatars.githubusercontent.com/u/59441476?v=4" width="100px;" alt="AinzRimuru"/><br /><sub><b>AinzRimuru</b></sub></a><br />
-      </td>
-      <td align="center" valign="top">
-        <a href="https://github.com/fengxueguiren"><img src="https://avatars.githubusercontent.com/u/153522370?v=4" width="100px;" alt="fengxueguiren"/><br /><sub><b>fengxueguiren</b></sub></a><br />
-      </td>
-   </tr>
-  </tbody>
-</table>
-
-# Acknowledgement
-We sincerely thank the following individuals and organizations for their promotion and support!!!
-<table>
-  <tbody>
-    <tr>
-      <td align="center" valign="top">
-        <a href="https://x.com/GitHub_Daily/status/1930610556731318781"><img src="https://pbs.twimg.com/profile_images/1660876795347111937/EIo6fIr4_400x400.jpg" width="100px;" alt="Github_Daily"/><br /><sub><b>Github_Daily</b></sub></a><br />
-      </td>
-      <td align="center" valign="top">
-        <a href="https://x.com/aigclink/status/1930897858963853746"><img src="https://pbs.twimg.com/profile_images/1729450995850027008/gllXr6bh_400x400.jpg" width="100px;" alt="AIGCLINK"/><br /><sub><b>AIGCLINK</b></sub></a><br />
-      </td>
-      <td align="center" valign="top">
-        <a href="https://www.ruanyifeng.com/blog/2025/06/weekly-issue-353.html"><img src="https://avatars.githubusercontent.com/u/905434" width="100px;" alt="阮一峰的网络日志"/><br /><sub><b>阮一峰的网络日志 <br> 科技爱好者周刊 <br> （第 353 期）</b></sub></a><br />
-      </td>
-      <td align="center" valign="top">
-        <a href="https://hellogithub.com/periodical/volume/111"><img src="https://github.com/user-attachments/assets/eff6b6dd-0323-40c4-9db6-444a51bbc80a" width="100px;" alt="《HelloGitHub》第 111 期"/><br /><sub><b>《HelloGitHub》<br> 月刊第 111 期</b></sub></a><br />
-      </td>
-    </tr>
-  </tbody>
-</table>
-
-
-# Star history
-
-[![Stargazers over time](https://starchart.cc/dw-dengwei/daily-arXiv-ai-enhanced.svg?variant=adaptive)](https://starchart.cc/dw-dengwei/daily-arXiv-ai-enhanced)
-
-# Buy me a coffee
-[here](./buy-me-a-coffee/README.md)
+Apache-2.0, see [LICENSE](LICENSE). This project builds on the original daily-arXiv work by Wei Deng and Jian Guan. Paper metadata and abstracts remain attributed to their authors and arXiv. AI summaries require scientific review.

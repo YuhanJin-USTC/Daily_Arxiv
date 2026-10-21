@@ -1,72 +1,76 @@
-import json
+"""Render validated summaries without overwriting Markdown on input failure."""
+
 import argparse
-import os
-from itertools import count
+from pathlib import Path
+
+from ai.config import settings
+from ai.quality import read_records, validate_records
+from ai.storage import write_bytes
+
+
+def convert(source, language=None):
+    source = Path(source)
+    rows = read_records(source)
+    validate_records(rows)
+    config = settings()
+    language = language or config["language"]
+    preferred = config["categories"]
+    template = (Path(__file__).parent / "paper_template.md").read_text()
+    if language == "Chinese":
+        for old, new in (
+            ("Main category:", "分类："),
+            ("Details", "详细分析"),
+            ("Motivation:", "研究动机："),
+            ("Method:", "方法："),
+            ("Result:", "结果："),
+            ("Conclusion:", "结论："),
+            ("Abstract:", "原始摘要："),
+        ):
+            template = template.replace(old, new)
+    grouped = {}
+    for row in rows:
+        categories = row["categories"]
+        category = next((c for c in preferred if c in categories), categories[0])
+        grouped.setdefault(category, []).append(row)
+    names = sorted(
+        grouped,
+        key=lambda c: (preferred.index(c) if c in preferred else len(preferred), c),
+    )
+    toc = "目录" if language == "Chinese" else "Contents"
+    back = "返回目录" if language == "Chinese" else "Back"
+    parts = [f'<div id="toc"></div>\n\n# {toc}\n']
+    parts += [
+        f"- [{category}](#{category}) ({len(grouped[category])})" for category in names
+    ]
+    index = 0
+    for category in names:
+        parts.append(
+            f'\n<div id="{category}"></div>\n\n# {category} [[{back}]](#toc)\n'
+        )
+        for row in grouped[category]:
+            index += 1
+            parts.append(
+                template.format(
+                    title=row["title"],
+                    authors=", ".join(row["authors"]),
+                    summary=row["summary"],
+                    url=row["abs"],
+                    cate=category,
+                    idx=index,
+                    **row["AI"],
+                )
+            )
+    target = source.with_name(source.stem.split("_AI_enhanced_", 1)[0] + ".md")
+    write_bytes(target, ("\n\n".join(parts) + "\n").encode())
+    return target
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--data", required=True, type=Path)
+    args = parser.parse_args()
+    convert(args.data)
+
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--data", type=str, help="Path to the jsonline file")
-    args = parser.parse_args()
-    data = []
-    preference = os.environ.get('CATEGORIES', 'cs.CV, cs.CL').split(',')
-    preference = list(map(lambda x: x.strip(), preference))
-    def rank(cate):
-        if cate in preference:
-            return preference.index(cate)
-        else:
-            return len(preference)
-
-    with open(args.data, "r") as f:
-        for line in f:
-            data.append(json.loads(line))
-
-    categories = set([item["categories"][0] for item in data])
-    template = open("paper_template.md", "r").read()
-    categories = sorted(categories, key=rank)
-    cnt = {cate: 0 for cate in categories}
-    for item in data:
-        if item["categories"][0] not in cnt.keys():
-            continue
-        cnt[item["categories"][0]] += 1
-
-    markdown = f"<div id=toc></div>\n\n# Table of Contents\n\n"
-    for idx, cate in enumerate(categories):
-        markdown += f"- [{cate}](#{cate}) [Total: {cnt[cate]}]\n"
-
-    idx = count(1)
-    for cate in categories:
-        markdown += f"\n\n<div id='{cate}'></div>\n\n"
-        markdown += f"# {cate} [[Back]](#toc)\n\n"
-        papers = []
-        for item in data:
-            if item["categories"][0] == cate:
-                # Safely access AI fields with default values
-                ai_data = item.get('AI', {})
-                if not ai_data or not isinstance(ai_data, dict):
-                    print(f"Skipping item '{item.get('title', 'Unknown')}' due to missing or invalid AI data")
-                    continue
-                
-                # Check if all required AI fields are present
-                required_fields = ['tldr', 'motivation', 'method', 'result', 'conclusion']
-                if not all(field in ai_data for field in required_fields):
-                    print(f"Skipping item '{item.get('title', 'Unknown')}' due to incomplete AI fields")
-                    continue
-                
-                papers.append(
-                    template.format(
-                        title=item["title"],
-                        authors=",".join(item["authors"]),
-                        summary=item["summary"],
-                        url=item['abs'],
-                        tldr=ai_data.get('tldr', ''),
-                        motivation=ai_data.get('motivation', ''),
-                        method=ai_data.get('method', ''),
-                        result=ai_data.get('result', ''),
-                        conclusion=ai_data.get('conclusion', ''),
-                        cate=item['categories'][0],
-                        idx=next(idx)
-                    )
-                )
-        markdown += "\n\n".join(papers)
-    with open(args.data.split('_')[0] + '.md', "w") as f:
-        f.write(markdown)
+    main()

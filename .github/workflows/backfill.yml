@@ -1,0 +1,54 @@
+name: Stage missing 2026-10-20 papers
+on:
+  workflow_dispatch:
+    inputs:
+      generate:
+        description: Generate candidates after crawling missing IDs (false only crawls and audits)
+        default: false
+        type: boolean
+permissions:
+  contents: read
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: code
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: data
+          path: published
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --frozen
+        working-directory: code
+      - name: Fetch only missing archived IDs
+        working-directory: code
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/arxiv-backfill"
+          git -C ../published rev-parse HEAD > "$RUNNER_TEMP/arxiv-backfill/source-commit.txt"
+          uv run --frozen python daily_arxiv/crawl.py \
+            --inventory docs/audits/arxiv-2026-10-20.json --history-dir ../published/data \
+            --output "$RUNNER_TEMP/arxiv-backfill/2026-10-20.jsonl" \
+            --audit "$RUNNER_TEMP/arxiv-backfill/coverage.json"
+      - name: Generate and stage new rows
+        if: inputs.generate
+        working-directory: code
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          set -euo pipefail
+          uv run --frozen python scripts/stage_daily.py --source ../published --date 2026-10-20 \
+            --raw "$RUNNER_TEMP/arxiv-backfill/2026-10-20.jsonl" \
+            --output "$RUNNER_TEMP/arxiv-backfill/ready"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: arxiv-backfill-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/arxiv-backfill/
+          if-no-files-found: ignore
+          retention-days: 14
