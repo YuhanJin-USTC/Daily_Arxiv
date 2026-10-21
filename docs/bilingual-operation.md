@@ -8,9 +8,9 @@
 
 启用发布后的配置 push 会重新构建历史高亮。索引绑定配置和有效分类摘要；构建与数据刷新先后完成时，网页会暂时提示索引待更新，不展示旧配置标记。新增研究者/收件人不会追发历史。
 
-`notifications.recipients` 配置稳定收件人 ID、邮箱与开关。默认地址为 `jinyuhan@mail.ustc.edu.cn`，用户已同意它在公开配置中出现；它不会被打包进网页。`notifications.smtp` 默认 `mail.ustc.edu.cn:465`、`security="ssl"`，发件地址单独配置。认证通过 `username_env`、`password_env` 指定的环境变量读取，默认 `SMTP_USERNAME`、`SMTP_PASSWORD`。使用邮箱客户端专用密码，不要把密码发到聊天、写入 TOML 或命令参数。
+`notifications.recipients` 配置稳定收件人 ID、邮箱与开关。默认地址为 `jinyuhan@mail.ustc.edu.cn`，用户已同意它在公开配置中出现；它不会被打包进网页。`notifications.smtp` 使用 `smtp.qq.com:465`、`security="ssl"`，发件地址为 `1786527728@qq.com`。认证通过 `username_env`、`password_env` 指定的环境变量读取，默认 `SMTP_USERNAME`、`SMTP_PASSWORD`。QQ 邮箱使用客户端授权码，不要把授权码发到聊天、写入 TOML 或命令参数。
 
-改用其他 SMTP 不需要改代码。例如 Gmail 可配置 `host="smtp.gmail.com"`，SSL 端口 465，或 `security="starttls"`、端口 587；认证身份、发件地址和客户端密码需相应调整。`timeout` 和 `max_attempts` 控制超时及明确失败重试次数。邮件使用英文纯文本，一篇论文命中多位研究者只列一次。真实发送同时要求通知配置启用、显式 `--send`、`ALLOW_SMTP_SEND=1`、可用凭据和持久发布回调。
+改用其他 SMTP 不需要改传输代码。按服务商要求选择 `ssl` 或 `starttls` 及对应端口，同时更新认证身份、发件地址和客户端密码。`timeout` 和 `max_attempts` 控制超时及明确失败重试次数。邮件使用英文纯文本，一篇论文命中多位研究者只列一次。真实发送同时要求通知配置启用、显式 `--send`、`ALLOW_SMTP_SEND=1`、可用凭据和持久发布回调。
 
 ## 本地验证
 
@@ -75,7 +75,9 @@ python scripts/notify.py --state DATA_CHECKOUT/data/notification-state.json --pr
 
 连接或认证失败时，先手动运行 `smtp-auth` 阶段。它调用 `release_probe.py --check-auth`，使用与正常发送相同的连接、TLS 和登录流程，仅诊断一次，不发送邮件、不读取或修改通知队列，也不消耗发送次数。输出仅包含脱敏的阶段、错误类别和数字 SMTP 状态码，不记录服务器原文或凭据；查明原因后再决定是否重试 `mail`。
 
-科大邮箱网页二次验证不影响 SMTP 自动化；`SMTP_PASSWORD` 必须使用在“设置 → 安全设置 → 客户端专用密码”生成的专用密码（去掉显示空格），不是网页登录密码或短信验证码，SMTP_USERNAME 使用完整邮箱地址。参见[科大官方说明](https://email.ustc.edu.cn/notice/2fa/)与[客户端设置](https://mail.ustc.edu.cn/coremail/help/index.jsp?locale=zh_CN)。不要在日志或本地浏览器测试文件中复制 Secrets。
+更换发件地址后，已冻结的测试邮件会阻止直接重发。仅当探针状态为明确失败的 `failed` 时，才可手动运行 `mail-sender` 阶段并填写公开的 `evidence_note`，把发件人迁移到当前配置。此操作不读取 SMTP 凭据、不发信，保留 `failed` 状态、原失败记录、次数、收件人和 Message-ID；`sending/uncertain/sent` 等状态禁止迁移。次数耗尽时仍需单独的人工带证据恢复，迁移不重置额度。之后仍须先确认新服务商的 Secrets 已替换，再诊断认证和执行邮件实测。
+
+QQ 邮箱配置步骤：登录[网页版邮箱](https://mail.qq.com/)，在设置中开启包含 SMTP 的第三方客户端服务，按页面完成安全验证并生成授权码。在仓库 Actions Secrets 中将 `SMTP_USERNAME` 设置为 `1786527728@qq.com`，将 `SMTP_PASSWORD` 替换为该邮箱生成的客户端授权码；不要填写 QQ 登录密码或一次性验证码。参见 [QQ 邮箱授权码说明](https://service.mail.qq.com/detail/0/75)。授权码失效或被撤销后需生成新码并更新 Secret。不要在日志或本地浏览器测试文件中复制 Secrets。
 
 ## 发布与回退
 
