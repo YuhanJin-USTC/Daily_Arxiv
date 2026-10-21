@@ -8,6 +8,7 @@ import hashlib
 import json
 import os
 import smtplib
+import socket
 import ssl
 from urllib.parse import urlparse
 
@@ -17,6 +18,94 @@ from .researchers import config_digest, match_paper
 
 class DeliveryFailure(Exception):
     """The server did not accept this message."""
+
+    STAGES = {"connect", "ehlo", "starttls", "auth", "sender", "recipient", "data"}
+    REASONS = {
+        "dns_failed",
+        "timeout",
+        "refused",
+        "tls_certificate_failed",
+        "tls_failed",
+        "disconnected",
+        "unsupported",
+        "rejected",
+        "connection_failed",
+        "failed",
+    }
+    EXCEPTIONS = {
+        "SMTPAuthenticationError",
+        "SMTPConnectError",
+        "SMTPServerDisconnected",
+        "SMTPHeloError",
+        "SMTPNotSupportedError",
+        "SMTPResponseException",
+        "SMTPException",
+        "SMTPRecipientsRefused",
+        "SMTPSenderRefused",
+        "SMTPDataError",
+        "SSLCertVerificationError",
+        "SSLError",
+        "TimeoutError",
+        "ConnectionRefusedError",
+        "ConnectionResetError",
+        "ConnectionAbortedError",
+        "BrokenPipeError",
+        "gaierror",
+        "OSError",
+        "ValueError",
+        "UnicodeEncodeError",
+    }
+
+    def __init__(
+        self,
+        message=None,
+        *,
+        stage=None,
+        reason=None,
+        exception_type=None,
+        smtp_code=None,
+    ):
+        self.code = "smtp_explicit_failure"
+        self.diagnostic = {"code": self.code}
+        if stage in self.STAGES and reason in self.REASONS:
+            self.code = f"smtp_{stage}_{reason}"
+            self.diagnostic.update(code=self.code, stage=stage)
+        if exception_type is not None:
+            self.diagnostic["exception_type"] = (
+                exception_type if exception_type in self.EXCEPTIONS else "Exception"
+            )
+        if type(smtp_code) is int and 100 <= smtp_code <= 599:
+            self.diagnostic["smtp_code"] = smtp_code
+        super().__init__(self.code)
+
+
+def smtp_failure(error, stage):
+    if isinstance(error, ssl.SSLCertVerificationError):
+        reason = "tls_certificate_failed"
+    elif isinstance(error, ssl.SSLError):
+        reason = "tls_failed"
+    elif isinstance(error, socket.gaierror):
+        reason = "dns_failed"
+    elif isinstance(error, TimeoutError):
+        reason = "timeout"
+    elif isinstance(error, ConnectionRefusedError):
+        reason = "refused"
+    elif isinstance(error, smtplib.SMTPServerDisconnected):
+        reason = "disconnected"
+    elif isinstance(error, smtplib.SMTPNotSupportedError):
+        reason = "unsupported"
+    elif isinstance(error, smtplib.SMTPResponseException):
+        reason = "rejected"
+    elif isinstance(error, OSError):
+        reason = "connection_failed"
+    else:
+        reason = "failed"
+    return DeliveryFailure(
+        stage=stage,
+        reason=reason,
+        exception_type=type(error).__name__,
+        smtp_code=getattr(error, "smtp_code", None),
+    )
 
 
 class DeliveryUncertain(Exception):
@@ -234,8 +323,24 @@ class SMTPTransport:
         if config["security"] not in ("ssl", "starttls"):
             raise ValueError("SMTP requires SSL or STARTTLS")
 
-    def __call__(self, message):
+    @staticmethod
+    def _close(client, graceful=False):
+        if client is None:
+            return
+        if graceful:
+            try:
+                client.quit()
+                return
+            except Exception:
+                pass
+        try:
+            client.close()
+        except Exception:
+            pass
+
+    def _connect_login(self):
         client = None
+        stage = "connect"
         try:
             context = ssl.create_default_context()
             if self.config["security"] == "ssl":
@@ -245,40 +350,81 @@ class SMTPTransport:
                     timeout=self.config.get("timeout", 30),
                     context=context,
                 )
+                stage = "ehlo"
+                client.ehlo_or_helo_if_needed()
             else:
                 client = smtplib.SMTP(
                     self.config["host"],
                     self.config["port"],
                     timeout=self.config.get("timeout", 30),
                 )
+                stage = "ehlo"
                 client.ehlo()
+                stage = "starttls"
                 client.starttls(context=context)
+                stage = "ehlo"
                 client.ehlo()
-            client.login(self.username, self.password)
+            stage = "auth"
+            response = client.login(self.username, self.password)
+            return client, response
         except Exception as error:
-            if client is not None:
-                client.close()
-            raise DeliveryFailure("smtp_connection_or_authentication_failed") from error
+            self._close(client)
+            raise smtp_failure(error, stage) from None
+
+    def check_auth(self):
+        """One normal connection/login call; no envelope, DATA or delivery state."""
+        try:
+            client, response = self._connect_login()
+        except DeliveryFailure as error:
+            return {"ok": False, **error.diagnostic}
+        self._close(client, graceful=True)
+        report = {"ok": True, "stage": "auth", "code": "smtp_authenticated"}
+        if (
+            isinstance(response, tuple)
+            and response
+            and type(response[0]) is int
+            and 100 <= response[0] <= 599
+        ):
+            report["smtp_code"] = response[0]
+        return report
+
+    def __call__(self, message):
+        client, _ = self._connect_login()
         try:
             refused = client.send_message(message)
             if refused:
-                raise DeliveryFailure("smtp_recipient_refused")
-        except (
-            smtplib.SMTPRecipientsRefused,
-            smtplib.SMTPSenderRefused,
-            smtplib.SMTPDataError,
-            smtplib.SMTPNotSupportedError,
-        ) as error:
-            raise DeliveryFailure("smtp_explicit_rejection") from error
+                codes = {
+                    value[0]
+                    for value in refused.values()
+                    if isinstance(value, tuple) and value and type(value[0]) is int
+                }
+                raise DeliveryFailure(
+                    stage="recipient",
+                    reason="rejected",
+                    smtp_code=next(iter(codes)) if len(codes) == 1 else None,
+                )
+        except smtplib.SMTPRecipientsRefused as error:
+            codes = {
+                value[0]
+                for value in error.recipients.values()
+                if isinstance(value, tuple) and value and type(value[0]) is int
+            }
+            raise DeliveryFailure(
+                stage="recipient",
+                reason="rejected",
+                exception_type=type(error).__name__,
+                smtp_code=next(iter(codes)) if len(codes) == 1 else None,
+            ) from None
+        except smtplib.SMTPSenderRefused as error:
+            raise smtp_failure(error, "sender") from None
+        except (smtplib.SMTPDataError, smtplib.SMTPNotSupportedError) as error:
+            raise smtp_failure(error, "data") from None
         except DeliveryFailure:
             raise
-        except Exception as error:
-            raise DeliveryUncertain("smtp_acceptance_unknown") from error
+        except Exception:
+            raise DeliveryUncertain("smtp_acceptance_unknown") from None
         finally:
-            try:
-                client.quit()
-            except Exception:
-                client.close()
+            self._close(client, graceful=True)
 
 
 def dispatch(state, config, persist, transport=None, environment=None, day=None):
@@ -385,15 +531,19 @@ def dispatch(state, config, persist, transport=None, environment=None, day=None)
             # A remote push may have succeeded before its response was lost.
             report["errors"].append("pre_send_persistence_failed")
             return report
-        status, failure = "sent", None
+        status, failure, diagnostic = "sent", None, None
         try:
             transport(message)
-        except DeliveryFailure:
-            status, failure = "failed", "smtp_explicit_failure"
+        except DeliveryFailure as error:
+            status, failure = "failed", error.code
+            diagnostic = error.diagnostic
         except Exception:
             status, failure = "uncertain", "smtp_acceptance_unknown"
         for identifier in identifiers:
             deliveries[identifier].update(status=status, last_error=failure)
+            deliveries[identifier].pop("last_diagnostic", None)
+            if diagnostic:
+                deliveries[identifier]["last_diagnostic"] = copy.deepcopy(diagnostic)
         if status == "sent":
             batch["sent_date"] = day
         try:

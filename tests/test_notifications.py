@@ -3,11 +3,13 @@ import json
 import os
 from pathlib import Path
 import smtplib
+import socket
+import ssl
 import subprocess
 import sys
 import tempfile
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "daily_arxiv"))
@@ -406,6 +408,121 @@ class SMTPTransportTests(unittest.TestCase):
                 ).side_effect = smtplib.SMTPServerDisconnected("lost")
                 with self.assertRaises(expected):
                     SMTPTransport(config, ENV)(self.message())
+
+    def test_connection_failures_are_precise_without_raw_response(self):
+        config = configuration()["notifications"]["smtp"]
+        for error, code in (
+            (TimeoutError("hidden value"), "smtp_connect_timeout"),
+            (socket.gaierror(-2, "hidden hostname"), "smtp_connect_dns_failed"),
+            (
+                ssl.SSLCertVerificationError(1, "hidden certificate"),
+                "smtp_connect_tls_certificate_failed",
+            ),
+            (
+                smtplib.SMTPConnectError(421, b"hidden response"),
+                "smtp_connect_rejected",
+            ),
+        ):
+            with (
+                self.subTest(code=code),
+                patch(
+                    "daily_arxiv.notifications.smtplib.SMTP_SSL", side_effect=error
+                ) as connect,
+            ):
+                result = SMTPTransport(config, ENV).check_auth()
+                self.assertFalse(result["ok"])
+                self.assertEqual(result["code"], code)
+                self.assertEqual(result["stage"], "connect")
+                self.assertEqual(result["exception_type"], type(error).__name__)
+                self.assertNotIn("hidden", json.dumps(result))
+                connect.assert_called_once()
+
+    def test_auth_only_success_never_issues_envelope_or_data(self):
+        config = configuration()["notifications"]["smtp"]
+        with patch("daily_arxiv.notifications.smtplib.SMTP_SSL") as connect:
+            client = connect.return_value
+            client.esmtp_features = {"auth": "PLAIN LOGIN"}
+            client.login.return_value = (235, b"hidden server response")
+            result = SMTPTransport(config, ENV).check_auth()
+            self.assertEqual(
+                result,
+                {
+                    "ok": True,
+                    "stage": "auth",
+                    "code": "smtp_authenticated",
+                    "smtp_code": 235,
+                },
+            )
+            client.login.assert_called_once()
+            client.quit.assert_called_once()
+            for method in ("send_message", "sendmail", "mail", "rcpt", "data"):
+                getattr(client, method).assert_not_called()
+            self.assertEqual(client.esmtp_features["auth"], "PLAIN LOGIN")
+
+    def test_auth_diagnostic_preserves_normal_login_negotiation_once(self):
+        config = configuration()["notifications"]["smtp"]
+        client = smtplib.SMTP()
+        client.ehlo_resp = b"already greeted"
+        client.esmtp_features = {"auth": "PLAIN LOGIN"}
+        client.auth = Mock(
+            side_effect=[
+                smtplib.SMTPAuthenticationError(535, b"hidden response"),
+                (235, b"hidden success"),
+            ]
+        )
+        client.login = Mock(wraps=client.login)
+        client.close = Mock()
+        client.quit = Mock()
+        with patch(
+            "daily_arxiv.notifications.smtplib.SMTP_SSL", return_value=client
+        ) as connect:
+            result = SMTPTransport(config, ENV).check_auth()
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["code"], "smtp_authenticated")
+        self.assertEqual(result["smtp_code"], 235)
+        connect.assert_called_once()
+        client.login.assert_called_once_with(ENV["SMTP_USERNAME"], ENV["SMTP_PASSWORD"])
+        self.assertEqual(
+            [call.args[0] for call in client.auth.call_args_list], ["PLAIN", "LOGIN"]
+        )
+        self.assertEqual(client.esmtp_features["auth"], "PLAIN LOGIN")
+        self.assertNotIn("hidden", json.dumps(result))
+
+    def test_auth_and_tls_failure_stages_are_separate(self):
+        for security, method, error, expected in (
+            (
+                "ssl",
+                "login",
+                smtplib.SMTPAuthenticationError(535, b"hidden"),
+                "smtp_auth_rejected",
+            ),
+            (
+                "ssl",
+                "ehlo_or_helo_if_needed",
+                smtplib.SMTPHeloError(550, b"hidden"),
+                "smtp_ehlo_rejected",
+            ),
+            (
+                "starttls",
+                "starttls",
+                smtplib.SMTPNotSupportedError("hidden"),
+                "smtp_starttls_unsupported",
+            ),
+        ):
+            config = configuration()["notifications"]["smtp"]
+            config["security"] = security
+            factory = "SMTP_SSL" if security == "ssl" else "SMTP"
+            with patch("daily_arxiv.notifications.smtplib." + factory) as connect:
+                getattr(connect.return_value, method).side_effect = error
+                result = SMTPTransport(config, ENV).check_auth()
+                self.assertEqual(result["code"], expected)
+                self.assertNotIn("hidden", json.dumps(result))
+                connect.return_value.send_message.assert_not_called()
+
+    def test_legacy_failure_message_is_never_exposed(self):
+        error = DeliveryFailure("password or arbitrary server response")
+        self.assertEqual(str(error), "smtp_explicit_failure")
+        self.assertEqual(error.diagnostic, {"code": "smtp_explicit_failure"})
 
 
 if __name__ == "__main__":

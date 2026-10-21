@@ -5,7 +5,7 @@ on:
       phase:
         description: Explicit release check; each phase preserves prior results
         type: choice
-        options: [crawl, ai, mail]
+        options: [crawl, ai, smtp-auth, mail]
         required: true
       paper_id:
         description: One genuinely new post-baseline arXiv ID for the AI probe
@@ -26,6 +26,7 @@ jobs:
           path: code
           persist-credentials: false
       - uses: actions/checkout@v4
+        if: inputs.phase != 'smtp-auth'
         with:
           ref: data
           path: published
@@ -36,8 +37,20 @@ jobs:
         id: prepare
         run: |
           mkdir -p "$RUNNER_TEMP/arxiv-release"
-          git -C published rev-parse HEAD > "$RUNNER_TEMP/arxiv-release/source-commit.txt"
+          if [ -d published ]; then
+            git -C published rev-parse HEAD > "$RUNNER_TEMP/arxiv-release/source-commit.txt"
+          fi
           echo "day=$(date -u +%F)" >> "$GITHUB_OUTPUT"
+      - name: Check SMTP authentication without sending
+        if: inputs.phase == 'smtp-auth'
+        working-directory: code
+        env:
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          uv run --frozen python scripts/release_probe.py --check-auth \
+            | tee "$RUNNER_TEMP/arxiv-release/smtp-auth.json"
       - name: Crawl once and publish only verified raw discoveries
         id: crawl
         if: inputs.phase == 'crawl'
@@ -103,7 +116,7 @@ jobs:
             --repository "$GITHUB_REPOSITORY" --recipient yuhanjin --date "$DAY" \
             --send --publish
       - name: Save persistent state evidence
-        if: always()
+        if: always() && inputs.phase != 'smtp-auth'
         run: |
           for name in pipeline-state.json notification-state.json; do
             if [ -f "published/data/$name" ]; then

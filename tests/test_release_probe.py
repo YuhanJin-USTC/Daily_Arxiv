@@ -1,4 +1,6 @@
 import copy
+from contextlib import redirect_stdout
+import io
 import json
 from pathlib import Path
 import subprocess
@@ -10,7 +12,7 @@ from unittest.mock import Mock, patch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "daily_arxiv"))
 from daily_arxiv.notifications import DeliveryFailure, enqueue_discoveries, new_state
-from scripts.release_probe import PROBE_ID, dispatch_probe, preview, resolve_probe
+from scripts.release_probe import PROBE_ID, dispatch_probe, main, preview, resolve_probe
 from test_notifications import DAY, ENV, configuration
 from test_researchers import paper
 
@@ -213,6 +215,56 @@ class ReleaseProbeTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("SMTP release verification", result.stdout)
             self.assertEqual(path.read_bytes(), before)
+
+    def test_sanitized_transport_failure_reason_is_persisted(self):
+        failure = DeliveryFailure(
+            stage="auth",
+            reason="rejected",
+            exception_type="SMTPAuthenticationError",
+            smtp_code=535,
+        )
+        report = self.dispatch(transport=Mock(side_effect=failure))
+        self.assertEqual(self.record()["last_error"], "smtp_auth_rejected")
+        self.assertEqual(self.record()["last_diagnostic"]["smtp_code"], 535)
+        self.assertEqual(report["diagnostic"], failure.diagnostic)
+
+    def test_auth_cli_has_no_source_queue_publication_or_send(self):
+        result = {
+            "ok": True,
+            "stage": "auth",
+            "code": "smtp_authenticated",
+            "smtp_code": 235,
+        }
+        with (
+            patch("sys.argv", ["release_probe.py", "--check-auth"]),
+            patch("scripts.release_probe.SMTPTransport") as transport,
+            patch("scripts.release_probe.Publisher") as publisher,
+            patch("scripts.release_probe.write_json") as write,
+            redirect_stdout(io.StringIO()) as output,
+        ):
+            transport.return_value.check_auth.return_value = result
+            self.assertEqual(main(), 0)
+            self.assertEqual(json.loads(output.getvalue()), result)
+            transport.return_value.check_auth.assert_called_once()
+            publisher.assert_not_called()
+            write.assert_not_called()
+
+    def test_auth_cli_rejects_queue_or_publication_flags(self):
+        for extra in (
+            ["--source", "/not/read"],
+            ["--publish"],
+            ["--send"],
+            ["--resolve", "retry"],
+        ):
+            with (
+                patch("sys.argv", ["release_probe.py", "--check-auth", *extra]),
+                patch("scripts.release_probe.SMTPTransport") as transport,
+                patch("sys.stderr", io.StringIO()),
+                self.assertRaises(SystemExit) as error,
+            ):
+                main()
+            self.assertEqual(error.exception.code, 2)
+            transport.assert_not_called()
 
 
 if __name__ == "__main__":

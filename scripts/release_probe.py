@@ -199,14 +199,19 @@ def dispatch_probe(
     except Exception:
         report["errors"].append("pre_send_persistence_failed")
         return report
-    status, failure = "sent", None
+    status, failure, diagnostic = "sent", None, None
     try:
         transport(message)
-    except DeliveryFailure:
-        status, failure = "failed", "smtp_explicit_failure"
+    except DeliveryFailure as error:
+        status, failure = "failed", error.code
+        diagnostic = error.diagnostic
     except Exception:
         status, failure = "uncertain", "smtp_acceptance_unknown"
     record.update(status=status, last_error=failure)
+    record.pop("last_diagnostic", None)
+    if diagnostic:
+        record["last_diagnostic"] = copy.deepcopy(diagnostic)
+        report["diagnostic"] = copy.deepcopy(diagnostic)
     if status == "sent":
         record["sent_date"] = day
     try:
@@ -260,7 +265,7 @@ def resolve_probe(state, resolution, note, day=None):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--source", type=Path, required=True)
+    parser.add_argument("--source", type=Path)
     parser.add_argument("--repository", default=os.environ.get("GITHUB_REPOSITORY"))
     parser.add_argument(
         "--recipient",
@@ -270,12 +275,27 @@ def main():
     parser.add_argument("--publish", action="store_true")
     action = parser.add_mutually_exclusive_group()
     action.add_argument("--send", action="store_true")
+    action.add_argument(
+        "--check-auth",
+        action="store_true",
+        help="One SMTP authentication diagnostic; no message, publication or queue access",
+    )
     action.add_argument("--resolve", choices=("sent", "retry", "cancelled"))
     parser.add_argument("--note", default="")
     args = parser.parse_args()
+    config = settings()
+    if args.check_auth:
+        if args.source or args.publish or args.recipient or args.note:
+            parser.error(
+                "--check-auth does not accept source, publication, recipient or resolution options"
+            )
+        report = SMTPTransport(config["notifications"]["smtp"]).check_auth()
+        print(json.dumps(report, indent=2))
+        return int(not report["ok"])
+    if not args.source:
+        parser.error("--source is required for preview, send or resolution")
     state_path = args.source / QUEUE
     state = validate_state(json.loads(state_path.read_text()))
-    config = settings()
     if args.note and not args.resolve:
         parser.error("--note requires --resolve")
     if not args.send and not args.resolve:
