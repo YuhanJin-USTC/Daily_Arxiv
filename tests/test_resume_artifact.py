@@ -8,8 +8,9 @@ from unittest.mock import patch
 from ai.config import settings
 from ai.quality import FIELDS
 from ai.recover import plan_recovery, stage_recovery
-from ai.storage import digest, write_json, write_jsonl
+from ai.storage import digest, write_bytes, write_json, write_jsonl
 from scripts.resume_artifact import INVENTORY, checked_file, prepare, selector
+from scripts.stage_daily import stage
 
 GOOD = {field: "Valid " + field for field in FIELDS}
 DAY = date(2026, 10, 20)
@@ -71,6 +72,50 @@ class ArtifactTests(unittest.TestCase):
         )
         return raw
 
+    def metadata(self):
+        inventory = json.loads(INVENTORY.read_text())
+        identifiers = [paper["id"] for paper in inventory["papers"]]
+        rows = [
+            {
+                **self.row,
+                "id": identifier,
+                "abs": "https://arxiv.org/abs/" + identifier,
+                "pdf": "https://arxiv.org/pdf/" + identifier,
+                "announcement_date": str(DAY),
+            }
+            for identifier in identifiers[:2]
+        ]
+        raw = self.artifact / f"{DAY}.jsonl"
+        write_bytes(
+            raw, b"".join(b"  " + json.dumps(row).encode() + b"\r\n" for row in rows)
+        )
+        write_json(
+            self.artifact / "coverage.json",
+            {
+                "complete": True,
+                "errors": [],
+                "expected_ids": identifiers[:2],
+                "excluded_published_ids": [],
+                "inventory_count": len(identifiers),
+                "inventory_date": str(DAY),
+                "requested_ids": identifiers[:2],
+                "remaining_ids": identifiers[2:],
+            },
+        )
+        prepare("append", self.source, self.artifact, ids=tuple(identifiers[:2]))
+        return raw, rows
+
+    def snapshot(self, ids):
+        prepare(
+            "append",
+            self.source,
+            self.output,
+            ids=tuple(ids),
+            snapshot=self.artifact,
+            metadata_run_id="123",
+            metadata_name="arxiv-backfill-123-1",
+        )
+
     def test_selector_requires_matching_pair_type_and_exact_numeric_run(self):
         selector("repair", "", "")
         selector("repair", "123", "arxiv-recovery-123-1")
@@ -85,6 +130,128 @@ class ArtifactTests(unittest.TestCase):
         ]:
             with self.subTest(run=run, name=name), self.assertRaises(ValueError):
                 selector("repair", run, name)
+
+    def test_metadata_selector_rejects_resume_and_incomplete_pairs(self):
+        selector("append", "", "", "123", "arxiv-backfill-123-1")
+        for kind, run, name, metadata_run, metadata_name in [
+            ("append", "123", "arxiv-backfill-123-1", "456", "arxiv-backfill-456-1"),
+            ("repair", "", "", "123", "arxiv-backfill-123-1"),
+            ("append", "", "", "123", ""),
+            ("append", "", "", "", "arxiv-backfill-123-1"),
+        ]:
+            with self.assertRaises(ValueError):
+                selector(kind, run, name, metadata_run, metadata_name)
+
+    def test_metadata_rebinds_current_source_without_rewriting_original_rows(self):
+        raw, rows = self.metadata()
+        before = {path.name: path.read_bytes() for path in self.artifact.iterdir()}
+        published = self.source / "data" / f"{DAY}_AI_enhanced_{self.language}.jsonl"
+        write_jsonl(published, [{**rows[0], "AI": GOOD}])
+        write_jsonl(self.source / "data" / raw.name, rows[:1])
+        published_bytes = published.read_bytes()
+        self.snapshot(row["id"] for row in rows)
+        selected = self.output / raw.name
+        self.assertEqual(
+            selected.read_bytes(), raw.read_bytes().splitlines(keepends=True)[1]
+        )
+        evidence = json.loads((self.output / "request.json").read_text())
+        self.assertEqual(evidence["request"]["selected_ids"], [rows[1]["id"]])
+        self.assertEqual(
+            evidence["request"]["sources"]["data/" + published.name], digest(published)
+        )
+        self.assertEqual(evidence["metadata_source"]["raw_sha256"], digest(raw))
+        self.assertEqual(
+            evidence["metadata_source"]["request_sha256"],
+            digest(self.artifact / "request.json"),
+        )
+        self.assertEqual(evidence["metadata_source"]["run_id"], "123")
+        self.assertEqual(
+            before, {path.name: path.read_bytes() for path in self.artifact.iterdir()}
+        )
+        self.assertFalse((self.output / "ready").exists())
+        calls = []
+
+        def generate(items, language, progress):
+            calls.extend(item["id"] for item in items)
+            result = [{**item, "AI": GOOD} for item in items]
+            progress(result, None)
+            return result
+
+        stage(self.source, selected, self.output / "ready", str(DAY), generate)
+        self.assertEqual(calls, [rows[1]["id"]])
+        self.assertTrue(
+            (self.output / "ready/data" / published.name)
+            .read_bytes()
+            .startswith(published_bytes)
+        )
+        self.assertEqual(published.read_bytes(), published_bytes)
+        resumed = self.root / "resumed"
+        prepare(
+            "append",
+            self.source,
+            resumed,
+            resume=self.output,
+            ids=tuple(row["id"] for row in rows),
+        )
+        self.assertEqual(
+            json.loads((resumed / "request.json").read_text())["metadata_source"],
+            evidence["metadata_source"],
+        )
+
+    def test_metadata_rejects_changed_identity_hashes_and_missing_ids(self):
+        raw, rows = self.metadata()
+        ids = [row["id"] for row in rows]
+        request_path = self.artifact / "request.json"
+        original = json.loads(request_path.read_text())
+        for key, value in (
+            ("repository", "other/repository"),
+            ("language", "Other"),
+            ("date", "2026-10-19"),
+            ("inventory_sha256", "changed"),
+            ("profile", {}),
+            ("prompt_sha256", {}),
+        ):
+            changed = json.loads(json.dumps(original))
+            changed["request"][key] = value
+            write_json(request_path, changed)
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                self.snapshot(ids)
+        write_json(request_path, original)
+        original_raw = raw.read_bytes()
+        raw.write_bytes(original_raw + b"\n")
+        with self.assertRaisesRegex(ValueError, "hashes"):
+            self.snapshot(ids)
+        raw.write_bytes(original_raw)
+        missing = json.loads(INVENTORY.read_text())["papers"][2]["id"]
+        with self.assertRaisesRegex(ValueError, "every selected"):
+            self.snapshot([*ids, missing])
+        audit_path = self.artifact / "coverage.json"
+        audit = json.loads(audit_path.read_text())
+        audit["remaining_ids"] = []
+        write_json(audit_path, audit)
+        original["coverage_sha256"] = digest(audit_path)
+        write_json(request_path, original)
+        with self.assertRaisesRegex(ValueError, "coverage"):
+            self.snapshot(ids)
+        self.assertFalse(self.output.exists())
+
+    def test_metadata_rejects_generated_artifacts_and_ai_in_raw(self):
+        self.backfill()
+        with self.assertRaisesRegex(ValueError, "audit-only"):
+            self.snapshot([self.identifier])
+        raw, rows = self.metadata()
+        alternate = self.root / "audit-only"
+        alternate.mkdir()
+        for name in (raw.name, "coverage.json", "request.json"):
+            write_bytes(alternate / name, (self.artifact / name).read_bytes())
+        self.artifact = alternate
+        raw = alternate / raw.name
+        write_jsonl(raw, [{**rows[0], "AI": GOOD}, rows[1]])
+        evidence = json.loads((alternate / "request.json").read_text())
+        evidence["raw_sha256"] = digest(raw)
+        write_json(alternate / "request.json", evidence)
+        with self.assertRaisesRegex(ValueError, "coverage"):
+            self.snapshot(row["id"] for row in rows)
 
     def test_backfill_resume_copies_exact_raw_without_refetch(self):
         raw = self.backfill()

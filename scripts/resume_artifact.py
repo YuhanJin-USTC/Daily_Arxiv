@@ -22,7 +22,11 @@ from daily_arxiv.validate_crawl import validate
 INVENTORY = ROOT / "docs/audits/arxiv-2026-10-20.json"
 
 
-def selector(kind, run_id, name):
+def selector(kind, run_id, name, metadata_run_id="", metadata_name=""):
+    if metadata_run_id or metadata_name:
+        if kind != "append" or run_id or name:
+            raise ValueError("Metadata snapshots and checkpoint resume are exclusive")
+        selector("append", metadata_run_id, metadata_name)
     if not run_id and not name:
         return
     prefix = "recovery" if kind == "repair" else "backfill"
@@ -92,19 +96,132 @@ def request(kind, source, start, end, ids, expected_count):
     return base
 
 
+def copy_metadata(snapshot, source, output, binding, run_id, name):
+    if (snapshot / "ready").exists():
+        raise ValueError("Use an audit-only snapshot; generated work requires resume")
+    previous_path = checked_file(snapshot, "request.json")
+    previous = json.loads(previous_path.read_text())
+    old_request = previous.get("request", {})
+    for key in (
+        "version",
+        "kind",
+        "repository",
+        "language",
+        "date",
+        "inventory_sha256",
+        "profile",
+        "prompt_sha256",
+    ):
+        if old_request.get(key) != binding[key]:
+            raise ValueError("Metadata snapshot request does not match this project")
+    raw = checked_file(snapshot, binding["date"] + ".jsonl")
+    audit_path = checked_file(snapshot, "coverage.json")
+    if digest(raw) != previous.get("raw_sha256") or digest(audit_path) != previous.get(
+        "coverage_sha256"
+    ):
+        raise ValueError("Metadata snapshot hashes changed")
+    validate(raw, audit_path)
+    rows = read_records(raw)
+    audit = json.loads(audit_path.read_text())
+    inventory = json.loads(INVENTORY.read_text())
+    all_ids = {paper_id(row["id"]) for row in inventory["papers"]}
+    saved_ids = {row["id"] for row in rows}
+    excluded, remaining = (
+        set(audit["excluded_published_ids"]),
+        set(audit["remaining_ids"]),
+    )
+    if (
+        sorted(saved_ids) != old_request.get("selected_ids")
+        or saved_ids | excluded | remaining != all_ids
+        or saved_ids & excluded
+        or saved_ids & remaining
+        or excluded & remaining
+        or audit.get("inventory_count") != len(all_ids)
+        or audit.get("inventory_date") != binding["date"]
+        or any(
+            row.get("announcement_date") != binding["date"]
+            or "AI" in row
+            or "AI_status" in row
+            for row in rows
+        )
+    ):
+        raise ValueError("Metadata snapshot inventory coverage is inconsistent")
+    selected = set(binding["selected_ids"])
+    if not selected <= saved_ids:
+        raise ValueError("Metadata snapshot does not contain every selected missing ID")
+    history = load_history_ids(source / "data")
+    fresh_audit = {
+        **audit,
+        "expected_ids": sorted(selected),
+        "excluded_published_ids": sorted(all_ids & history),
+        "requested_ids": binding["ids"],
+        "remaining_ids": sorted(all_ids - history - selected),
+    }
+    selected_bytes = b"".join(
+        line
+        for line in raw.read_bytes().splitlines(keepends=True)
+        if line.strip() and json.loads(line)["id"] in selected
+    )
+    if selected_bytes and not selected_bytes.endswith(b"\n"):
+        raise ValueError("Metadata snapshot is missing its final newline")
+    for target in (
+        output / raw.name,
+        output / "coverage.json",
+        output / "request.json",
+    ):
+        if target.exists():
+            raise ValueError("New artifact evidence already exists")
+    write_bytes(output / raw.name, selected_bytes)
+    write_json(output / "coverage.json", fresh_audit)
+    return {
+        "run_id": run_id,
+        "artifact_name": name,
+        "request_sha256": digest(previous_path),
+        "raw_sha256": digest(raw),
+        "coverage_sha256": digest(audit_path),
+    }
+
+
 def prepare(
-    kind, source, output, resume=None, start=None, end=None, ids=(), expected_count=None
+    kind,
+    source,
+    output,
+    resume=None,
+    start=None,
+    end=None,
+    ids=(),
+    expected_count=None,
+    snapshot=None,
+    metadata_run_id="",
+    metadata_name="",
 ):
+    if snapshot is not None and (
+        kind != "append"
+        or resume is not None
+        or not metadata_run_id
+        or not metadata_name
+    ):
+        raise ValueError("Use one append metadata snapshot with its run and artifact")
+    if snapshot is None and (metadata_run_id or metadata_name):
+        raise ValueError("Metadata identifiers require a snapshot directory")
+    selector(kind, "", "", metadata_run_id, metadata_name)
     if len(ids) != len(set(ids)):
         raise ValueError("Requested IDs must be unique")
     binding = request(kind, source, start, end, ids, expected_count)
-    if resume is not None:
+    origin = resume if resume is not None else snapshot
+    if origin is not None:
         if (
-            output.resolve() == resume.resolve()
-            or output.resolve().is_relative_to(resume.resolve())
-            or resume.resolve().is_relative_to(output.resolve())
+            output.resolve() == origin.resolve()
+            or output.resolve().is_relative_to(origin.resolve())
+            or origin.resolve().is_relative_to(output.resolve())
         ):
             raise ValueError("Use separate old and new artifact directories")
+    evidence = {"request": binding}
+    if snapshot is not None:
+        evidence["metadata_source"] = copy_metadata(
+            snapshot, source, output, binding, metadata_run_id, metadata_name
+        )
+    if resume is not None:
         previous = json.loads(checked_file(resume, "request.json").read_text())
         if previous.get("request") != binding:
             raise ValueError(
@@ -156,7 +273,8 @@ def prepare(
                 if target.exists():
                     raise ValueError("New artifact snapshot already exists")
                 write_bytes(target, old.read_bytes())
-    evidence = {"request": binding}
+        if "metadata_source" in previous:
+            evidence["metadata_source"] = previous["metadata_source"]
     if kind == "append":
         raw = checked_file(output, binding["date"] + ".jsonl")
         audit = checked_file(output, "coverage.json")
@@ -173,15 +291,21 @@ def main():
     parser.add_argument("--check-selector", action="store_true")
     parser.add_argument("--run-id", default="")
     parser.add_argument("--name", default="")
+    parser.add_argument("--metadata-run-id", default="")
+    parser.add_argument("--metadata-name", default="")
     parser.add_argument("--source", type=Path)
     parser.add_argument("--output", type=Path)
-    parser.add_argument("--resume", type=Path)
+    origin = parser.add_mutually_exclusive_group()
+    origin.add_argument("--resume", type=Path)
+    origin.add_argument("--snapshot", type=Path)
     parser.add_argument("--start", type=date.fromisoformat)
     parser.add_argument("--end", type=date.fromisoformat)
     parser.add_argument("--ids", default="")
     parser.add_argument("--expected-count", type=int)
     args = parser.parse_args()
-    selector(args.kind, args.run_id, args.name)
+    selector(
+        args.kind, args.run_id, args.name, args.metadata_run_id, args.metadata_name
+    )
     if args.check_selector:
         return
     if (
@@ -202,6 +326,9 @@ def main():
         args.end,
         ids,
         args.expected_count,
+        snapshot=args.snapshot,
+        metadata_run_id=args.metadata_run_id,
+        metadata_name=args.metadata_name,
     )
 
 

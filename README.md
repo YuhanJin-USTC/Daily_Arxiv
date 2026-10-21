@@ -74,6 +74,8 @@ See [architecture](docs/architecture.md), [verified incident findings](docs/inci
 
 The recovery and backfill workflows accept `resume_run_id` together with `resume_artifact_name`. They download only a matching artifact from the same repository and workflow, verify its request, language, model profile and source hashes, then reuse its checkpoints. Backfill resumes the exact saved raw snapshot. Completed and partial fields survive repeated interruptions; older complete artifacts remain publishable with `apply_staged.py`.
 
+If arXiv is unavailable after a successful audit-only backfill, use `metadata_run_id` and `metadata_artifact_name` instead of the resume inputs. The workflow verifies that same-repository audit's request, inventory and file hashes, excludes IDs now published, and requires metadata for every currently selected missing ID. Selected raw lines stay byte-identical; a new request binds them to current published files and records the original artifact hashes. Artifacts containing generated work are rejected here: use checkpoint resume to retain those paid results.
+
 Backfill `ids` selects a subset of the reviewed inventory for a one-paper live check. Publish that complete candidate before fetching the remaining IDs. Historical repairs reuse complete same-language summaries only for the same ID and exact abstract; conflicting values for requested fields stop the operation. Manifest `model_paper_ids` counts papers sent for generation, not HTTP requests or field-repair attempts; `reused_ids`, `checkpoint_reused_ids` and source hashes explain avoided regeneration.
 
 ## License and attribution

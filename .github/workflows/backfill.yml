@@ -18,6 +18,14 @@ on:
         description: Exact arxiv-backfill-RUN-ATTEMPT artifact name
         default: ''
         type: string
+      metadata_run_id:
+        description: Successful audit-only backfill run to reuse when arXiv is unavailable
+        default: ''
+        type: string
+      metadata_artifact_name:
+        description: Exact audit-only arxiv-backfill-RUN-ATTEMPT artifact name; excludes resume
+        default: ''
+        type: string
 permissions:
   contents: read
   actions: read
@@ -43,16 +51,25 @@ jobs:
         env:
           RESUME_RUN_ID: ${{ inputs.resume_run_id }}
           RESUME_ARTIFACT_NAME: ${{ inputs.resume_artifact_name }}
+          METADATA_RUN_ID: ${{ inputs.metadata_run_id }}
+          METADATA_ARTIFACT_NAME: ${{ inputs.metadata_artifact_name }}
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           uv run --frozen python scripts/resume_artifact.py --kind append --check-selector \
-            --run-id "$RESUME_RUN_ID" --name "$RESUME_ARTIFACT_NAME"
-          if [ -n "$RESUME_RUN_ID" ]; then
-            path=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RESUME_RUN_ID" --jq '.path')
+            --run-id "$RESUME_RUN_ID" --name "$RESUME_ARTIFACT_NAME" \
+            --metadata-run-id "$METADATA_RUN_ID" --metadata-name "$METADATA_ARTIFACT_NAME"
+          artifact_run="$RESUME_RUN_ID"
+          if [ -n "$METADATA_RUN_ID" ]; then artifact_run="$METADATA_RUN_ID"; fi
+          if [ -n "$artifact_run" ]; then
+            path=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$artifact_run" --jq '.path')
             test "$path" = '.github/workflows/backfill.yml'
-            repo=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RESUME_RUN_ID" --jq '.head_repository.full_name')
+            repo=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$artifact_run" --jq '.head_repository.full_name')
             test "$repo" = "$GITHUB_REPOSITORY"
+            if [ -n "$METADATA_RUN_ID" ]; then
+              conclusion=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$artifact_run" --jq '.conclusion')
+              test "$conclusion" = 'success'
+            fi
           fi
       - uses: actions/download-artifact@v4
         if: inputs.resume_run_id != ''
@@ -61,12 +78,21 @@ jobs:
           run-id: ${{ inputs.resume_run_id }}
           github-token: ${{ github.token }}
           path: ${{ runner.temp }}/arxiv-backfill-resume
+      - uses: actions/download-artifact@v4
+        if: inputs.metadata_run_id != ''
+        with:
+          name: ${{ inputs.metadata_artifact_name }}
+          run-id: ${{ inputs.metadata_run_id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/arxiv-backfill-metadata
       - name: Fetch only missing archived IDs
         id: crawl
         working-directory: code
         env:
           IDS: ${{ inputs.ids }}
           RESUME_RUN_ID: ${{ inputs.resume_run_id }}
+          METADATA_RUN_ID: ${{ inputs.metadata_run_id }}
+          METADATA_ARTIFACT_NAME: ${{ inputs.metadata_artifact_name }}
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/arxiv-backfill"
@@ -74,6 +100,9 @@ jobs:
           resume=()
           if [ -n "$RESUME_RUN_ID" ]; then
             resume+=(--resume "$RUNNER_TEMP/arxiv-backfill-resume")
+          elif [ -n "$METADATA_RUN_ID" ]; then
+            resume+=(--snapshot "$RUNNER_TEMP/arxiv-backfill-metadata" \
+              --metadata-run-id "$METADATA_RUN_ID" --metadata-name "$METADATA_ARTIFACT_NAME")
           else
             uv run --frozen python daily_arxiv/crawl.py \
               --inventory docs/audits/arxiv-2026-10-20.json --ids "$IDS" --history-dir ../published/data \
