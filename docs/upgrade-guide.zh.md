@@ -128,6 +128,8 @@ git -C ../daily-arxiv-english-data push -u origin HEAD
 
 中英文各执行一次。这个清单保留在源码中，超过官网最近五个公告日窗口后仍可补抓，不需要重新生成当天已有论文。
 
+若成功完成过 `generate=false` 预检查，但之后 arXiv 限流或不可用，可在 **Stage missing 2026-10-20 papers** 填写 `metadata_run_id` 与 `metadata_artifact_name`，选择同仓库、同工作流的成功纯预检查产物；不要同时填写 resume 输入。工具核对旧 request、raw、coverage、清单及其哈希，按当前 data 排除已经发布的论文，要求旧快照覆盖本次所有待补 ID，并逐字节保留选中 raw 行；然后创建绑定当前源文件的新 request，记录原运行、产物名及哈希，不修改旧产物。含 `ready` 或 AI 字段的生成产物会被拒绝，应使用 checkpoint resume 保留已付费结果。仅验证可用 `generate=false`，通过后用同一 metadata 来源和 `generate=true` 生成候选。
+
 补抓或日常批次中途失败时，artifact 会保留原始 raw 文件和 `ready/checkpoint.json`，每完成一篇原子保存，连续中断也保留所有继承的成功及部分字段。补抓 Actions 可同时填写 `resume_run_id` 和 `resume_artifact_name`，保持相同 `ids`；它复用原始 raw 快照而不重新抓取，并验证当前尚缺 ID、源文件和模型配置。`coverage.json` 的 `remaining_ids` 与 append manifest 的 `remaining_inventory_count` 表示本次子集后仍缺多少，`complete=true` 只表示这个候选完整。可在已配置凭据的可信本地环境用 `.venv/bin/python scripts/stage_daily.py --source 数据工作区 --raw 原始raw文件 --date 原日期 --output 新目录 --resume 旧ready/checkpoint.json` 继续；源 raw 哈希和语言必须一致，已完成的字段会复用。重新下载一批不同内容的 raw 后不能套用旧 checkpoint。
 
 ## 7. 恢复自动更新并验收
