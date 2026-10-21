@@ -7036,9 +7036,9 @@
       "site_url": "https://yuhanjin-ustc.github.io/daily-arxiv/",
       "sender": "yhjin1005@qq.com",
       "message_id": "<daily-arxiv-release-4caba5c4dbd0cb5d216178789bd1f5a9@yuhanjin-ustc.github.io>",
-      "status": "failed",
-      "attempts": 1,
-      "last_error": "smtp_explicit_failure",
+      "status": "sending",
+      "attempts": 2,
+      "last_error": null,
       "resolutions": [
         {
           "date": "2026-10-21",
