@@ -1,3 +1,4 @@
+import asyncio
 import json
 import os
 from pathlib import Path
@@ -13,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "daily_arxiv"))
 from daily_arxiv.spiders.arxiv import ArxivSpider
 from daily_arxiv.validate_crawl import validate
 from daily_arxiv.check_stats import deduplicate
+from ai.config import settings
 
 
 def response(rows, total=None):
@@ -33,6 +35,41 @@ class CrawlTests(unittest.TestCase):
     def spider(self, **kwargs):
         with patch.dict(os.environ, {"CATEGORIES": "physics.plasm-ph"}):
             return ArxivSpider(**kwargs)
+
+    def test_sync_and_async_start_emit_the_configured_listing_requests(self):
+        async def collect(spider):
+            return [request async for request in spider.start()]
+
+        for supplied, expected in (
+            ("", settings()["categories"]),
+            (
+                " physics.optics, physics.plasm-ph, physics.optics ",
+                ["physics.optics", "physics.plasm-ph"],
+            ),
+        ):
+            with (
+                self.subTest(categories=supplied),
+                patch.dict(os.environ, {"CATEGORIES": supplied}),
+            ):
+                spider = ArxivSpider()
+                starts = (list(spider.start_requests()), asyncio.run(collect(spider)))
+                for requests in starts:
+                    self.assertEqual(
+                        [request.url for request in requests],
+                        [
+                            f"https://arxiv.org/list/{category}/recent?skip=0&show=2000"
+                            for category in sorted(expected)
+                        ],
+                    )
+                    self.assertEqual(
+                        len({request.url for request in requests}), len(expected)
+                    )
+                    for request, category in zip(requests, sorted(expected)):
+                        self.assertEqual(
+                            request.cb_kwargs, {"category": category, "skip": 0}
+                        )
+                        self.assertEqual(request.callback, spider.parse)
+                        self.assertEqual(request.errback, spider.failed)
 
     def test_cross_list_with_external_primary_category_is_kept(self):
         spider = self.spider()
