@@ -1,0 +1,84 @@
+name: Stage historical AI repairs
+on:
+  workflow_dispatch:
+    inputs:
+      start:
+        description: First archived date (YYYY-MM-DD)
+        default: '2026-10-20'
+        required: true
+        type: string
+      end:
+        description: Last archived date (YYYY-MM-DD)
+        default: '2026-10-20'
+        required: true
+        type: string
+      ids:
+        description: Optional exact IDs, comma-separated; one date only
+        default: ''
+        type: string
+      expected_count:
+        description: Optional exact row count (Chinese single-paper repair uses 59)
+        default: ''
+        type: string
+      generate:
+        description: Generate candidates (false only audits, without an API key)
+        default: false
+        type: boolean
+permissions:
+  contents: read
+jobs:
+  recovery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: code
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: data
+          path: published
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --frozen
+        working-directory: code
+      - name: Audit selected records
+        working-directory: code
+        env:
+          START: ${{ inputs.start }}
+          END: ${{ inputs.end }}
+          IDS: ${{ inputs.ids }}
+          COUNT: ${{ inputs.expected_count }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/arxiv-recovery"
+          git -C ../published rev-parse HEAD > "$RUNNER_TEMP/arxiv-recovery/source-commit.txt"
+          extra=()
+          if [ -n "$COUNT" ]; then extra+=(--expected-count "$COUNT"); fi
+          uv run --frozen python -m ai.recover --source ../published/data \
+            --start "$START" --end "$END" --ids "$IDS" "${extra[@]}" \
+            > "$RUNNER_TEMP/arxiv-recovery/plan.json"
+      - name: Generate candidates
+        if: inputs.generate
+        working-directory: code
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          START: ${{ inputs.start }}
+          END: ${{ inputs.end }}
+          IDS: ${{ inputs.ids }}
+          COUNT: ${{ inputs.expected_count }}
+        run: |
+          set -euo pipefail
+          extra=()
+          if [ -n "$COUNT" ]; then extra+=(--expected-count "$COUNT"); fi
+          uv run --frozen python -m ai.recover --source ../published/data \
+            --start "$START" --end "$END" --ids "$IDS" "${extra[@]}" \
+            --generate --output "$RUNNER_TEMP/arxiv-recovery/ready"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: arxiv-recovery-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/arxiv-recovery/
+          if-no-files-found: ignore
+          retention-days: 14

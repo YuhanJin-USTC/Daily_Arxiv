@@ -114,13 +114,7 @@ function initEventListeners() {
 
 // Function to detect preferred language based on browser settings
 function getPreferredLanguage() {
-  const browserLang = navigator.language || navigator.userLanguage;
-  // Check if browser is set to Chinese variants
-  if (browserLang.startsWith('zh')) {
-    return 'Chinese';
-  }
-  // Default to English for all other languages
-  return 'English';
+  return DATA_CONFIG.language === 'Chinese' ? 'Chinese' : 'English';
 }
 
 // Function to select the best available language for a date
@@ -128,7 +122,7 @@ function selectLanguageForDate(date, preferredLanguage = null) {
   const availableLanguages = window.dateLanguageMap?.get(date) || [];
   
   if (availableLanguages.length === 0) {
-    return 'English'; // fallback
+    return getPreferredLanguage(); // repository edition
   }
   
   // Use provided preference or detect from browser
@@ -140,7 +134,7 @@ function selectLanguageForDate(date, preferredLanguage = null) {
   }
   
   // Fallback: prefer English if available, otherwise use the first available
-  return availableLanguages.includes('English') ? 'English' : availableLanguages[0];
+  return availableLanguages.includes(getPreferredLanguage()) ? getPreferredLanguage() : availableLanguages[0];
 }
 
 async function fetchAvailableDates() {

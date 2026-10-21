@@ -1,77 +1,167 @@
-import scrapy
+"""Collect new submissions AND cross-lists from all recent announcement pages."""
+
+from datetime import datetime
+import json
 import os
+from pathlib import Path
 import re
+import tomllib
+from urllib.parse import urlencode
+
+import scrapy
+
+from daily_arxiv.history import load_history_ids, paper_id
 
 
 class ArxivSpider(scrapy.Spider):
-    def __init__(self, *args, **kwargs):
+    name = "arxiv"
+    allowed_domains = ["arxiv.org"]
+    custom_settings = {"DOWNLOAD_DELAY": 3, "CONCURRENT_REQUESTS_PER_DOMAIN": 1}
+
+    def __init__(
+        self, target_date=None, history_dir=None, audit_path=None, *args, **kwargs
+    ):
         super().__init__(*args, **kwargs)
-        categories = os.environ.get("CATEGORIES", "cs.CV")
-        categories = categories.split(",")
-        # 保存目标分类列表，用于后续验证
-        self.target_categories = set(map(str.strip, categories))
-        self.start_urls = [
-            f"https://arxiv.org/list/{cat}/new" for cat in self.target_categories
-        ]  # 起始URL（计算机科学领域的最新论文）
+        root = Path(__file__).resolve().parents[3]
+        defaults = tomllib.loads((root / "pyproject.toml").read_text())["tool"][
+            "daily_arxiv"
+        ]["categories"]
+        supplied = os.environ.get("CATEGORIES", "").strip()
+        categories = supplied.split(",") if supplied else defaults
+        self.target_categories = {
+            category.strip() for category in categories if category.strip()
+        }
+        if not self.target_categories or any(
+            not re.fullmatch(r"[A-Za-z][A-Za-z.-]+", c) for c in self.target_categories
+        ):
+            raise ValueError("CATEGORIES must contain arXiv category names")
+        self.target_date = (
+            datetime.strptime(target_date, "%Y-%m-%d").date() if target_date else None
+        )
+        self.history_ids = load_history_ids(history_dir)
+        self.audit_path = Path(audit_path) if audit_path else None
+        self.expected_ids = set()
+        self.listed_ids = set()
+        self.excluded_history_ids = set()
+        self.listings = {}
+        self.errors = []
+        self.announcement_dates = set()
 
-    name = "arxiv"  # 爬虫名称
-    allowed_domains = ["arxiv.org"]  # 允许爬取的域名
+    def start_requests(self):
+        for category in sorted(self.target_categories):
+            yield self.list_request(category, 0)
 
-    def parse(self, response):
-        # 提取每篇论文的信息
-        anchors = []
-        for li in response.css("div[id=dlpage] ul li"):
-            href = li.css("a::attr(href)").get()
-            if href and "item" in href:
-                anchors.append(int(href.split("item")[-1]))
+    def list_request(self, category, skip):
+        query = urlencode({"skip": skip, "show": 2000})
+        return scrapy.Request(
+            f"https://arxiv.org/list/{category}/recent?{query}",
+            callback=self.parse,
+            errback=self.failed,
+            cb_kwargs={"category": category, "skip": skip},
+        )
 
-        # 遍历每篇论文的详细信息
-        for paper in response.css("dl dt"):
-            paper_anchor = paper.css("a[name^='item']::attr(name)").get()
-            if not paper_anchor:
-                continue
-                
-            paper_id = int(paper_anchor.split("item")[-1])
-            if anchors and paper_id >= anchors[-1]:
-                continue
+    def failed(self, failure):
+        self.errors.append("listing_request_failed")
+        self.logger.error(
+            "An arXiv listing request failed; completeness check will fail"
+        )
 
-            # 获取论文ID
-            abstract_link = paper.css("a[title='Abstract']::attr(href)").get()
-            if not abstract_link:
+    def parse(self, response, category, skip=0):
+        text = " ".join(response.css("div.paging ::text").getall())
+        total_match = re.search(r"Total of ([\d,]+) entries", text)
+        if total_match is None:
+            raise ValueError(
+                "Listing total is missing; refusing silent partial results"
+            )
+        total = int(total_match.group(1).replace(",", ""))
+        state = self.listings.setdefault(
+            category, {"total": total, "rows": set(), "pages": set()}
+        )
+        if state["total"] != total or skip in state["pages"]:
+            raise ValueError("Listing changed or a pagination loop was detected")
+        state["pages"].add(skip)
+        papers = response.css("dl dt")
+        if not papers and skip < total:
+            raise ValueError("Empty page before the advertised end of listing")
+        for paper in papers:
+            heading = " ".join(paper.xpath("preceding::h3[1]//text()").getall()).strip()
+            match = re.match(r"([A-Za-z]{3}, \d{1,2} [A-Za-z]{3} \d{4})", heading)
+            if not match:
+                raise ValueError("Could not determine the announcement date")
+            announced = datetime.strptime(match.group(1), "%a, %d %b %Y").date()
+            self.announcement_dates.add(announced.isoformat())
+            link = paper.css("a[title='Abstract']::attr(href)").get()
+            if not link or not link.startswith("/abs/"):
+                raise ValueError("A listing entry has no abstract id")
+            identifier = paper_id(link.removeprefix("/abs/"))
+            dd = paper.xpath("following-sibling::dd[1]")
+            # Read secondary categories too; a selected category is not always primary.
+            subjects = " ".join(dd.css(".list-subjects ::text").getall())
+            categories = re.findall(r"\(([A-Za-z][A-Za-z.-]+)\)", subjects)
+            if category not in categories:
+                raise ValueError("Listing subject metadata does not match its category")
+            state["rows"].add((announced.isoformat(), identifier))
+            if self.target_date and announced != self.target_date:
                 continue
-                
-            arxiv_id = abstract_link.split("/")[-1]
-            
-            # 获取对应的论文描述部分 (dd元素)
-            paper_dd = paper.xpath("following-sibling::dd[1]")
-            if not paper_dd:
+            self.listed_ids.add(identifier)
+            if identifier in self.history_ids:
+                self.excluded_history_ids.add(identifier)
                 continue
-            
-            # 提取论文分类信息 - 在subjects部分
-            subjects_text = paper_dd.css(".list-subjects .primary-subject::text").get()
-            if not subjects_text:
-                # 如果找不到主分类，尝试其他方式获取分类
-                subjects_text = paper_dd.css(".list-subjects::text").get()
-            
-            if subjects_text:
-                # 解析分类信息，通常格式如 "Computer Vision and Pattern Recognition (cs.CV)"
-                # 提取括号中的分类代码
-                categories_in_paper = re.findall(r'\(([^)]+)\)', subjects_text)
-                
-                # 检查论文分类是否与目标分类有交集
-                paper_categories = set(categories_in_paper)
-                if paper_categories.intersection(self.target_categories):
-                    yield {
-                        "id": arxiv_id,
-                        "categories": list(paper_categories),  # 添加分类信息用于调试
-                    }
-                    self.logger.info(f"Found paper {arxiv_id} with categories {paper_categories}")
-                else:
-                    self.logger.debug(f"Skipped paper {arxiv_id} with categories {paper_categories} (not in target {self.target_categories})")
-            else:
-                # 如果无法获取分类信息，记录警告但仍然返回论文（保持向后兼容）
-                self.logger.warning(f"Could not extract categories for paper {arxiv_id}, including anyway")
+            if identifier not in self.expected_ids:
+                self.expected_ids.add(identifier)
                 yield {
-                    "id": arxiv_id,
-                    "categories": [],
+                    "id": identifier,
+                    "categories": categories,
+                    "announcement_date": announced.isoformat(),
                 }
+        next_skip = skip + len(papers)
+        if next_skip < total:
+            yield self.list_request(category, next_skip)
+        elif next_skip != total:
+            raise ValueError("Page length exceeds advertised listing total")
+
+    def audit(self, reason):
+        errors = list(self.errors)
+        stats = self.crawler.stats.get_stats() if getattr(self, "crawler", None) else {}
+        if reason != "finished":
+            errors.append("crawl_did_not_finish_cleanly")
+        if any(
+            value
+            for key, value in stats.items()
+            if key.startswith("spider_exceptions/")
+        ):
+            errors.append("spider_exception")
+        for category in self.target_categories:
+            state = self.listings.get(category)
+            if state is None or len(state["rows"]) != state["total"]:
+                errors.append("incomplete_listing:" + category)
+        if (
+            self.target_date
+            and self.target_date.isoformat() not in self.announcement_dates
+        ):
+            errors.append("requested_date_not_in_recent_window")
+        return {
+            "complete": not errors,
+            "errors": sorted(set(errors)),
+            "scope": "recent announcement dates, new submissions and cross-lists",
+            "announcement_dates": sorted(self.announcement_dates),
+            "categories": sorted(self.target_categories),
+            "listed_ids": sorted(self.listed_ids),
+            "excluded_published_ids": sorted(self.excluded_history_ids),
+            "expected_ids": sorted(self.expected_ids),
+            "listing_counts": {
+                category: {
+                    "advertised": state["total"],
+                    "parsed": len(state["rows"]),
+                    "pages": len(state["pages"]),
+                }
+                for category, state in self.listings.items()
+            },
+        }
+
+    def closed(self, reason):
+        if self.audit_path:
+            self.audit_path.parent.mkdir(parents=True, exist_ok=True)
+            self.audit_path.write_text(
+                json.dumps(self.audit(reason), indent=2), encoding="utf-8"
+            )

@@ -1,0 +1,752 @@
+{
+  "announcement_date": "2026-10-20",
+  "retrieved_on": "2026-10-21",
+  "categories": [
+    "physics.acc-ph",
+    "physics.atom-ph",
+    "physics.comp-ph",
+    "physics.flu-dyn",
+    "physics.optics",
+    "physics.plasm-ph"
+  ],
+  "papers": [
+    {
+      "id": "1711.08891",
+      "title": "Magneto-Rayleigh-Taylor instability driven by a rotating magnetic field: Cylindrical liner configuration",
+      "categories": [
+        "physics.plasm-ph",
+        "physics.flu-dyn"
+      ]
+    },
+    {
+      "id": "2610.23948",
+      "title": "Parameter misspecification in physics-informed neural networks: A closed-form audit and its limits",
+      "categories": [
+        "cs.LG",
+        "math.NA",
+        "physics.comp-ph"
+      ]
+    },
+    {
+      "id": "2610.24004",
+      "title": "Transient Heat Conduction on Quantum Hardware: Replicated Temperature-Field Reconstruction and Shot-Count Sensitivity with a Variational Quantum Linear Solver",
+      "categories": [
+        "physics.comp-ph",
+        "quant-ph"
+      ]
+    },
+    {
+      "id": "2610.24041",
+      "title": "Residual Carleman lift for nonlinear lattice Boltzmann simulations",
+      "categories": [
+        "physics.comp-ph",
+        "physics.flu-dyn"
+      ]
+    },
+    {
+      "id": "2610.24074",
+      "title": "QRecoupling.jl: numerical and exact computation of classical and quantum recoupling coefficients",
+      "categories": [
+        "cs.MS",
+        "gr-qc",
+        "math-ph",
+        "physics.comp-ph"
+      ]
+    },
+    {
+      "id": "2610.24151",
+      "title": "Boundary Element Modeling for THz-SNOM Near-Field Probes",
+      "categories": [
+        "cond-mat.mes-hall",
+        "physics.comp-ph"
+      ]
+    },
+    {
+      "id": "2610.24167",
+      "title": "Probing wetting and solidification dynamics of neon thin films with a high-$T_c$ superconducting circuit",
+      "categories": [
+        "quant-ph",
+        "physics.flu-dyn"
+      ]
+    },
+    {
+      "id": "2610.24210",
+      "title": "Colour-Field Based Particle Categorization for Residual Stress Detection and Reduction in Solid SPH Simulations",
+      "categories": [
+        "cs.GR",
+        "cond-mat.mtrl-sci",
+        "physics.flu-dyn"
+      ]
+    },
+    {
+      "id": "2610.24219",
+      "title": "From Classical Trapping to Curvature-Induced Bolus Formation in Peristaltic Wave-Driven Flows",
+      "categories": [
+        "physics.flu-dyn"
+      ]
+    },
+    {
+      "id": "2610.24225",
+      "title": "A consistent coupled level-set and volume-of-fluid solver for two-phase flow in OpenFOAM",
+      "categories": [
+        "physics.flu-dyn"
+      ]
+    },
+    {
+      "id": "2610.24245",
+      "title": "Polarization-dependent exchange effects in intrabeam scattering",
+      "categories": [
+        "physics.acc-ph"
+      ]
+    },
+    {
+      "id": "2610.24262",
+      "title": "A large nonmagnetic aluminum-and-Viton vacuum chamber suitable for vacuum pressures down into the extremely-high-vacuum (XHV) regime",
+      "categories": [
+        "physics.atom-ph"
+      ]
+    },
+    {
+      "id": "2610.24296",
+      "title": "Intermittent turbulence as the driver of stochastic heating in the near-Sun solar wind",
+      "categories": [
+        "astro-ph.SR",
+        "physics.plasm-ph",
+        "physics.space-ph"
+      ]
+    },
+    {
+      "id": "2610.24338",
+      "title": "Microcomb spectral fingerprinting enables parts-per-trillion methane detection with low humidity cross-sensitivity",
+      "categories": [
+        "physics.optics",
+        "physics.app-ph"
+      ]
+    },
+    {
+      "id": "2610.24393",
+      "title": "Freeform gradient-index media reconstruction",
+      "categories": [
+        "physics.optics"
+      ]
+    },
+    {
+      "id": "2610.24394",
+      "title": "Critical magnetic Reynolds number of the weakly-collisional turbulent dynamo in supersonic plasmas",
+      "categories": [
+        "astro-ph.CO",
+        "physics.plasm-ph"
+      ]
+    },
+    {
+      "id": "2610.24410",
+      "title": "Calibrated shape-only recovery of membrane viscosities",
+      "categories": [
+        "cond-mat.soft",
+        "physics.flu-dyn"
+      ]
+    },
+    {
+      "id": "2610.24432",
+      "title": "A GRACE Interatomic Potential for W--Ta Systems: Application to Ta Segregation and Pinning of Shear-Coupled Grain-Boundary Migration",
+      "categories": [
+        "cond-mat.mtrl-sci",
+        "cond-mat.dis-nn",
+        "physics.atm-clus",
+        "physics.comp-ph"
+      ]
+    },
+    {
+      "id": "2610.24457",
+      "title": "Quantum-Correlation-Based Multi-Emitter Localization in Information-Limited Regimes via Learned Inference",
+      "categories": [
+        "quant-ph",
+        "physics.optics"
+      ]
+    },
+    {
+      "id": "2610.24460",
+      "title": "Water-Driven Porous Silicon as a Platform for Blue Materials",
+      "categories": [
+        "cond-mat.mes-hall",
+        "cond-mat.mtrl-sci",
+        "physics.chem-ph",
+        "physics.optics"
+      ]
+    },
+    {
+      "id": "2610.24504",
+      "title": "Micrometer-thin liquid sheets from single-jet impact on a sharp edge for multi-kHz laser-plasma experiments",
+      "categories": [
+        "physics.plasm-ph",
+        "physics.flu-dyn"
+      ]
+    },
+    {
+      "id": "2610.24525",
+      "title": "Reconstruction of Unobserved Core Electron Density in Tokamak Plasmas with a Neural Operator Transport Surrogate and Uncertainty Quantification",
+      "categories": [
+        "physics.plasm-ph",
+        "cs.LG"
+      ]
+    },
+    {
+      "id": "2610.24616",
+      "title": "SIESTA-QCOMP: Bridging Classical and Quantum Computing for Strongly Correlated Systems",
+      "categories": [
+        "physics.comp-ph"
+      ]
+    },
+    {
+      "id": "2610.24689",
+      "title": "Transient growth and Counter-propagating Rossby Waves in a sloped Eady problem",
+      "categories": [
+        "physics.flu-dyn",
+        "physics.ao-ph"
+      ]
+    },
+    {
+      "id": "2610.24713",
+      "title": "Charge-Selective Displacement of Spatiotemporal Optical Vortices at a Spatially Uniform Time Boundary",
+      "categories": [
+        "physics.optics"
+      ]
+    },
+    {
+      "id": "2610.24714",
+      "title": "Realization of valley-controlled orbital angular momentum via inter-orbital coupling",
+      "categories": [
+        "physics.optics"
+      ]
+    },
+    {
+      "id": "2610.24746",
+      "title": "Boosting fluorescence and polarization with nanophotonics for single-molecule chiral sensing",
+      "categories": [
+        "physics.optics",
+        "cond-mat.mes-hall",
+        "physics.chem-ph"
+      ]
+    },
+    {
+      "id": "2610.24815",
+      "title": "Low-Field J-Coupling Spectroscopy Measured with a Diamond Nitrogen Vacancy Spectrometer",
+      "categories": [
+        "physics.chem-ph",
+        "physics.app-ph",
+        "physics.atom-ph",
+        "quant-ph"
+      ]
+    },
+    {
+      "id": "2610.24876",
+      "title": "Scaling laws for contamination traversal times during vacuum breaks in superconducting accelerators",
+      "categories": [
+        "physics.acc-ph",
+        "physics.app-ph",
+        "physics.flu-dyn"
+      ]
+    },
+    {
+      "id": "2610.24891",
+      "title": "Hidden Perturbative Structure in Attosecond Streaking",
+      "categories": [
+        "physics.atom-ph"
+      ]
+    },
+    {
+      "id": "2610.24932",
+      "title": "Second-Order Correction for Statistical Bias in Monte Carlo Depletion Calculations",
+      "categories": [
+        "physics.comp-ph"
+      ]
+    },
+    {
+      "id": "2610.24934",
+      "title": "Undulatory Swimming in Sand: Subsurface Locomotion of the Sandfish Lizard",
+      "categories": [
+        "physics.bio-ph",
+        "cond-mat.soft",
+        "eess.SY",
+        "physics.flu-dyn",
+        "q-bio.OT"
+      ]
+    },
+    {
+      "id": "2610.25014",
+      "title": "Large Language Model Steering of Acousto-Optic Tweezer Arrays",
+      "categories": [
+        "physics.atom-ph",
+        "quant-ph"
+      ]
+    },
+    {
+      "id": "2610.25020",
+      "title": "Fast and High-Fidelity Motional-State-Preserving Transport in Optical Tweezers",
+      "categories": [
+        "physics.atom-ph",
+        "quant-ph"
+      ]
+    },
+    {
+      "id": "2610.25079",
+      "title": "Dynamic Hotspot Migration and Self-Induced Resonances in Ultrafast Laser-Irradiated Silicon Thin Films",
+      "categories": [
+        "physics.optics",
+        "cond-mat.mtrl-sci",
+        "cond-mat.other"
+      ]
+    },
+    {
+      "id": "2610.25105",
+      "title": "Generative marginal learning for finite-size molecular simulation with application to stress calculation",
+      "categories": [
+        "physics.comp-ph",
+        "cond-mat.stat-mech"
+      ]
+    },
+    {
+      "id": "2610.25165",
+      "title": "Superradiant temporal transition radiation of a relativistic electron beam",
+      "categories": [
+        "physics.optics"
+      ]
+    },
+    {
+      "id": "2610.25174",
+      "title": "Multigroup Implicit Monte Carlo Radiation Hydrodynamics on Moving Voronoi Meshes with STORM and RICH",
+      "categories": [
+        "physics.comp-ph",
+        "astro-ph.IM"
+      ]
+    },
+    {
+      "id": "2610.25209",
+      "title": "One Component Plasmas Frequency Moments from the ISF",
+      "categories": [
+        "physics.plasm-ph"
+      ]
+    },
+    {
+      "id": "2610.25336",
+      "title": "Construction of crystal-based light sources with LWFA electron beams",
+      "categories": [
+        "physics.acc-ph"
+      ]
+    },
+    {
+      "id": "2610.25382",
+      "title": "Design and synthesis of laser inscribed flexible Bragg gratings containing silicon oxynitride-doped silicon thin film for authentication applications with the insights from X-Ray Absorption Spectroscopy and Quantum Mechanical Calculations",
+      "categories": [
+        "physics.optics"
+      ]
+    },
+    {
+      "id": "2610.25383",
+      "title": "Dependence of the acoustic propulsion of nano- and microcones on their orientation and aspect ratio",
+      "categories": [
+        "cond-mat.soft",
+        "cond-mat.mes-hall",
+        "physics.class-ph",
+        "physics.flu-dyn"
+      ]
+    },
+    {
+      "id": "2610.25409",
+      "title": "A Unified Interface Neural Network for Elliptic Interface Problems",
+      "categories": [
+        "physics.comp-ph"
+      ]
+    },
+    {
+      "id": "2610.25433",
+      "title": "Yielding-dependent Taylor dispersion in electrokinetic-magnetohydrodynamic Casson microflows",
+      "categories": [
+        "physics.flu-dyn",
+        "math-ph",
+        "math.NA"
+      ]
+    },
+    {
+      "id": "2610.25442",
+      "title": "Probing Flow-Induced Chain Scission in Shear-Banding Wormlike Micelles",
+      "categories": [
+        "physics.flu-dyn"
+      ]
+    },
+    {
+      "id": "2610.25462",
+      "title": "Rydberg Atomic Receiver for Wireless Physical Layer: A Survey",
+      "categories": [
+        "physics.atom-ph",
+        "quant-ph"
+      ]
+    },
+    {
+      "id": "2610.25466",
+      "title": "Squeezing and Decoherence of Axion Dark Matter",
+      "categories": [
+        "quant-ph",
+        "gr-qc",
+        "hep-th",
+        "physics.atom-ph"
+      ]
+    },
+    {
+      "id": "2610.25471",
+      "title": "\\textit{In situ} certification of multiparticle indistinguishability in a generic interferometer",
+      "categories": [
+        "quant-ph",
+        "math-ph",
+        "physics.atom-ph"
+      ]
+    },
+    {
+      "id": "2610.25477",
+      "title": "NEP-kappa 2.0: A unified framework for phonon transport and nonequilibrium thermalization with machine-learning interatomic potentials",
+      "categories": [
+        "cond-mat.mtrl-sci",
+        "physics.comp-ph"
+      ]
+    },
+    {
+      "id": "2610.25520",
+      "title": "Multiplicative Noise in Nanolaser Amplification: From Discrete Emission Events to the Additive-Noise Limit",
+      "categories": [
+        "quant-ph",
+        "physics.optics"
+      ]
+    },
+    {
+      "id": "2610.25565",
+      "title": "Concurrent two-scale topology optimization of printable bone scaffolds via rectified-flow generation and exact latent-space refinement",
+      "categories": [
+        "physics.comp-ph",
+        "cs.LG"
+      ]
+    },
+    {
+      "id": "2610.25648",
+      "title": "A General Treatment of Coupled Cavity Resonators",
+      "categories": [
+        "physics.acc-ph",
+        "physics.class-ph"
+      ]
+    },
+    {
+      "id": "2610.25655",
+      "title": "All-Dielectric Tight-Binding Photonics via a Band-Gap Vacuum",
+      "categories": [
+        "physics.optics"
+      ]
+    },
+    {
+      "id": "2610.25727",
+      "title": "Measuring the Quantum Phase of Multiphoton Systems",
+      "categories": [
+        "quant-ph",
+        "physics.optics"
+      ]
+    },
+    {
+      "id": "2610.25738",
+      "title": "Reduced Molecular Plasma Kinetics with Non-Boltzmann Vibrational Distribution",
+      "categories": [
+        "physics.plasm-ph",
+        "physics.app-ph"
+      ]
+    },
+    {
+      "id": "2610.25839",
+      "title": "High-Efficiency Silicon-Lithium Niobate Grating Coupler enabled by Fully-Etched Subwavelength Structures",
+      "categories": [
+        "physics.optics"
+      ]
+    },
+    {
+      "id": "2610.26033",
+      "title": "Decoherence of the pair entangled states at thermalization and interparticle interaction. Heisenberg--Wigner path integral Monte Carlo simulations",
+      "categories": [
+        "physics.comp-ph"
+      ]
+    },
+    {
+      "id": "2610.26041",
+      "title": "Time-resolved transient absorption spectroscopy with quantum light",
+      "categories": [
+        "quant-ph",
+        "physics.atom-ph"
+      ]
+    },
+    {
+      "id": "2610.26045",
+      "title": "Effect of Physical Barriers on High-Harmonic Generation in Liquid-Phase",
+      "categories": [
+        "physics.atom-ph",
+        "physics.optics"
+      ]
+    },
+    {
+      "id": "2610.26050",
+      "title": "Fractal forcing of turbulence by settling particles",
+      "categories": [
+        "physics.flu-dyn",
+        "nlin.AO"
+      ]
+    },
+    {
+      "id": "2610.26082",
+      "title": "LIDAR with Optically Amplified Thermal Light",
+      "categories": [
+        "physics.optics",
+        "quant-ph"
+      ]
+    },
+    {
+      "id": "2610.26121",
+      "title": "Experimental verification of the PRIORA Monte Carlo code for proton radiography",
+      "categories": [
+        "physics.plasm-ph"
+      ]
+    },
+    {
+      "id": "2610.26138",
+      "title": "Reinforcement Learning Controllers for Fusion Scenario Development",
+      "categories": [
+        "physics.plasm-ph",
+        "cs.LG"
+      ]
+    },
+    {
+      "id": "2610.26150",
+      "title": "Superstability of micrometer viscous jets surrounded by weakly-elastic viscous shells",
+      "categories": [
+        "cond-mat.soft",
+        "physics.flu-dyn"
+      ]
+    },
+    {
+      "id": "2610.26164",
+      "title": "How stagnation lines move, persist and break up in fluid flows",
+      "categories": [
+        "physics.flu-dyn"
+      ]
+    },
+    {
+      "id": "2610.26172",
+      "title": "Demonstration of continuous non-invasive monitoring of plant metabolism using mid-infrared photoacoustic spectroscopy",
+      "categories": [
+        "physics.ins-det",
+        "physics.bio-ph",
+        "physics.optics"
+      ]
+    },
+    {
+      "id": "2610.26234",
+      "title": "How Much Does Auger Spectroscopy Add to XAS? A Fisher-information Analysis of Core-Hole Dynamics in $Ar^+$",
+      "categories": [
+        "physics.atom-ph"
+      ]
+    },
+    {
+      "id": "2610.26280",
+      "title": "Correlated detection of electrons and ions emitted from laser-induced nanoplasmas in doped helium nanodroplets in the single-shot single-cluster regime",
+      "categories": [
+        "physics.atm-clus",
+        "physics.atom-ph",
+        "physics.ins-det",
+        "physics.plasm-ph"
+      ]
+    },
+    {
+      "id": "2610.26282",
+      "title": "Study of non-uniformity-induced structured spectrum in a tapered optical fiber through stimulated four-wave mixing",
+      "categories": [
+        "physics.optics"
+      ]
+    },
+    {
+      "id": "2610.26289",
+      "title": "Optical vortex bullets with large angular momenta",
+      "categories": [
+        "physics.optics",
+        "cond-mat.quant-gas",
+        "nlin.PS"
+      ]
+    },
+    {
+      "id": "2610.26372",
+      "title": "Self-Oscillating Photonic Frequency Comb for Sub-THz Local Oscillator Generation in Earth Observation Systems",
+      "categories": [
+        "physics.optics",
+        "physics.space-ph"
+      ]
+    },
+    {
+      "id": "2610.26429",
+      "title": "Parameter-efficient neural computing with programmable photonic meshes",
+      "categories": [
+        "physics.optics"
+      ]
+    },
+    {
+      "id": "2610.26449",
+      "title": "Two-Dimensional Quantum Droplets in a Mixture of Bose-Einstein Condensates",
+      "categories": [
+        "cond-mat.quant-gas",
+        "physics.atom-ph"
+      ]
+    },
+    {
+      "id": "2610.26458",
+      "title": "Residual-Based Adaptive Refinement in Hybrid Variational-Collocation PINNs for Singular Elliptic PDEs with Mixed Dirichlet-Neumann Boundary Conditions",
+      "categories": [
+        "math.NA",
+        "cs.LG",
+        "physics.comp-ph"
+      ]
+    },
+    {
+      "id": "2610.26471",
+      "title": "End-to-End Optimization of Partial Fault Tolerance in Neutral-Atom Arrays",
+      "categories": [
+        "quant-ph",
+        "cond-mat.quant-gas",
+        "physics.atom-ph"
+      ]
+    },
+    {
+      "id": "2610.26476",
+      "title": "Spatiotemporal spherical Gaussian pulses",
+      "categories": [
+        "physics.optics"
+      ]
+    },
+    {
+      "id": "2610.26479",
+      "title": "Observation and control of polariton noise in a thermal Rydberg atom electrometer",
+      "categories": [
+        "physics.atom-ph",
+        "physics.app-ph",
+        "quant-ph"
+      ]
+    },
+    {
+      "id": "2610.26495",
+      "title": "A mixed leading variable physics-informed neural network for nonsmooth dynamics simulation in contact systems",
+      "categories": [
+        "physics.comp-ph"
+      ]
+    },
+    {
+      "id": "2610.26499",
+      "title": "Non-local Stabilization and Synchronization of Larmor Precession in Trapped Polariton Condensate Dimer",
+      "categories": [
+        "cond-mat.quant-gas",
+        "physics.optics"
+      ]
+    },
+    {
+      "id": "2610.26537",
+      "title": "Beyond Radiation Hydrodynamics: A Coupled Kinetic Plasma and Radiation Modeling of NIF Polar Direct Drive Capsule",
+      "categories": [
+        "physics.plasm-ph"
+      ]
+    },
+    {
+      "id": "2610.26567",
+      "title": "Assisted Turbulence Modeling via Data Assimilation and Machine Learning for Turbomachinery Flows",
+      "categories": [
+        "physics.flu-dyn"
+      ]
+    },
+    {
+      "id": "2610.26578",
+      "title": "Single-Mode Laser Arrays with Size-Invariant Loss Discrimination",
+      "categories": [
+        "physics.optics"
+      ]
+    },
+    {
+      "id": "2610.26591",
+      "title": "Coupling Evaporation, Chemical Reactions, and Crystallization: A Population-Balance Framework Applied to Two-Step Perovskite Crystallization",
+      "categories": [
+        "physics.chem-ph",
+        "cond-mat.mtrl-sci",
+        "physics.app-ph",
+        "physics.comp-ph"
+      ]
+    },
+    {
+      "id": "2610.26616",
+      "title": "Modeling and control of traveling wave structures with arbitrary beam loading",
+      "categories": [
+        "physics.acc-ph"
+      ]
+    },
+    {
+      "id": "2610.26631",
+      "title": "Bridging the Lattice Boltzmann Method and Moment Methods",
+      "categories": [
+        "physics.flu-dyn"
+      ]
+    },
+    {
+      "id": "2610.26667",
+      "title": "Vacancy and Helium-Cluster Thermomigration in Tungsten",
+      "categories": [
+        "cond-mat.mtrl-sci",
+        "physics.plasm-ph"
+      ]
+    },
+    {
+      "id": "2610.26674",
+      "title": "Terabit-scale wavelength-multiplexed transmitter enabled by thin-film lithium tantalate",
+      "categories": [
+        "physics.app-ph",
+        "physics.optics"
+      ]
+    },
+    {
+      "id": "2610.26694",
+      "title": "CuAD: Source-to-Source Automatic Differentiation of CUDA Kernels for Discrete Adjoints in Computational Fluid Dynamics",
+      "categories": [
+        "physics.flu-dyn",
+        "physics.comp-ph"
+      ]
+    },
+    {
+      "id": "2610.26701",
+      "title": "Challenging Atomistic Foundation Models on Disordered Carbons",
+      "categories": [
+        "physics.chem-ph",
+        "cond-mat.mtrl-sci",
+        "physics.comp-ph"
+      ]
+    },
+    {
+      "id": "2610.26715",
+      "title": "Proximity Transient Absorption in van der Waals Heterostructures",
+      "categories": [
+        "cond-mat.mes-hall",
+        "physics.optics"
+      ]
+    },
+    {
+      "id": "2610.26731",
+      "title": "Ion Heating in Pair-loaded Relativistic Turbulence",
+      "categories": [
+        "physics.plasm-ph",
+        "astro-ph.HE"
+      ]
+    }
+  ],
+  "sources": {
+    "physics.acc-ph": "https://arxiv.org/list/physics.acc-ph/recent?skip=0&show=2000",
+    "physics.atom-ph": "https://arxiv.org/list/physics.atom-ph/recent?skip=0&show=2000",
+    "physics.comp-ph": "https://arxiv.org/list/physics.comp-ph/recent?skip=0&show=2000",
+    "physics.flu-dyn": "https://arxiv.org/list/physics.flu-dyn/recent?skip=0&show=2000",
+    "physics.optics": "https://arxiv.org/list/physics.optics/recent?skip=0&show=2000",
+    "physics.plasm-ph": "https://arxiv.org/list/physics.plasm-ph/recent?skip=0&show=2000"
+  }
+}
