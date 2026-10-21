@@ -1,0 +1,259 @@
+{
+  "schema_version": 1,
+  "config_digest": "dc252170446e0fc0c3f7460b684dff34a04158936738e49b20582637a29be30c",
+  "papers": {
+    "2602.18838": [
+      {
+        "researcher_id": "jorge-vieira",
+        "display_name": "Jorge Vieira",
+        "author": "Jorge Vieira",
+        "kind": "reliable",
+        "basis": "full_name"
+      }
+    ],
+    "2603.20253": [
+      {
+        "researcher_id": "alexey-arefiev",
+        "display_name": "Alexey Arefiev",
+        "author": "Alexey Arefiev",
+        "kind": "reliable",
+        "basis": "full_name"
+      }
+    ],
+    "2603.20565": [
+      {
+        "researcher_id": "alexey-arefiev",
+        "display_name": "Alexey Arefiev",
+        "author": "A. Arefiev",
+        "kind": "suspected",
+        "basis": "unconfirmed_alias"
+      }
+    ],
+    "2603.22930": [
+      {
+        "researcher_id": "alexey-arefiev",
+        "display_name": "Alexey Arefiev",
+        "author": "A. Arefiev",
+        "kind": "suspected",
+        "basis": "unconfirmed_alias"
+      }
+    ],
+    "2603.28473": [
+      {
+        "researcher_id": "jorge-vieira",
+        "display_name": "Jorge Vieira",
+        "author": "Jorge Vieira",
+        "kind": "reliable",
+        "basis": "full_name"
+      }
+    ],
+    "2604.03568": [
+      {
+        "researcher_id": "baifei-shen",
+        "display_name": "Baifei Shen",
+        "author": "Baifei Shen",
+        "kind": "reliable",
+        "basis": "full_name"
+      },
+      {
+        "researcher_id": "liangliang-ji",
+        "display_name": "Liangliang Ji",
+        "author": "Liangliang Ji",
+        "kind": "reliable",
+        "basis": "full_name"
+      }
+    ],
+    "2604.04002": [
+      {
+        "researcher_id": "yin-shi",
+        "display_name": "Yin Shi",
+        "author": "Y. Shi",
+        "kind": "suspected",
+        "basis": "unconfirmed_alias"
+      }
+    ],
+    "2604.15545": [
+      {
+        "researcher_id": "alexey-arefiev",
+        "display_name": "Alexey Arefiev",
+        "author": "A. V. Arefiev",
+        "kind": "suspected",
+        "basis": "unconfirmed_alias"
+      }
+    ],
+    "2604.22369": [
+      {
+        "researcher_id": "liangliang-ji",
+        "display_name": "Liangliang Ji",
+        "author": "Liangliang Ji",
+        "kind": "reliable",
+        "basis": "full_name"
+      }
+    ],
+    "2604.23913": [
+      {
+        "researcher_id": "liangliang-ji",
+        "display_name": "Liangliang Ji",
+        "author": "Liangliang Ji",
+        "kind": "reliable",
+        "basis": "full_name"
+      }
+    ],
+    "2605.19814": [
+      {
+        "researcher_id": "liangliang-ji",
+        "display_name": "Liangliang Ji",
+        "author": "Liangliang Ji",
+        "kind": "reliable",
+        "basis": "full_name"
+      }
+    ],
+    "2605.23528": [
+      {
+        "researcher_id": "baifei-shen",
+        "display_name": "Baifei Shen",
+        "author": "Baifei Shen",
+        "kind": "reliable",
+        "basis": "full_name"
+      },
+      {
+        "researcher_id": "liangliang-ji",
+        "display_name": "Liangliang Ji",
+        "author": "Liangliang Ji",
+        "kind": "reliable",
+        "basis": "full_name"
+      }
+    ],
+    "2606.04332": [
+      {
+        "researcher_id": "zheng-gong",
+        "display_name": "Zheng Gong",
+        "author": "Zheng Gong",
+        "kind": "reliable",
+        "basis": "full_name"
+      }
+    ],
+    "2606.20298": [
+      {
+        "researcher_id": "jorge-vieira",
+        "display_name": "Jorge Vieira",
+        "author": "J. Vieira",
+        "kind": "suspected",
+        "basis": "unconfirmed_alias"
+      }
+    ],
+    "2607.09457": [
+      {
+        "researcher_id": "zheng-gong",
+        "display_name": "Zheng Gong",
+        "author": "Z. Gong",
+        "kind": "suspected",
+        "basis": "unconfirmed_alias"
+      },
+      {
+        "researcher_id": "liangliang-ji",
+        "display_name": "Liangliang Ji",
+        "author": "L. Ji",
+        "kind": "suspected",
+        "basis": "unconfirmed_alias"
+      }
+    ],
+    "2508.00417": [
+      {
+        "researcher_id": "liangliang-ji",
+        "display_name": "Liangliang Ji",
+        "author": "Liangliang Ji",
+        "kind": "reliable",
+        "basis": "full_name"
+      }
+    ],
+    "2607.13507": [
+      {
+        "researcher_id": "liangliang-ji",
+        "display_name": "Liangliang Ji",
+        "author": "Liangliang Ji",
+        "kind": "reliable",
+        "basis": "full_name"
+      }
+    ],
+    "2607.27894": [
+      {
+        "researcher_id": "zheng-gong",
+        "display_name": "Zheng Gong",
+        "author": "Zheng Gong",
+        "kind": "reliable",
+        "basis": "full_name"
+      }
+    ],
+    "2608.04932": [
+      {
+        "researcher_id": "liangliang-ji",
+        "display_name": "Liangliang Ji",
+        "author": "Liangliang Ji",
+        "kind": "reliable",
+        "basis": "full_name"
+      }
+    ],
+    "2608.28301": [
+      {
+        "researcher_id": "liangliang-ji",
+        "display_name": "Liangliang Ji",
+        "author": "Liangliang Ji",
+        "kind": "reliable",
+        "basis": "full_name"
+      }
+    ],
+    "2609.06562": [
+      {
+        "researcher_id": "zheng-gong",
+        "display_name": "Zheng Gong",
+        "author": "Zheng Gong",
+        "kind": "reliable",
+        "basis": "full_name"
+      }
+    ],
+    "2609.07584": [
+      {
+        "researcher_id": "yutong-he",
+        "display_name": "Yutong He",
+        "author": "Yutong He",
+        "kind": "reliable",
+        "basis": "full_name"
+      },
+      {
+        "researcher_id": "alexey-arefiev",
+        "display_name": "Alexey Arefiev",
+        "author": "Alexey Arefiev",
+        "kind": "reliable",
+        "basis": "full_name"
+      }
+    ],
+    "2609.18137": [
+      {
+        "researcher_id": "yin-shi",
+        "display_name": "Yin Shi",
+        "author": "Y. Shi",
+        "kind": "suspected",
+        "basis": "unconfirmed_alias"
+      }
+    ],
+    "2610.11061": [
+      {
+        "researcher_id": "zheng-gong",
+        "display_name": "Zheng Gong",
+        "author": "Zheng Gong",
+        "kind": "reliable",
+        "basis": "full_name"
+      }
+    ],
+    "2610.26476": [
+      {
+        "researcher_id": "jorge-vieira",
+        "display_name": "Jorge Vieira",
+        "author": "J. Vieira",
+        "kind": "suspected",
+        "basis": "unconfirmed_alias"
+      }
+    ]
+  }
+}
