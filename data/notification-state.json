@@ -7024,5 +7024,22 @@
   "discoveries": {},
   "deliveries": {},
   "batches": {},
-  "resolutions": []
+  "resolutions": [],
+  "release_probes": {
+    "initial-release-v1": {
+      "probe_id": "initial-release-v1",
+      "recipient": {
+        "id": "yuhanjin",
+        "email": "jinyuhan@mail.ustc.edu.cn"
+      },
+      "date": "2026-10-21",
+      "site_url": "https://yuhanjin-ustc.github.io/daily-arxiv/",
+      "sender": "jinyuhan@mail.ustc.edu.cn",
+      "message_id": "<daily-arxiv-release-4caba5c4dbd0cb5d216178789bd1f5a9@yuhanjin-ustc.github.io>",
+      "status": "sending",
+      "attempts": 1,
+      "last_error": null,
+      "resolutions": []
+    }
+  }
 }
