@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "language": "English",
+  "provenance": {
+    "profile": {
+      "model": "deepseek-flash",
+      "base_url": "https://api.deepseek.com",
+      "reasoning_effort": "max",
+      "max_tokens": 393216,
+      "context_window": "1M"
+    },
+    "prompt_sha256": {
+      "system.txt": "f4bfa3e128110e5d0cd74d7c9e573e02f309ddc31597886a865576fe90c8a8b3",
+      "template.txt": "5f26af098e985001388af71aa28a1fff1fc6c2ce8e6afccddcbab40178832dbc",
+      "structure.py": "89d66dbc153d12de5372060fde36551108d45821c890f1d3675da4d478cc24ee"
+    }
+  },
+  "records": {}
+}
