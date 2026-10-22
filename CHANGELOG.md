@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-22 — Routine maintenance
+
+- Add a direct website entry and clarify when subscription, researcher and recipient changes take effect.
+- Consolidate manual checks into Maintenance and archive three retired workflow definitions without changing recovery tools or historical results.
+- Apply the data-write gate to Daily and manual writes; keep browser, authentication and data credentials separate.
+- Document locked local setup, short-lived development branches and cleanup of verified temporary outputs.
+- Use EN / ZH controls and Times New Roman HTML email with a plain-text alternative.
+
 ## 2026-10-21 — Single bilingual repository
 
 - Add deterministic, byte-preserving history migration with provenance and baseline.

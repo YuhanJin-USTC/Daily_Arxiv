@@ -7,6 +7,7 @@
 - Public settings belong only in `[tool.daily_arxiv]` in `pyproject.toml`. Preserve the existing model profile and moderation/quality checks unless separately requested.
 - `ai/` owns model access, quality, provenance and recovery; `daily_arxiv/daily_arxiv/` owns crawl/history, researcher matching and notification semantics; `scripts/` owns staging/application/publication/build; `to_md/` owns rendering; `js/`, `css/` and HTML own the static reader.
 - Use one implementation with explicit English/Chinese arguments. Do not add a frontend framework, service or database for these features.
+- Keep five regular Actions entrypoints: Tests, Daily arXiv, Deploy website, Refresh researcher highlights and Maintenance. Maintenance retains `release-check.yml` for its existing history; retired workflow definitions belong in `docs/workflow-archive/`, not the active workflow directory.
 
 ## Data and delivery invariants
 
@@ -21,6 +22,7 @@
 - Diagnose SMTP connection/auth failures with the manual auth-only check before another send. Keep diagnostics allowlisted; never record server response text, credentials or authentication payloads.
 - Changing a frozen release-probe sender requires an explicit audited rebind from failed state. Preserve attempts, recipient and Message-ID; never rebind sent, sending or uncertain probes. Confirm replacement SMTP Secrets before authenticating with a new provider.
 - All data workflows share `concurrency.group: arxiv-data`, `cancel-in-progress: false`; verify remote data HEAD before writes. Never force-push to recover a conflict. Configuration refresh updates highlights only, never historic mail.
+- Daily and manual data operations honor `ENABLE_DATA_WRITES`; AI and email retain their separate gates. Maintenance runs only from `main`, and browser/auth jobs do not receive model or sending credentials beyond their own task.
 - Mail uses English plain text plus an escaped HTML alternative with inline Times New Roman, Times and serif fallbacks. Never load remote fonts or change delivery identity for formatting.
 - Keep mail recipients/SMTP configuration out of site bundles; credentials only in Secrets/environment. Do not infer authentication from recipient addresses. Preserve repository-specific authentication and Pages subpaths.
 
@@ -30,6 +32,8 @@
 - For UI changes, inspect 1440/768/390 widths, keyboard selection, fast toggling, range/filter/detail state, stats deduplication and missing-language fallback. State clearly when browser inspection is unavailable.
 - Dependency changes require a matching `uv.lock`; do not silently substitute unlocked tests for locked validation.
 - Keep one-time evidence in ignored `artifacts/upgrade/STATE.md`; do not commit credentials, caches, previews, checkpoints or personal work logs to source. Before resuming a large upgrade, read that state and necessary diffs.
+- Remove obsolete generated caches, duplicate checkouts and previews after acceptance. Retain compact provenance, unique raw snapshots, sourced paid checkpoints and interpreter targets still used by `.venv`; verify retained copies before deleting duplicates.
 - Follow the user's deletion rules. Never discard pre-existing changes. Remove only your own temporary outputs when obsolete, marking cleanup with `CODEX_TEMP_CLEANUP=1` and exact paths.
 - Confirm Git remotes before publication. The legacy local source may be retained as `source-chinese`; never push there. `origin` must identify the authorized target GitHub repository. New GitHub repo creation/push/deployment, real SMTP/paid model calls and old-site changes need separate explicit release authorization. Activation variables are disabled by absence.
 - Preserve old sites, branches and migration snapshots until the user explicitly approves any specific deletion. PR descriptions state final behavior, tests, data preservation evidence and known limits.
+- When the user has enabled automatic branch deletion after merge, completed PR branches may follow that setting. Keep `main/data`; archive and obtain specific approval before deleting unmerged work. Local `main` tracks `origin/main`, uses fast-forward pulls and defaults to `origin`; temporary migration remotes are not required for normal use.

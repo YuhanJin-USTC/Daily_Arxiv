@@ -1,18 +1,14 @@
-name: Release checks
+name: Maintenance
 on:
   workflow_dispatch:
     inputs:
       phase:
-        description: Explicit release check; each phase preserves prior results
+        description: Explicit maintenance task; never a historical backfill
         type: choice
-        options: [crawl, ai, smtp-auth, mail-sender, mail, recipient-mail]
+        options: [browser, crawl, ai, smtp-auth, recipient-mail]
         required: true
       paper_id:
-        description: One genuinely new post-baseline arXiv ID for the AI probe
-        type: string
-        default: ''
-      evidence_note:
-        description: Public evidence for a failed probe sender change; never credentials
+        description: One paper ID for AI generation or published bilingual browser verification
         type: string
         default: ''
       recipient_id:
@@ -20,21 +16,101 @@ on:
         type: string
         default: ''
 permissions:
-  contents: write
+  contents: read
 concurrency:
   group: arxiv-data
   cancel-in-progress: false
 jobs:
-  check:
+  browser:
+    if: inputs.phase == 'browser'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Require the main branch
+        run: test "$GITHUB_REF" = refs/heads/main
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install isolated browser test tools
+        run: |
+          npm install --prefix "$RUNNER_TEMP/arxiv-browser" playwright@1.64.1
+          node "$RUNNER_TEMP/arxiv-browser/node_modules/playwright/cli.js" install --with-deps chromium
+      - name: Verify live authentication and reader
+        env:
+          ACCESS_PASSWORD: ${{ secrets.ACCESS_PASSWORD }}
+          SITE_URL: https://yuhanjin-ustc.github.io/daily-arxiv/
+          PLAYWRIGHT_MODULE: ${{ runner.temp }}/arxiv-browser/node_modules/playwright
+          BROWSER_REPORT_DIR: ${{ runner.temp }}/arxiv-browser-report
+          VERIFY_PAPER_ID: ${{ inputs.paper_id }}
+        run: node scripts/check_live_site.cjs
+      - name: Preserve screenshots and sanitized report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arxiv-browser-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/arxiv-browser-report/
+          if-no-files-found: ignore
+          retention-days: 30
+  smtp:
+    if: inputs.phase == 'smtp-auth'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require the main branch
+        run: test "$GITHUB_REF" = refs/heads/main
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --frozen
+      - name: Check authentication without sending
+        env:
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/arxiv-smtp"
+          uv run --frozen python scripts/release_probe.py --check-auth \
+            | tee "$RUNNER_TEMP/arxiv-smtp/auth.json"
+      - name: Preserve sanitized authentication result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arxiv-smtp-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/arxiv-smtp/
+          if-no-files-found: ignore
+          retention-days: 14
+  data:
+    if: inputs.phase == 'crawl' || inputs.phase == 'ai' || inputs.phase == 'recipient-mail'
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
+      - name: Validate branch and activation
+        env:
+          PHASE: ${{ inputs.phase }}
+          DATA_WRITES: ${{ vars.ENABLE_DATA_WRITES }}
+          AI_ENABLED: ${{ vars.ENABLE_AI }}
+          EMAIL_ENABLED: ${{ vars.ENABLE_EMAIL }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = refs/heads/main
+          test "$DATA_WRITES" = true
+          case "$PHASE" in
+            crawl) ;;
+            ai) test "$AI_ENABLED" = true ;;
+            recipient-mail) test "$EMAIL_ENABLED" = true ;;
+            *) exit 1 ;;
+          esac
       - uses: actions/checkout@v4
         with:
           path: code
           persist-credentials: false
       - uses: actions/checkout@v4
-        if: inputs.phase != 'smtp-auth'
         with:
           ref: data
           path: published
@@ -44,21 +120,11 @@ jobs:
       - name: Prepare evidence
         id: prepare
         run: |
-          mkdir -p "$RUNNER_TEMP/arxiv-release"
+          mkdir -p "$RUNNER_TEMP/arxiv-maintenance"
           if [ -d published ]; then
-            git -C published rev-parse HEAD > "$RUNNER_TEMP/arxiv-release/source-commit.txt"
+            git -C published rev-parse HEAD > "$RUNNER_TEMP/arxiv-maintenance/source-commit.txt"
           fi
           echo "day=$(date -u +%F)" >> "$GITHUB_OUTPUT"
-      - name: Check SMTP authentication without sending
-        if: inputs.phase == 'smtp-auth'
-        working-directory: code
-        env:
-          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
-          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
-        run: |
-          set -euo pipefail
-          uv run --frozen python scripts/release_probe.py --check-auth \
-            | tee "$RUNNER_TEMP/arxiv-release/smtp-auth.json"
       - name: Crawl once and publish only verified raw discoveries
         id: crawl
         if: inputs.phase == 'crawl'
@@ -68,7 +134,7 @@ jobs:
           DAY: ${{ steps.prepare.outputs.day }}
         run: |
           set -euo pipefail
-          work="$RUNNER_TEMP/arxiv-release"
+          work="$RUNNER_TEMP/arxiv-maintenance"
           uv run --frozen python daily_arxiv/crawl.py --history-dir ../published/data \
             --output "$work/$DAY.jsonl" --audit "$work/coverage.json"
           uv run --frozen python scripts/daily_update.py raw --source ../published \
@@ -97,7 +163,7 @@ jobs:
         run: |
           uv run --frozen python scripts/daily_update.py ai --source ../published \
             --language English --ids "$PAPER_ID" \
-            --output "$RUNNER_TEMP/arxiv-release/English" --publish
+            --output "$RUNNER_TEMP/arxiv-maintenance/English" --publish
       - name: Generate only selected Chinese interpretation
         id: chinese
         if: inputs.phase == 'ai'
@@ -109,29 +175,7 @@ jobs:
         run: |
           uv run --frozen python scripts/daily_update.py ai --source ../published \
             --language Chinese --ids "$PAPER_ID" \
-            --output "$RUNNER_TEMP/arxiv-release/Chinese" --publish
-      - name: Send one durable English infrastructure probe
-        id: mail
-        if: inputs.phase == 'mail'
-        working-directory: code
-        env:
-          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
-          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
-          ALLOW_SMTP_SEND: '1'
-          DAY: ${{ steps.prepare.outputs.day }}
-        run: |
-          uv run --frozen python scripts/release_probe.py --source ../published \
-            --repository "$GITHUB_REPOSITORY" --recipient yuhanjin --date "$DAY" \
-            --send --publish
-      - name: Rebind a confirmed failed probe to the configured sender
-        if: inputs.phase == 'mail-sender'
-        working-directory: code
-        env:
-          EVIDENCE_NOTE: ${{ inputs.evidence_note }}
-        run: |
-          uv run --frozen python scripts/release_probe.py --source ../published \
-            --repository "$GITHUB_REPOSITORY" --rebind-sender \
-            --note "$EVIDENCE_NOTE" --publish
+            --output "$RUNNER_TEMP/arxiv-maintenance/Chinese" --publish
       - name: Send one durable recipient layout test
         if: inputs.phase == 'recipient-mail'
         working-directory: code
@@ -146,19 +190,19 @@ jobs:
             --repository "$GITHUB_REPOSITORY" --recipient-test "$RECIPIENT_ID" \
             --date "$DAY" --send --publish
       - name: Save persistent state evidence
-        if: always() && inputs.phase != 'smtp-auth'
+        if: always()
         run: |
           for name in pipeline-state.json notification-state.json; do
             if [ -f "published/data/$name" ]; then
-              cp "published/data/$name" "$RUNNER_TEMP/arxiv-release/$name"
+              cp "published/data/$name" "$RUNNER_TEMP/arxiv-maintenance/$name"
             fi
           done
-      - name: Preserve release evidence
+      - name: Preserve maintenance evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: arxiv-release-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/arxiv-release/
+          name: arxiv-maintenance-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/arxiv-maintenance/
           if-no-files-found: error
           retention-days: 30
       - name: Report language failures
