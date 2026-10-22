@@ -8,9 +8,9 @@
 
 启用发布后的配置 push 会重新构建历史高亮。索引绑定配置和有效分类摘要；构建与数据刷新先后完成时，网页会暂时提示索引待更新，不展示旧配置标记。新增研究者/收件人不会追发历史。
 
-`notifications.recipients` 配置稳定收件人 ID、邮箱与开关。默认地址为 `jinyuhan@mail.ustc.edu.cn`，用户已同意它在公开配置中出现；它不会被打包进网页。`notifications.smtp` 使用 `smtp.qq.com:465`、`security="ssl"`，发件地址为 `yhjin1005@qq.com`。认证通过 `username_env`、`password_env` 指定的环境变量读取，默认 `SMTP_USERNAME`、`SMTP_PASSWORD`。QQ 邮箱使用客户端授权码，不要把授权码发到聊天、写入 TOML 或命令参数。
+`notifications.recipients` 配置稳定收件人 ID、邮箱与开关。当前启用 `yuhanjin`（`jinyuhan@mail.ustc.edu.cn`）与 `xuanwu`（`xuanw@mail.ustc.edu.cn`）；地址随公开配置保存，不打包进网页。`notifications.smtp` 使用 `smtp.qq.com:465`、`security="ssl"`，发件地址为 `yhjin1005@qq.com`。认证通过 `username_env`、`password_env` 指定的环境变量读取，默认 `SMTP_USERNAME`、`SMTP_PASSWORD`。QQ 邮箱使用客户端授权码，不要把授权码发到聊天、写入 TOML 或命令参数。
 
-改用其他 SMTP 不需要改传输代码。按服务商要求选择 `ssl` 或 `starttls` 及对应端口，同时更新认证身份、发件地址和客户端密码。`timeout` 和 `max_attempts` 控制超时及明确失败重试次数。邮件使用英文纯文本，一篇论文命中多位研究者只列一次。真实发送同时要求通知配置启用、显式 `--send`、`ALLOW_SMTP_SEND=1`、可用凭据和持久发布回调。
+改用其他 SMTP 不需要改传输代码。按服务商要求选择 `ssl` 或 `starttls` 及对应端口，同时更新认证身份、发件地址和客户端密码。`timeout` 和 `max_attempts` 控制超时及明确失败重试次数。英文邮件同时包含纯文本和 HTML 版本；HTML 使用内联 Times New Roman 字体，客户端缺少该字体时回退到 Times 或系统衬线字体，不加载远程字体。一篇论文命中多位研究者只列一次。真实发送同时要求通知配置启用、显式 `--send`、`ALLOW_SMTP_SEND=1`、可用凭据和持久发布回调。
 
 ## 本地验证
 
@@ -63,7 +63,7 @@ python scripts/migrate_history.py --chinese CN_SNAPSHOT --english EN_SNAPSHOT --
 python scripts/notify.py --state DATA_CHECKOUT/data/notification-state.json --preview-dir NEW_PREVIEW
 ```
 
-该命令只生成 `.txt` / `.eml`。发送前先将 `sending` 状态提交并推送，成功后保存 `sent`。明确拒收记为 `failed`，可能已被 SMTP 接收或发送后状态无法落盘记为 `uncertain`；中断遗留 `sending` 也转为 `uncertain`。未知结果不自动重发，SMTP 无法保证严格 exactly-once。
+该命令只生成 `.txt` / `.html` / `.eml`。发送前先将 `sending` 状态提交并推送，成功后保存 `sent`。明确拒收记为 `failed`，可能已被 SMTP 接收或发送后状态无法落盘记为 `uncertain`；中断遗留 `sending` 也转为 `uncertain`。未知结果不自动重发，SMTP 无法保证严格 exactly-once。
 
 人工核对邮箱/服务端记录和 Message-ID 后，用 `scripts/notify.py --state ... --resolve-recipient ID --resolve-paper ARXIV_ID --resolution sent|retry|cancelled --note '核验依据'` 记录整个汇总批次的决定，再通过正常数据发布流程提交。不要把凭据放进 note。禁用或地址改变的旧收件人批次不会静默转发至新地址。确需放弃时，可以带核验备注将 pending 批次显式 cancelled；不允许把未发送的 pending 直接标为 sent 或重置重试。通知失败在工作流最后明确报告，不回滚论文或阻断 AI 保存。
 

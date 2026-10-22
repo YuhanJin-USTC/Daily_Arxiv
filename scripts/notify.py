@@ -96,7 +96,12 @@ def main():
                 raise ValueError("Recipient ID is not safe as a preview filename")
             write_bytes(args.preview_dir / f"{recipient}.eml", message.as_bytes())
             write_bytes(
-                args.preview_dir / f"{recipient}.txt", message.get_content().encode()
+                args.preview_dir / f"{recipient}.txt",
+                message.get_body(preferencelist=("plain",)).get_content().encode(),
+            )
+            write_bytes(
+                args.preview_dir / f"{recipient}.html",
+                message.get_body(preferencelist=("html",)).get_content().encode(),
             )
         print(f"Wrote {len(messages)} previews; no messages sent")
     else:
