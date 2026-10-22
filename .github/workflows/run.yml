@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   daily:
-    if: vars.ENABLE_DAILY == 'true'
+    if: vars.ENABLE_DAILY == 'true' && vars.ENABLE_DATA_WRITES == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     steps:

@@ -1,8 +1,10 @@
 # Contributing
 
-Use a feature branch and a pull request. Keep code changes on `main` and generated records on `data`; do not mix the two in one commit.
+Create a `codex/` feature branch from `main`, open a pull request, and merge after review and required checks pass. Keep source changes on `main` and generated records on `data`; do not mix the two in one commit. Local configuration edits take effect on the hosted pipeline only after the commit reaches GitHub `main`.
 
-Run the commands under Local development in README before opening a code PR. Dependencies are locked with uv; keep `pyproject.toml` and `uv.lock` in the same change. Tests must use mocks or public saved fixtures, never real API credentials or paid model requests.
+After merging, confirm that the branch contains no unmerged work before considering cleanup. Deleting remote or local branches requires the user's explicit approval or an explicitly approved repository setting. Do not assume automatic branch deletion is enabled; preserve `main`, `data` and any branch with unmerged work.
+
+Run the commands under Local development in README before opening a code PR, beginning with `uv sync --frozen`. Dependencies are locked with uv; keep dependency changes in `pyproject.toml` and `uv.lock` together. Tests must use mocks or public saved fixtures, never real API credentials or paid model requests.
 
 Maintain this repository only; the legacy repositories are read-only migration sources. Language is an explicit generation/recovery argument. Do not introduce separate English/Chinese provider implementations or crawlers. Shared raw metadata defines the paper set, and a baseline excludes historical gaps from automatic generation.
 

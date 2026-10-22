@@ -1,6 +1,10 @@
 # daily-arXiv AI enhanced
 
-[![Tests](../../actions/workflows/test.yml/badge.svg)](../../actions/workflows/test.yml)
+**[Open the website — English / Chinese AI summaries](https://yuhanjin-ustc.github.io/daily-arxiv/)**
+
+The website is deployed on GitHub Pages and opens at the password screen. Use the configured site password to sign in, then select EN / ZH.
+
+[![Tests](https://github.com/YuhanJin-USTC/daily-arxiv/actions/workflows/test.yml/badge.svg)](https://github.com/YuhanJin-USTC/daily-arxiv/actions/workflows/test.yml)
 
 Daily arXiv announcements with validated AI summaries and a static GitHub Pages reader. One repository stores shared raw metadata and separate English and Chinese AI interpretations. English is the default; EN / ZH switches only the AI content. The two legacy projects remain historical sources.
 
@@ -26,37 +30,37 @@ language = "English"
 languages = ["English", "Chinese"]
 ```
 
-Edit `[tool.daily_arxiv].categories` in `pyproject.toml` to add, remove, or reorder subscriptions in this repository. Defaults are `physics.plasm-ph`, `physics.acc-ph`, `physics.optics`, `physics.flu-dyn`, `physics.atom-ph`, and `physics.comp-ph`. A nonempty repository Actions variable `CATEGORIES` overrides this list for both daily crawling and website filters; update that override too, or intentionally clear it to use the file. After release activation, merging a file change into `main` runs **Deploy website** and researcher configuration changes refresh historical highlights without enqueueing email. Changing only the variable requires running both **Deploy website** and **Refresh researcher highlights** manually. Do not edit generated `js/data-config.js`. The reviewed October 20 backfill inventory still uses its original six categories.
+Edit `pyproject.toml`, commit the change and push it to GitHub `main`, normally by merging a reviewed pull request. Local edits alone do not change the deployed site or scheduled jobs.
+
+| Setting | Where to edit | When it takes effect |
+| --- | --- | --- |
+| Categories | `[tool.daily_arxiv].categories` | The next **Daily arXiv** run crawls the new selection; the push also rebuilds the website filters. |
+| Watched researchers | `[[tool.daily_arxiv.researchers]]` | The push automatically runs **Refresh researcher highlights** for existing papers. It does not enqueue historical mail. |
+| Mail recipients | `[[tool.daily_arxiv.notifications.recipients]]` | Later new discoveries freeze the updated recipient cohort. Existing frozen cohorts remain unchanged, with no historical email backfill. |
+
+The configured categories are `physics.plasm-ph`, `physics.acc-ph`, `physics.optics`, `physics.flu-dyn`, `physics.atom-ph`, and `physics.comp-ph`. The repository currently has no `CATEGORIES` Actions variable, so this file supplies the selection. If a nonempty `CATEGORIES` override is added later, it takes precedence for crawling and website filters. Changing only that variable requires running **Deploy website** and **Refresh researcher highlights** manually. Do not edit generated `js/data-config.js`. The reviewed October 20 backfill inventory retains its original six categories.
 
 The model uses the repository Actions secret **`OPENAI_API_KEY`**, containing a valid official DeepSeek credential. Old `MODEL_NAME`, `OPENAI_BASE_URL`, and `LANGUAGE` environment/Actions variables do not override the versioned settings. No credential belongs in source, a command argument, an issue, or a log. An offline format check cannot prove a credential is active.
 
 Researchers use stable IDs, enabled flags, full display names, `aliases` (confirmed), and `suspected_aliases` (unconfirmed). Initial abbreviated names are suspected only; they never trigger mail. Browser author filters are personal and do not control repository notifications. Name-only matching cannot establish identity.
 
-Mail uses QQ SMTP SSL on port 465, with `SMTP_USERNAME` and `SMTP_PASSWORD` supplied as Secrets or environment variables; use the QQ client authorization code. The configured QQ sender delivers to the enabled USTC recipients. English messages include plain text and HTML alternatives; HTML uses Times New Roman with local serif fallbacks. `notifications.smtp` supports other SSL or STARTTLS providers without transport changes. Mail addresses are intentionally public in configuration, but are excluded from website bundles. Never put credentials in TOML or chat. See [.env.example](.env.example) and [operations](docs/bilingual-operation.md).
+Mail uses QQ SMTP SSL on port 465, with `SMTP_USERNAME` and `SMTP_PASSWORD` supplied as Secrets or environment variables; use the QQ client authorization code. The configured QQ sender delivers to the enabled USTC recipients. A daily digest is sent only when new papers reliably match watched researchers; a day without such matches produces no paper email. English messages include plain text and HTML alternatives; HTML uses Times New Roman with local serif fallbacks. `notifications.smtp` supports other SSL or STARTTLS providers without transport changes. Mail addresses are intentionally public in configuration, but are excluded from website bundles.
+
+Configure credentials separately in **Settings → Secrets and variables → Actions**: `OPENAI_API_KEY`, `SMTP_USERNAME`, `SMTP_PASSWORD`, and the website's `ACCESS_PASSWORD`. Editing categories, researchers or recipients does not configure these Secrets. Never put credentials in TOML or chat. See [.env.example](.env.example) and [operations](docs/bilingual-operation.md).
 
 ## Local development
 
-Requirements: Python 3.12 or newer and Node.js 22 or newer. Use a virtual environment without activating it. This repository has dependency declarations, not an installable package configuration; install the declared runtime and development dependencies directly:
+Requirements: uv, Python 3.12 or newer and Node.js 22 or newer. Install the exact dependencies from `uv.lock`, matching GitHub Actions. uv creates the virtual environment; activation is unnecessary:
 
 ```bash
-python3 -m venv .venv
-.venv/bin/python - <<'PY'
-import subprocess
-import sys
-import tomllib
-from pathlib import Path
-
-config = tomllib.loads(Path("pyproject.toml").read_text())
-dependencies = config["project"]["dependencies"] + config["dependency-groups"]["dev"]
-subprocess.check_call([sys.executable, "-m", "pip", "install", *dependencies])
-PY
-.venv/bin/python -m ruff check ai daily_arxiv scripts to_md tests
-.venv/bin/python -m ruff format --check ai daily_arxiv scripts to_md tests
-.venv/bin/python -m unittest discover -s tests -v
+uv sync --frozen
+uv run --frozen ruff check ai daily_arxiv scripts to_md tests
+uv run --frozen ruff format --check ai daily_arxiv scripts to_md tests
+uv run --frozen python -m unittest discover -s tests -v
 node --test tests/*.cjs
 ```
 
-These are Bash/WSL commands; Windows virtual environments use `.venv/Scripts/python.exe`. Pip resolves the declarations and does **not** guarantee the exact versions in `uv.lock`. GitHub Actions installs uv itself and continues to use `uv sync --frozen`. Local `run.sh` uses `.venv/bin/python`; set `ARXIV_PYTHON` to another virtual environment's interpreter when needed.
+Keep dependency changes and the updated `uv.lock` together; do not substitute an unlocked pip installation for validation. Local `run.sh` uses Bash/WSL and `.venv/bin/python`; set `ARXIV_PYTHON` to another virtual environment's interpreter when needed.
 
 No keys or live model calls are needed for tests. `bash run.sh DATA_CHECKOUT NEW_OUTPUT` crawls once and prepares a separate raw candidate without changing the supplied checkout. Only an explicit third argument `--generate` enables model requests for both languages; this also processes eligible pending languages when no papers are newly discovered. It never publishes or sends mail. The data checkout must be a separate checkout of the repository's `data` branch.
 
@@ -64,12 +68,13 @@ No keys or live model calls are needed for tests. `bash run.sh DATA_CHECKOUT NEW
 
 | Workflow | Purpose | Can publish? |
 | --- | --- | --- |
-| Tests | Offline Python, frontend, formatting and lint checks | No |
-| Daily arXiv | Crawl once; persist raw/cohort; notify; independently save both AI languages | `data` only, activation gated |
-| Refresh researcher highlights | Rebuild history index after configuration changes; no email enqueue | `data` only, activation gated |
-| Stage historical AI repairs | Audit or repair selected archived dates/IDs | No; artifact only |
-| Stage missing 2026-10-20 papers | Fetch only missing IDs from the reviewed 91-paper inventory | No; artifact only |
-| Deploy website | Build public settings and deploy the static reader | GitHub Pages only |
+| [Tests](.github/workflows/test.yml) | Offline Python, frontend, formatting and lint checks | No |
+| [Daily arXiv](.github/workflows/run.yml) | Crawl once; persist raw/cohort; notify reliable matches; independently save both AI languages | `data` only, activation gated |
+| [Deploy website](.github/workflows/pages.yml) | Build public settings and deploy the static reader | GitHub Pages only |
+| [Refresh researcher highlights](.github/workflows/researchers.yml) | Rebuild history index after configuration changes; no email enqueue | `data` only, activation gated |
+| [Maintenance](.github/workflows/release-check.yml) | Explicit manual checks: `browser`, `crawl`, `ai` for one new paper ID, `smtp-auth`, or `recipient-mail` | Selected actions write `data`; `recipient-mail` can send its one-time test email |
+
+**Maintenance** keeps the existing `release-check.yml` workflow identity. Use `browser` to verify the deployed reader, optionally with a paper ID whose two AI languages are complete. The `ai` action requires one genuinely new post-baseline ID; it does not regenerate historical papers. `smtp-auth` checks transport authentication without sending mail. `recipient-mail` uses a fixed scope per configured recipient and skips a test already marked sent.
 
 Publication is initially gated by repository variables: `ENABLE_PAGES`, `ENABLE_DATA_WRITES`, `ENABLE_DAILY`, `ENABLE_AI`, and `ENABLE_EMAIL` must each equal `true` for their respective actions. Configure these only during the approved rollout. Set **Settings → Pages → Source → GitHub Actions**. Website configuration is generated in the Pages artifact; scheduled jobs no longer commit generated settings to `main`. The reader fetches current data directly from `data`, so a new data commit does not need a website rebuild. Existing `ACCESS_PASSWORD` behavior is retained during the website build.
 
@@ -79,11 +84,11 @@ Publication is initially gated by repository variables: `ENABLE_PAGES`, `ENABLE_
 
 See [architecture](docs/architecture.md), [verified incident findings](docs/incidents-2026-10-21.md), and the [step-by-step guide](docs/upgrade-guide.zh.md). Recovery artifacts include source/candidate hashes and expire after 14 days; retain a reviewed manifest with the data PR. Existing valid summaries and paper metadata must not be regenerated to fix unrelated failures.
 
-The recovery and backfill workflows accept `resume_run_id` together with `resume_artifact_name`. They download only a matching artifact from the same repository and workflow, verify its request, language, model profile and source hashes, then reuse compatible checkpoints. Select the language explicitly. Incompatible legacy partial checkpoints are rejected; archived AI remains readable, and complete old artifacts keep hash-checked compatibility. Backfill resumes the exact saved raw snapshot. Completed and partial fields survive repeated interruptions; older complete artifacts remain inspectable; legacy shared Markdown targets require explicit language-scoped restaging.
+The former recovery, October 20 backfill and standalone browser workflows are preserved under [docs/workflow-archive](docs/workflow-archive/README.md) as historical reference, outside active Actions entrypoints. CLI recovery remains available through `ai/recover.py`, `scripts/resume_artifact.py` and `scripts/apply_staged.py`; use the archive guide for the corresponding commands and provenance requirements.
 
-If arXiv is unavailable after a successful audit-only backfill, use `metadata_run_id` and `metadata_artifact_name` instead of the resume inputs. The workflow verifies that same-repository audit's request, inventory and file hashes, excludes IDs now published, and requires metadata for every currently selected missing ID. Selected raw lines stay byte-identical; a new request binds them to current published files and records the original artifact hashes. Artifacts containing generated work are rejected here: use checkpoint resume to retain those paid results.
+The archived workflows document `resume_run_id` / `resume_artifact_name`, audit-only `metadata_run_id` / `metadata_artifact_name`, and exact-ID `ids` selection. These are historical workflow inputs, not controls in **Maintenance**. Recovery verifies the request, explicit language, model profile and exact source hashes before reusing checkpoints. Backfill retains its saved raw snapshot; incompatible legacy partial checkpoints fail explicitly, and legacy shared Markdown targets require language-specific restaging. Completed and partial fields survive interruptions without changing healthy records.
 
-Backfill `ids` selects a subset of the reviewed inventory for a one-paper live check. Publish that complete candidate before fetching the remaining IDs. Historical repairs reuse complete same-language summaries only for the same ID and exact abstract; conflicting values for requested fields stop the operation. Manifest `model_paper_ids` counts papers sent for generation, not HTTP requests or field-repair attempts; `reused_ids`, `checkpoint_reused_ids` and source hashes explain avoided regeneration.
+Historical repairs reuse complete same-language summaries only for the same ID and exact abstract; conflicting values stop the operation. Manifest `model_paper_ids` counts papers sent for generation, not HTTP requests or field-repair attempts; `reused_ids`, `checkpoint_reused_ids` and source hashes explain avoided regeneration.
 
 ## License and attribution
 
