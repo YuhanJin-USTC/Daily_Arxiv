@@ -73,6 +73,8 @@ python scripts/notify.py --state DATA_CHECKOUT/data/notification-state.json --pr
 
 `mail` 阶段通过 `release_probe.py` 发送独立的英文 SMTP 基础设施测试，只发给配置的一个收件人，不包含历史论文通知。固定探针 `initial-release-v1` 与 Message-ID 保存在 `notification-state.json.release_probes`；发送前持久推送 sending，sent/cancelled 不重发，sending/uncertain 需要人工核验。明确失败也受次数上限约束。服务端接受不等于收件箱已确认送达。
 
+用户明确要求验证新增收件箱或字体时，可手动运行 `recipient-mail` 阶段并提供启用的 `recipient_id`。对应 CLI 为 `release_probe.py --recipient-test ID --send --publish --source DATA_CHECKOUT --repository OWNER/REPO`，固定测试键为 `recipient-layout-v1:ID`；没有任意测试 ID 输入，也不改写原 `initial-release-v1`。每位收件人只执行一次此类测试，重复运行跳过 sent/cancelled，unknown 或中断状态要求人工证据。恢复时使用相同 `--recipient-test ID` 配合 `--resolve sent|retry|cancelled --note '核验依据' --publish`。测试邮件只验证字体和收件箱，不含历史论文，不改变普通通知的冻结收件人集合。
+
 连接或认证失败时，先手动运行 `smtp-auth` 阶段。它调用 `release_probe.py --check-auth`，使用与正常发送相同的连接、TLS 和登录流程，仅诊断一次，不发送邮件、不读取或修改通知队列，也不消耗发送次数。输出仅包含脱敏的阶段、错误类别和数字 SMTP 状态码，不记录服务器原文或凭据；查明原因后再决定是否重试 `mail`。
 
 更换发件地址后，已冻结的测试邮件会阻止直接重发。仅当探针状态为明确失败的 `failed` 时，才可手动运行 `mail-sender` 阶段并填写公开的 `evidence_note`，把发件人迁移到当前配置。此操作不读取 SMTP 凭据、不发信，保留 `failed` 状态、原失败记录、次数、收件人和 Message-ID；`sending/uncertain/sent` 等状态禁止迁移。次数耗尽时仍需单独的人工带证据恢复，迁移不重置额度。之后仍须先确认新服务商的 Secrets 已替换，再诊断认证和执行邮件实测。

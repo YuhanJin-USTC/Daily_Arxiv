@@ -468,6 +468,8 @@ class ReleaseProbeTests(unittest.TestCase):
             ["--publish"],
             ["--send"],
             ["--resolve", "retry"],
+            ["--recipient", ""],
+            ["--recipient-test", ""],
         ):
             with (
                 patch("sys.argv", ["release_probe.py", "--check-auth", *extra]),
@@ -478,6 +480,466 @@ class ReleaseProbeTests(unittest.TestCase):
                 main()
             self.assertEqual(error.exception.code, 2)
             transport.assert_not_called()
+
+
+class RecipientLayoutTests(unittest.TestCase):
+    def setUp(self):
+        self.config = configuration()
+        self.state = new_state(["2601.11111"])
+        dispatch_probe(
+            self.state, self.config, Mock(), transport=Mock(), environment=ENV, day=DAY
+        )
+        self.original = copy.deepcopy(self.state)
+        self.scope = "recipient-layout-v1:second"
+        self.sent = []
+        self.saved = []
+
+    def dispatch(self, **kwargs):
+        return dispatch_probe(
+            self.state,
+            self.config,
+            kwargs.pop("persist", self.saved.append),
+            transport=kwargs.pop("transport", self.sent.append),
+            environment=ENV,
+            day=DAY,
+            recipient_test=kwargs.pop("recipient_test", "second"),
+            **kwargs,
+        )
+
+    def changed_recipient_config(self, change):
+        config = copy.deepcopy(self.config)
+        recipients = config["notifications"]["recipients"]
+        if change == "disabled":
+            recipients[1]["enabled"] = False
+        elif change == "removed":
+            recipients.pop(1)
+        else:
+            recipients[1]["email"] = "changed@example.org"
+        return config
+
+    def test_preview_targets_only_selected_inbox_without_mutating_initial(self):
+        message = preview(self.state, self.config, day=DAY, recipient_test="second")
+        plain = message.get_body(preferencelist=("plain",)).get_content()
+        html = message.get_body(preferencelist=("html",)).get_content()
+        self.assertEqual(str(message["To"]), "second@example.org")
+        self.assertEqual(str(message["Subject"]), "Daily Arxiv font and inbox test")
+        self.assertIn("not a paper digest", plain)
+        self.assertIn("No historical paper notifications", plain)
+        self.assertIn(self.scope, plain)
+        self.assertIn("font-family: 'Times New Roman', Times, serif", html)
+        self.assertNotIn("arxiv.org/abs/", plain)
+        repeated = preview(
+            self.state, self.config, day="2026-10-22", recipient_test="second"
+        )
+        self.assertEqual(message["Message-ID"], repeated["Message-ID"])
+        self.assertNotEqual(
+            message["Message-ID"],
+            self.original["release_probes"][PROBE_ID]["message_id"],
+        )
+        self.assertEqual(self.state, self.original)
+
+    def test_send_once_with_durable_scope_preserves_initial_and_paper_queue(self):
+        def transport(message):
+            self.assertEqual(
+                self.saved[-1]["release_probes"][self.scope]["status"], "sending"
+            )
+            self.assertEqual(
+                self.saved[-1]["release_probes"][PROBE_ID],
+                self.original["release_probes"][PROBE_ID],
+            )
+            self.sent.append(message)
+
+        report = self.dispatch(transport=transport)
+        self.assertEqual(report["probe_id"], self.scope)
+        self.assertEqual(report["sent"], 1)
+        self.assertEqual(str(self.sent[0]["To"]), "second@example.org")
+        self.assertEqual(
+            self.state["release_probes"][PROBE_ID],
+            self.original["release_probes"][PROBE_ID],
+        )
+        for key in (
+            "historical_ids",
+            "discoveries",
+            "deliveries",
+            "batches",
+            "resolutions",
+        ):
+            self.assertEqual(self.state[key], self.original[key])
+        before = copy.deepcopy(self.state)
+        self.assertEqual(self.dispatch()["sent"], 0)
+        self.config["notifications"]["recipients"][1]["email"] = "changed@example.org"
+        self.assertEqual(self.dispatch()["sent"], 0)
+        self.assertEqual(self.state, before)
+        self.assertEqual(len(self.sent), 1)
+        self.assertEqual(set(self.state["release_probes"]), {PROBE_ID, self.scope})
+
+    def test_only_enabled_configured_ids_and_one_selector_are_accepted(self):
+        self.config["notifications"]["recipients"][1]["enabled"] = False
+        for identifier in ("second", "unknown", "../second", "second:new", ""):
+            with self.subTest(identifier=identifier), self.assertRaises(ValueError):
+                self.dispatch(recipient_test=identifier)
+        with self.assertRaises(ValueError):
+            self.dispatch(recipient_id="first")
+        self.assertEqual(self.state, self.original)
+        self.assertEqual(self.sent, [])
+
+    def test_unknown_delivery_requires_resolution_in_the_same_scope(self):
+        result = self.dispatch(
+            transport=Mock(side_effect=TimeoutError("lost response"))
+        )
+        self.assertEqual(result["uncertain"], 1)
+        self.assertEqual(self.dispatch()["uncertain"], 1)
+        with self.assertRaises(ValueError):
+            resolve_probe(self.state, "sent", "", DAY, recipient_test="second")
+        resolve_probe(
+            self.state,
+            "sent",
+            "Selected recipient confirmed the Message-ID",
+            DAY,
+            recipient_test="second",
+        )
+        self.assertEqual(self.dispatch()["sent"], 0)
+        self.assertEqual(self.sent, [])
+        self.assertEqual(
+            self.state["release_probes"][PROBE_ID],
+            self.original["release_probes"][PROBE_ID],
+        )
+        self.assertEqual(
+            self.state["release_probes"][self.scope]["resolutions"][-1]["prior"][
+                "status"
+            ],
+            "uncertain",
+        )
+
+    def test_failed_attempts_are_bounded_and_reuse_the_message_id(self):
+        messages = []
+
+        def reject(message):
+            messages.append(message)
+            raise DeliveryFailure()
+
+        self.assertEqual(self.dispatch(transport=reject)["failed"], 1)
+        self.assertEqual(self.dispatch(transport=reject)["failed"], 1)
+        self.assertIn("retry_limit_reached", self.dispatch()["blocked"])
+        self.assertEqual(len(messages), 2)
+        self.assertEqual(messages[0]["Message-ID"], messages[1]["Message-ID"])
+        resolve_probe(
+            self.state,
+            "retry",
+            "Verified explicit rejection; approve bounded retry",
+            DAY,
+            recipient_test="second",
+        )
+        self.assertEqual(self.dispatch()["sent"], 1)
+        self.assertEqual(self.sent[0]["Message-ID"], messages[0]["Message-ID"])
+        self.assertEqual(
+            self.state["release_probes"][PROBE_ID],
+            self.original["release_probes"][PROBE_ID],
+        )
+
+    def test_persistence_failures_never_resend_or_change_original_probe(self):
+        for fail_at in (1, 2):
+            with self.subTest(fail_at=fail_at):
+                self.state = copy.deepcopy(self.original)
+                self.sent = []
+                calls = 0
+
+                def persist(value):
+                    nonlocal calls
+                    calls += 1
+                    if calls == fail_at:
+                        raise OSError("publish failed")
+
+                report = self.dispatch(persist=persist)
+                self.assertTrue(report["errors"])
+                self.assertEqual(len(self.sent), fail_at - 1)
+                self.assertEqual(self.dispatch()["uncertain"], 1)
+                self.assertEqual(len(self.sent), fail_at - 1)
+                self.assertEqual(
+                    self.state["release_probes"][PROBE_ID],
+                    self.original["release_probes"][PROBE_ID],
+                )
+
+    def test_misbound_scope_or_recipient_is_rejected_without_sending(self):
+        original_probe = self.original["release_probes"][PROBE_ID]
+        for wrong in (original_probe, {**original_probe, "probe_id": self.scope}):
+            self.state = copy.deepcopy(self.original)
+            self.state["release_probes"][self.scope] = copy.deepcopy(wrong)
+            with self.assertRaises(ValueError):
+                self.dispatch()
+        self.assertEqual(self.sent, [])
+        self.assertEqual(self.saved, [])
+
+    def test_cli_send_and_manual_resolution_use_the_explicit_scope(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "data").mkdir()
+            state_path = root / "data/notification-state.json"
+            state_path.write_text(json.dumps(self.state))
+            base = [
+                "release_probe.py",
+                "--source",
+                str(root),
+                "--repository",
+                "example/repository",
+                "--recipient-test",
+                "second",
+                "--publish",
+                "--date",
+                DAY,
+            ]
+            phases = []
+
+            def published(paths):
+                phases.append(
+                    json.loads(state_path.read_text())["release_probes"][self.scope][
+                        "status"
+                    ]
+                )
+
+            with (
+                patch("sys.argv", [*base, "--send"]),
+                patch("scripts.release_probe.settings", return_value=self.config),
+                patch("scripts.release_probe.Publisher") as publisher,
+                patch("scripts.release_probe.SMTPTransport") as transport,
+                patch.dict("os.environ", ENV),
+                redirect_stdout(io.StringIO()),
+            ):
+                publisher.return_value.side_effect = published
+                transport.return_value.side_effect = TimeoutError("unknown")
+                self.assertEqual(main(), 1)
+                self.assertEqual(phases, ["sending", "uncertain"])
+                self.assertEqual(
+                    str(transport.return_value.call_args.args[0]["To"]),
+                    "second@example.org",
+                )
+            with (
+                patch(
+                    "sys.argv",
+                    [
+                        *base,
+                        "--resolve",
+                        "sent",
+                        "--note",
+                        "Inbox confirms this Message-ID",
+                    ],
+                ),
+                patch("scripts.release_probe.settings", return_value=self.config),
+                patch("scripts.release_probe.Publisher") as publisher,
+                patch("scripts.release_probe.SMTPTransport") as transport,
+                redirect_stdout(io.StringIO()),
+            ):
+                self.assertEqual(main(), 0)
+                publisher.return_value.assert_called_once_with(
+                    ["data/notification-state.json"]
+                )
+                transport.assert_not_called()
+            saved = json.loads(state_path.read_text())
+            self.assertEqual(saved["release_probes"][self.scope]["status"], "sent")
+            self.assertEqual(
+                saved["release_probes"][PROBE_ID],
+                self.original["release_probes"][PROBE_ID],
+            )
+
+    def test_cli_rejects_combined_selectors_auth_and_arbitrary_probe_id(self):
+        for extra in (
+            ["--recipient", "first"],
+            ["--check-auth"],
+            ["--probe-id", "new-arbitrary-id"],
+        ):
+            with (
+                patch(
+                    "sys.argv",
+                    ["release_probe.py", "--recipient-test", "second", *extra],
+                ),
+                patch("scripts.release_probe.settings", return_value=self.config),
+                patch("scripts.release_probe.SMTPTransport") as transport,
+                patch("scripts.release_probe.Publisher") as publisher,
+                patch("sys.stderr", io.StringIO()),
+                self.assertRaises(SystemExit) as error,
+            ):
+                main()
+            self.assertEqual(error.exception.code, 2)
+            transport.assert_not_called()
+            publisher.assert_not_called()
+
+    def test_cli_resolves_existing_scope_after_recipient_configuration_changes(self):
+        self.dispatch(transport=Mock(side_effect=TimeoutError("unknown")))
+        for change in ("disabled", "removed", "address"):
+            for resolution in ("sent", "cancelled"):
+                with (
+                    self.subTest(change=change, resolution=resolution),
+                    tempfile.TemporaryDirectory() as directory,
+                ):
+                    root = Path(directory)
+                    (root / "data").mkdir()
+                    state_path = root / "data/notification-state.json"
+                    state_path.write_text(json.dumps(self.state))
+                    base = [
+                        "release_probe.py",
+                        "--source",
+                        str(root),
+                        "--repository",
+                        "example/repository",
+                        "--recipient-test",
+                        "second",
+                        "--publish",
+                        "--date",
+                        DAY,
+                    ]
+                    config = self.changed_recipient_config(change)
+                    with (
+                        patch(
+                            "sys.argv",
+                            [
+                                *base,
+                                "--resolve",
+                                resolution,
+                                "--note",
+                                "Verified mailbox/server evidence for this saved Message-ID",
+                            ],
+                        ),
+                        patch("scripts.release_probe.settings", return_value=config),
+                        patch("scripts.release_probe.Publisher") as publisher,
+                        patch("scripts.release_probe.SMTPTransport") as transport,
+                        redirect_stdout(io.StringIO()),
+                    ):
+                        self.assertEqual(main(), 0)
+                        publisher.return_value.assert_called_once_with(
+                            ["data/notification-state.json"]
+                        )
+                        transport.assert_not_called()
+                    saved = json.loads(state_path.read_text())
+                    record = saved["release_probes"][self.scope]
+                    self.assertEqual(record["status"], resolution)
+                    self.assertEqual(record["recipient"]["email"], "second@example.org")
+                    self.assertEqual(
+                        record["resolutions"][-1]["prior"]["status"], "uncertain"
+                    )
+                    self.assertEqual(
+                        saved["release_probes"][PROBE_ID],
+                        self.original["release_probes"][PROBE_ID],
+                    )
+                    before = state_path.read_bytes()
+                    with (
+                        patch("sys.argv", [*base, "--send"]),
+                        patch("scripts.release_probe.settings", return_value=config),
+                        patch("scripts.release_probe.Publisher") as publisher,
+                        patch("scripts.release_probe.SMTPTransport") as transport,
+                        patch.dict("os.environ", ENV),
+                        redirect_stdout(io.StringIO()),
+                    ):
+                        self.assertEqual(main(), 0)
+                        transport.assert_not_called()
+                        publisher.return_value.assert_not_called()
+                    self.assertEqual(state_path.read_bytes(), before)
+
+    def test_cli_evidence_retry_cannot_bypass_recipient_send_checks(self):
+        self.dispatch(transport=Mock(side_effect=TimeoutError("unknown")))
+        for change in ("disabled", "removed", "address"):
+            with (
+                self.subTest(change=change),
+                tempfile.TemporaryDirectory() as directory,
+            ):
+                root = Path(directory)
+                (root / "data").mkdir()
+                state_path = root / "data/notification-state.json"
+                state_path.write_text(json.dumps(self.state))
+                base = [
+                    "release_probe.py",
+                    "--source",
+                    str(root),
+                    "--repository",
+                    "example/repository",
+                    "--recipient-test",
+                    "second",
+                    "--publish",
+                    "--date",
+                    DAY,
+                ]
+                config = self.changed_recipient_config(change)
+                with (
+                    patch(
+                        "sys.argv",
+                        [
+                            *base,
+                            "--resolve",
+                            "retry",
+                            "--note",
+                            "Server evidence proves no message acceptance",
+                        ],
+                    ),
+                    patch("scripts.release_probe.settings", return_value=config),
+                    patch("scripts.release_probe.Publisher") as publisher,
+                    patch("scripts.release_probe.SMTPTransport") as transport,
+                    redirect_stdout(io.StringIO()),
+                ):
+                    self.assertEqual(main(), 0)
+                    publisher.return_value.assert_called_once_with(
+                        ["data/notification-state.json"]
+                    )
+                    transport.assert_not_called()
+                before = state_path.read_bytes()
+                with (
+                    patch("sys.argv", [*base, "--send"]),
+                    patch("scripts.release_probe.settings", return_value=config),
+                    patch("scripts.release_probe.Publisher") as publisher,
+                    patch("scripts.release_probe.SMTPTransport") as transport,
+                    patch.dict("os.environ", ENV),
+                    redirect_stdout(io.StringIO()),
+                ):
+                    if change == "address":
+                        self.assertEqual(main(), 1)
+                    else:
+                        with self.assertRaisesRegex(
+                            ValueError, "enabled configured recipient"
+                        ):
+                            main()
+                    transport.assert_not_called()
+                    publisher.return_value.assert_not_called()
+                self.assertEqual(state_path.read_bytes(), before)
+
+    def test_cli_new_probe_still_requires_an_enabled_configured_recipient(self):
+        for change in ("disabled", "removed"):
+            for action in ([], ["--send", "--publish"]):
+                with (
+                    self.subTest(change=change, action=action),
+                    tempfile.TemporaryDirectory() as directory,
+                ):
+                    root = Path(directory)
+                    (root / "data").mkdir()
+                    state_path = root / "data/notification-state.json"
+                    state_path.write_text(json.dumps(self.original))
+                    before = state_path.read_bytes()
+                    with (
+                        patch(
+                            "sys.argv",
+                            [
+                                "release_probe.py",
+                                "--source",
+                                str(root),
+                                "--repository",
+                                "example/repository",
+                                "--recipient-test",
+                                "second",
+                                *action,
+                            ],
+                        ),
+                        patch(
+                            "scripts.release_probe.settings",
+                            return_value=self.changed_recipient_config(change),
+                        ),
+                        patch("scripts.release_probe.Publisher") as publisher,
+                        patch("scripts.release_probe.SMTPTransport") as transport,
+                        patch.dict("os.environ", ENV),
+                        self.assertRaisesRegex(
+                            ValueError, "enabled configured recipient"
+                        ),
+                    ):
+                        main()
+                    transport.assert_not_called()
+                    publisher.return_value.assert_not_called()
+                    self.assertEqual(state_path.read_bytes(), before)
 
 
 if __name__ == "__main__":
