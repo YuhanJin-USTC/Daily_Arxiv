@@ -1,9 +1,45 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const {createHash} = require('node:crypto');
 
 const REPOSITORY = 'yuhanjin-ustc/daily-arxiv';
 const SITE = 'https://yuhanjin-ustc.github.io/daily-arxiv/';
+const AI_FIELDS = ['tldr', 'motivation', 'method', 'result', 'conclusion'];
+
+function validatePaperId(value) {
+  if (value === undefined || value === '') return null;
+  if (typeof value !== 'string' || !/^(?:\d{2}(?:0[1-9]|1[0-2])\.\d{4,5}|[a-z][a-z.-]*\/\d{7})(?:v[1-9]\d*)?$/.test(value)) {
+    throw new Error('VERIFY_PAPER_ID must be one bare arXiv paper ID.');
+  }
+  return value.replace(/v\d+$/, '');
+}
+
+function selectPublishedAI(rawRows, enhancedRows, id) {
+  const matches = rows => rows.filter(row => String(row.id || '').replace(/v\d+$/, '') === id);
+  const raw = matches(rawRows);
+  assert.ok(raw.length && typeof raw[0].summary === 'string' && raw[0].summary.trim(), 'Verified paper must exist in published raw data.');
+  assert.ok(raw.every(row => row.summary === raw[0].summary), 'Verified raw abstracts conflict.');
+  const enhanced = matches(enhancedRows).filter(row => row.summary === raw[0].summary);
+  assert.ok(enhanced.length, 'Verified AI must match the exact published raw abstract.');
+  assert.ok(enhanced.every(row => AI_FIELDS.every(field => typeof row.AI?.[field] === 'string' && row.AI[field].trim())), 'Verified AI must contain all five fields.');
+  const fields = AI_FIELDS.map(field => enhanced[0].AI[field]);
+  assert.ok(enhanced.every(row => AI_FIELDS.every((field, i) => row.AI[field] === fields[i])), 'Verified AI fields conflict.');
+  assert.notEqual(fields[0], raw[0].summary, 'Verified TL;DR must differ from the raw abstract.');
+  return {id, abstract: raw[0].summary, fields};
+}
+
+function assertPublishedDetail(actual, expected, language) {
+  assert.equal(actual.id, expected.id);
+  assert.equal(actual.language, language);
+  assert.equal(actual.available, true, 'Verified detail must use AI.');
+  assert.equal(actual.abstract, expected.abstract);
+  assert.deepEqual(actual.fields, expected.fields, 'Detail data must match the selected published language.');
+  assert.equal(actual.heading, 'TL;DR');
+  assert.equal(actual.unavailable, 0);
+  assert.deepEqual(actual.rendered, expected.fields, 'Visible detail must match all five published AI fields.');
+  assert.equal(actual.renderedAbstract, expected.abstract);
+}
 
 function validateSiteUrl(value = SITE) {
   const url = new URL(value);
@@ -32,6 +68,7 @@ function redact(value, password) {
 
 async function runChecks(env = process.env) {
   const site = validateSiteUrl(env.SITE_URL || SITE);
+  const verifyId = validatePaperId(env.VERIFY_PAPER_ID);
   const password = env.ACCESS_PASSWORD;
   if (!password) throw new Error('ACCESS_PASSWORD must be provided through the job environment.');
   if (env.GITHUB_REPOSITORY && env.GITHUB_REPOSITORY.toLowerCase() !== REPOSITORY) {
@@ -87,8 +124,21 @@ async function runChecks(env = process.env) {
         if (!response.ok) throw new Error('Published raw data is unavailable.');
         return response.text();
       }, config.date);
-      const rawIds = new Set(rawText.trim().split('\n').filter(Boolean).map(line => JSON.parse(line).id.replace(/v\d+$/, '')));
+      const rawRows = rawText.trim().split('\n').filter(Boolean).map(line => JSON.parse(line));
+      const rawIds = new Set(rawRows.map(row => row.id.replace(/v\d+$/, '')));
       assert.equal(await page.locator('.paper-card').count(), rawIds.size);
+      const expectedAI = {};
+      if (verifyId) {
+        for (const language of config.languages) {
+          const enhancedText = await page.evaluate(async ({date, language}) => {
+            const response = await fetch(DATA_CONFIG.getDataUrl(`data/${date}_AI_enhanced_${language}.jsonl`));
+            if (!response.ok) throw new Error('Verified published AI language is unavailable.');
+            return response.text();
+          }, {date: config.date, language});
+          expectedAI[language] = selectPublishedAI(rawRows, enhancedText.split('\n').filter(line => line.trim()).map(line => JSON.parse(line)), verifyId);
+        }
+        assert.notDeepEqual(expectedAI.English.fields, expectedAI.Chinese.fields, 'Published English and Chinese results must be distinct.');
+      }
       const index = await page.evaluate(async () => {
         const response = await fetch(DATA_CONFIG.getDataUrl('assets/researcher-index.json'));
         if (!response.ok) throw new Error('Published researcher index is unavailable.');
@@ -111,11 +161,37 @@ async function runChecks(env = process.env) {
       await finished(page);
       assert.equal(await page.evaluate(() => getPreferredLanguage()), 'Chinese');
       assert.equal(await page.locator('.paper-card').count(), rawIds.size);
-      await page.locator('.paper-card').first().click();
+      if (verifyId) {
+        const cardIndex = await page.locator('.paper-card').evaluateAll((cards, id) => cards.findIndex(card => normalizePaperId(card.dataset.id) === id), verifyId);
+        assert.ok(cardIndex >= 0, 'Verified raw paper must have a visible card.');
+        await page.locator('.paper-card').nth(cardIndex).click();
+      } else {
+        await page.locator('.paper-card').first().click();
+      }
+      const verifyDetail = async language => {
+        const actual = await page.evaluate(() => {
+          const paper = currentFilteredPapers[currentPaperIndex];
+          const detail = document.querySelector('#modalBody .paper-details');
+          return {id: normalizePaperId(paper.id), language: paper.aiLanguage, available: paper.aiAvailable,
+            abstract: paper.details, fields: [paper.summary, paper.motivation, paper.method, paper.result, paper.conclusion],
+            heading: detail.querySelector('h3')?.textContent, unavailable: detail.querySelectorAll('.ai-summary-status').length,
+            rendered: [detail.querySelector('h3 + p')?.textContent, ...Array.from(detail.querySelectorAll('.paper-section p'), el => el.textContent)],
+            renderedAbstract: detail.querySelector('.original-abstract')?.textContent};
+        });
+        assertPublishedDetail(actual, expectedAI[language], language);
+        report.checks.push({scenario: 'Published bilingual AI detail', width, id: verifyId, date: config.date, language,
+          fieldsSha256: createHash('sha256').update(JSON.stringify(expectedAI[language].fields)).digest('hex'),
+          passed: ['exact raw abstract', 'all five selected-language AI fields', 'visible detail matches published AI']});
+      };
+      if (verifyId) {
+        await verifyDetail('Chinese');
+        if (width !== 768) await shot('detail-zh');
+      }
       const title = await page.locator('#modalTitle').textContent();
       await page.locator('#paperModal [data-ai-language="English"]').click();
       await finished(page);
       assert.equal(await page.locator('#modalTitle').textContent(), title);
+      if (verifyId) await verifyDetail('English');
       await shot('detail');
       await page.locator('#closeModal').click();
       await page.locator('header [data-ai-language="Chinese"]').click();
@@ -182,7 +258,7 @@ async function runChecks(env = process.env) {
   return {status: report.status, screenshots: report.screenshots.length};
 }
 
-module.exports = {validateSiteUrl, isSitePage, redact, runChecks};
+module.exports = {validateSiteUrl, validatePaperId, selectPublishedAI, assertPublishedDetail, isSitePage, redact, runChecks};
 if (require.main === module) {
   runChecks().then(result => console.log(JSON.stringify(result))).catch(error => {
     console.error(redact(error.message, process.env.ACCESS_PASSWORD));
