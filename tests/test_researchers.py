@@ -13,6 +13,7 @@ from daily_arxiv.researchers import (
     match_paper,
     normalize_name,
 )
+from ai.config import settings
 
 CATEGORIES = ["physics.plasm-ph"]
 RESEARCHERS = [
@@ -46,6 +47,47 @@ def paper(identifier="2610.12345v2", authors=None):
 
 
 class ResearcherTests(unittest.TestCase):
+    def test_verified_author_variants_match_configured_researchers(self):
+        config = settings()
+        for author, identifier, basis in (
+            ("Alexey V Arefiev", "alexey-arefiev", "confirmed_alias"),
+            ("Liang-Liang Ji", "liangliang-ji", "confirmed_alias"),
+            ("Bai-Fei Shen", "baifei-shen", "confirmed_alias"),
+            ("Jorge M Vieira", "jorge-vieira", "confirmed_alias"),
+            ("Xiao-Mei Zhang", "xiaomei-zhang", "confirmed_alias"),
+            ("Tong-Jun Xu", "tongjun-xu", "confirmed_alias"),
+            ("John P Palastro", "john-palastro", "full_name"),
+            ("John Palastro", "john-palastro", "confirmed_alias"),
+            ("John Patrick Palastro", "john-palastro", "confirmed_alias"),
+            ("  David R Blackman ", "david-rhys-blackman", "confirmed_alias"),
+            ("David Blackman", "david-rhys-blackman", "confirmed_alias"),
+            ("Robert J Kingham", "robert-kingham", "confirmed_alias"),
+            ("I-Lin Yeh", "i-lin-yeh", "full_name"),
+        ):
+            with self.subTest(author=author):
+                matches = match_paper(
+                    paper(authors=[author]),
+                    config["researchers"],
+                    config["categories"],
+                )
+                self.assertEqual(len(matches), 1)
+                self.assertEqual(matches[0]["researcher_id"], identifier)
+                self.assertEqual(matches[0]["kind"], "reliable")
+                self.assertEqual(matches[0]["basis"], basis)
+
+    def test_unverified_spellings_do_not_match_configured_researchers(self):
+        config = settings()
+        for author in ("John P. Plastro", "Yi-Lin Yeh", "Xiao Mei Zhang"):
+            with self.subTest(author=author):
+                self.assertEqual(
+                    match_paper(
+                        paper(authors=[author]),
+                        config["researchers"],
+                        config["categories"],
+                    ),
+                    [],
+                )
+
     def test_full_names_aliases_and_initials_keep_their_confidence(self):
         rows = match_paper(
             paper(

@@ -42,7 +42,7 @@ The configured categories are `physics.plasm-ph`, `physics.acc-ph`, `physics.opt
 
 The model uses the repository Actions secret **`OPENAI_API_KEY`**, containing a valid official DeepSeek credential. Old `MODEL_NAME`, `OPENAI_BASE_URL`, and `LANGUAGE` environment/Actions variables do not override the versioned settings. No credential belongs in source, a command argument, an issue, or a log. An offline format check cannot prove a credential is active.
 
-Researchers use stable IDs, enabled flags, full display names, `aliases` (confirmed), and `suspected_aliases` (unconfirmed). Initial abbreviated names are suspected only; they never trigger mail. Browser author filters are personal and do not control repository notifications. Name-only matching cannot establish identity.
+Researchers use stable IDs, enabled flags, full display names, `aliases` (confirmed), and `suspected_aliases` (unconfirmed). Keep verified name variants in `aliases`; ambiguous abbreviations remain suspected and never trigger mail. The current researcher and recipient lists live in `pyproject.toml`. Browser author filters are personal and do not control repository notifications. Name-only matching cannot establish identity.
 
 Mail uses QQ SMTP SSL on port 465, with `SMTP_USERNAME` and `SMTP_PASSWORD` supplied as Secrets or environment variables; use the QQ client authorization code. The configured QQ sender delivers to the enabled USTC recipients. A daily digest is sent only when new papers reliably match watched researchers; a day without such matches produces no paper email. English messages include plain text and HTML alternatives; HTML uses Times New Roman with local serif fallbacks. `notifications.smtp` supports other SSL or STARTTLS providers without transport changes. Mail addresses are intentionally public in configuration, but are excluded from website bundles.
 
@@ -50,17 +50,16 @@ Configure credentials separately in **Settings → Secrets and variables → Act
 
 ## Local development
 
-Requirements: uv, Python 3.12 or newer and Node.js 22 or newer. Install the exact dependencies from `uv.lock`, matching GitHub Actions. uv creates the virtual environment; activation is unnecessary:
+Requirements: Bash/WSL, Git, uv, Python 3.12 or newer, Node.js 22 or newer, and [actionlint 1.7.12](https://github.com/rhysd/actionlint/releases/tag/v1.7.12). Prepare the dependencies from `uv.lock`, then use the same check entrypoint as GitHub Actions. uv creates the virtual environment; activation is unnecessary:
 
 ```bash
 uv sync --frozen
-uv run --frozen ruff check ai daily_arxiv scripts to_md tests
-uv run --frozen ruff format --check ai daily_arxiv scripts to_md tests
-uv run --frozen python -m unittest discover -s tests -v
-node --test tests/*.cjs
+bash scripts/check.sh
 ```
 
-Keep dependency changes and the updated `uv.lock` together; do not substitute an unlocked pip installation for validation. Local `run.sh` uses Bash/WSL and `.venv/bin/python`; set `ARXIV_PYTHON` to another virtual environment's interpreter when needed.
+The check script validates the lockfile offline, Ruff, Python tests including site builds, Node tests, shell syntax, active workflows and diff whitespace. It uses the prepared `.venv` without installing or downloading tools or dependencies. Set `ARXIV_UV`, `ARXIV_NODE` or `ARXIV_ACTIONLINT` to an executable path when a tool is not on PATH. Optional ShellCheck and Pyflakes integrations are disabled so actionlint runs the same checks locally and in CI.
+
+Keep dependency changes and the updated `uv.lock` together; do not substitute an unlocked pip installation for validation. Local `run.sh` uses `.venv/bin/python`; set `ARXIV_PYTHON` to another virtual environment's interpreter when needed. Website previews use `scripts/build_site.py` and a new output directory; supply `ACCESS_PASSWORD` through the environment to build authentication. The build copies its explicit static-file allowlist and renders configuration in the output, leaving source files unchanged.
 
 No keys or live model calls are needed for tests. `bash run.sh DATA_CHECKOUT NEW_OUTPUT` crawls once and prepares a separate raw candidate without changing the supplied checkout. Only an explicit third argument `--generate` enables model requests for both languages; this also processes eligible pending languages when no papers are newly discovered. It never publishes or sends mail. The data checkout must be a separate checkout of the repository's `data` branch.
 

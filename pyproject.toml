@@ -37,7 +37,7 @@ context_window = "1M"
 id = "alexey-arefiev"
 display_name = "Alexey Arefiev"
 enabled = true
-aliases = []
+aliases = ["Alexey V. Arefiev"]
 suspected_aliases = ["A. Arefiev", "A. V. Arefiev"]
 
 [[tool.daily_arxiv.researchers]]
@@ -51,8 +51,8 @@ suspected_aliases = ["Y. He"]
 id = "liangliang-ji"
 display_name = "Liangliang Ji"
 enabled = true
-aliases = []
-suspected_aliases = ["L. Ji"]
+aliases = ["Liang-Liang Ji"]
+suspected_aliases = ["L. Ji", "L. L. Ji"]
 
 [[tool.daily_arxiv.researchers]]
 id = "yin-shi"
@@ -72,15 +72,113 @@ suspected_aliases = ["Z. Gong"]
 id = "baifei-shen"
 display_name = "Baifei Shen"
 enabled = true
-aliases = []
-suspected_aliases = ["B. Shen"]
+aliases = ["Bai-Fei Shen"]
+suspected_aliases = ["B. Shen", "B. F. Shen"]
 
 [[tool.daily_arxiv.researchers]]
 id = "jorge-vieira"
 display_name = "Jorge Vieira"
 enabled = true
-aliases = []
+aliases = ["Jorge M. Vieira"]
 suspected_aliases = ["J. Vieira"]
+
+[[tool.daily_arxiv.researchers]]
+id = "xiaomei-zhang"
+display_name = "Xiaomei Zhang"
+enabled = true
+aliases = ["Xiao-Mei Zhang"]
+suspected_aliases = ["X. Zhang", "X. M. Zhang"]
+
+[[tool.daily_arxiv.researchers]]
+id = "jun-li"
+display_name = "Jun Li"
+enabled = true
+aliases = []
+suspected_aliases = ["J. Li"]
+
+[[tool.daily_arxiv.researchers]]
+id = "jian-zheng"
+display_name = "Jian Zheng"
+enabled = true
+aliases = []
+suspected_aliases = ["J. Zheng"]
+
+[[tool.daily_arxiv.researchers]]
+id = "qing-jia"
+display_name = "Qing Jia"
+enabled = true
+aliases = []
+suspected_aliases = ["Q. Jia"]
+
+[[tool.daily_arxiv.researchers]]
+id = "tongjun-xu"
+display_name = "Tongjun Xu"
+enabled = true
+aliases = ["Tong-Jun Xu"]
+suspected_aliases = ["T. Xu"]
+
+[[tool.daily_arxiv.researchers]]
+id = "ping-zhu"
+display_name = "Ping Zhu"
+enabled = true
+aliases = []
+suspected_aliases = ["P. Zhu"]
+
+[[tool.daily_arxiv.researchers]]
+id = "hui-zhang"
+display_name = "Hui Zhang"
+enabled = true
+aliases = []
+suspected_aliases = ["H. Zhang"]
+
+[[tool.daily_arxiv.researchers]]
+id = "hao-peng"
+display_name = "Hao Peng"
+enabled = true
+aliases = []
+suspected_aliases = ["H. Peng"]
+
+[[tool.daily_arxiv.researchers]]
+id = "john-palastro"
+display_name = "John P. Palastro"
+enabled = true
+aliases = ["John Palastro", "John Patrick Palastro"]
+suspected_aliases = ["J. P. Palastro"]
+
+[[tool.daily_arxiv.researchers]]
+id = "david-rhys-blackman"
+display_name = "David Rhys Blackman"
+enabled = true
+aliases = ["David R. Blackman", "David Blackman"]
+suspected_aliases = ["D. R. Blackman", "D. Blackman"]
+
+[[tool.daily_arxiv.researchers]]
+id = "victor-malka"
+display_name = "Victor Malka"
+enabled = true
+aliases = []
+suspected_aliases = ["V. Malka"]
+
+[[tool.daily_arxiv.researchers]]
+id = "robert-kingham"
+display_name = "Robert Kingham"
+enabled = true
+aliases = ["Robert J. Kingham"]
+suspected_aliases = ["R. J. Kingham"]
+
+[[tool.daily_arxiv.researchers]]
+id = "kavin-tangtartharakul"
+display_name = "Kavin Tangtartharakul"
+enabled = true
+aliases = []
+suspected_aliases = ["K. Tangtartharakul"]
+
+[[tool.daily_arxiv.researchers]]
+id = "i-lin-yeh"
+display_name = "I-Lin Yeh"
+enabled = true
+aliases = []
+suspected_aliases = ["I-L. Yeh"]
 
 [tool.daily_arxiv.notifications]
 enabled = true
@@ -94,6 +192,11 @@ enabled = true
 [[tool.daily_arxiv.notifications.recipients]]
 id = "xuanwu"
 email = "xuanw@mail.ustc.edu.cn"
+enabled = true
+
+[[tool.daily_arxiv.notifications.recipients]]
+id = "xiangtang"
+email = "xiangtang@mail.ustc.edu.cn"
 enabled = true
 
 [tool.daily_arxiv.notifications.smtp]

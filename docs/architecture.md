@@ -13,7 +13,8 @@ The repository has one raw archive and two language outputs. Its source history 
 - `scripts/stage_daily.py`: append new rows to published bytes, update the full file inventory, render Markdown, and stage a manifest. Persist every completed paper and preserve inherited completed/partial fields before another request.
 - `scripts/resume_artifact.py`: validate artifact selector syntax and local request/language/model/prompt/source bindings, and reuse the exact backfill raw snapshot. It does not query GitHub to prove the originating repository or workflow; the operator must perform the checks preserved in the archived workflow before downloading and resuming. Downloaded paths must stay within the artifact directory; legacy shared Markdown manifests are explicitly rejected rather than silently converted; archived results remain readable.
 - `scripts/apply_staged.py`: verify all candidate/source hashes and byte-preservation invariants before changing a separate data checkout. A failed operation is not committed/pushed automatically. Multi-file disk writes are not a filesystem transaction; inspect an interrupted checkout before retrying.
-- `scripts/build_site.py`: copy only static assets, render public repository/language settings and existing password-hash configuration. Generated files never enter the source branch.
+- `scripts/build_site.py`: copy the explicit static-file allowlist and render public repository/language settings and password-hash configuration in a new output directory. Local authenticated previews and Pages use this same build; generated files never enter the source branch.
+- `scripts/check.sh`: shared local/CI checks for the lockfile, Python/Ruff, Node, shell syntax, site builds, active workflows and diff whitespace. Tools and locked dependencies are prepared separately; checks run offline without installing them.
 
 ## Completeness boundaries
 

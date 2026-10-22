@@ -15,6 +15,7 @@ from ai.config import settings, validate_language
 from ai.enhance import resume_rows
 from ai.quality import read_records
 from ai.recover import load_checkpoints, plan_recovery
+from ai.reuse import generation_provenance
 from ai.storage import digest, write_bytes, write_json
 from daily_arxiv.history import load_history_ids, paper_id
 from daily_arxiv.validate_crawl import validate
@@ -53,11 +54,7 @@ def request(kind, source, start, end, ids, expected_count, language=None):
         "repository": os.environ.get("GITHUB_REPOSITORY", ""),
         "language": config["language"],
         "ids": sorted(ids),
-        "profile": config["deepseek"],
-        "prompt_sha256": {
-            name: digest(ROOT / "ai" / name)
-            for name in ("system.txt", "template.txt", "structure.py")
-        },
+        **generation_provenance(config),
     }
     if kind == "repair":
         base.update(

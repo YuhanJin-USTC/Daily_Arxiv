@@ -4,7 +4,7 @@
 
 ## 配置
 
-编辑 `pyproject.toml` 的 `[tool.daily_arxiv]`，提交并推送到 `main`（代码功能改动使用 PR）。只修改本地文件或只推送开发分支，生产配置不会改变。`categories` 是订阅分类；非空 Actions 变量 `CATEGORIES` 同时覆盖抓取、匹配和网页分类。研究者列表使用稳定 `id`、`display_name`、`enabled`、确认 `aliases`、未确认 `suspected_aliases`。停用时保留稳定 ID。初始七个全名来自用户确认，缩写只标为疑似；不要仅凭缩写、姓氏或相似拼写确认身份。姓名匹配仅限订阅分类内已经抓到的论文，不能解决全部同名问题。
+编辑 `pyproject.toml` 的 `[tool.daily_arxiv]`，提交并推送到 `main`（代码功能改动使用 PR）。只修改本地文件或只推送开发分支，生产配置不会改变。`categories` 是订阅分类；非空 Actions 变量 `CATEGORIES` 同时覆盖抓取、匹配和网页分类。研究者列表使用稳定 `id`、`display_name`、`enabled`、确认 `aliases`、未确认 `suspected_aliases`。停用时保留稳定 ID。当前名单以该配置为准；别名应有身份核验依据，不确定缩写保留为疑似，不触发邮件。不要仅凭缩写、姓氏或相似拼写确认身份。姓名匹配仅限订阅分类内已经抓到的论文，不能解决全部同名问题。
 
 启用发布后的配置 push 会重新构建历史高亮。索引绑定配置和有效分类摘要；构建与数据刷新先后完成时，网页会暂时提示索引待更新，不展示旧配置标记。新增研究者/收件人不会追发历史。
 
@@ -29,25 +29,23 @@ git push
 
 `main` 应跟踪新仓库的 `origin/main`。功能开发使用短期分支与 PR；批准自动清理的仓库可以在合并后删除开发分支。本地分支若有独有提交，先保留、审查，再决定是否删除。旧来源 remote 无需作为日常 push 目标。
 
-`notifications.recipients` 配置稳定收件人 ID、邮箱与开关。当前启用 `yuhanjin`（`jinyuhan@mail.ustc.edu.cn`）与 `xuanwu`（`xuanw@mail.ustc.edu.cn`）；地址随公开配置保存，不打包进网页。`notifications.smtp` 使用 `smtp.qq.com:465`、`security="ssl"`，发件地址为 `yhjin1005@qq.com`。认证通过 `username_env`、`password_env` 指定的环境变量读取，默认 `SMTP_USERNAME`、`SMTP_PASSWORD`。QQ 邮箱使用客户端授权码，不要把授权码发到聊天、写入 TOML 或命令参数。
+`notifications.recipients` 配置稳定收件人 ID、邮箱与开关，当前名单以 `pyproject.toml` 为准；地址随公开配置保存，不打包进网页。`notifications.smtp` 使用 `smtp.qq.com:465`、`security="ssl"`，发件地址为 `yhjin1005@qq.com`。认证通过 `username_env`、`password_env` 指定的环境变量读取，默认 `SMTP_USERNAME`、`SMTP_PASSWORD`。QQ 邮箱使用客户端授权码，不要把授权码发到聊天、写入 TOML 或命令参数。
 
 改用其他 SMTP 不需要改传输代码。按服务商要求选择 `ssl` 或 `starttls` 及对应端口，同时更新认证身份、发件地址和客户端密码。`timeout` 和 `max_attempts` 控制超时及明确失败重试次数。英文邮件同时包含纯文本和 HTML 版本；HTML 使用内联 Times New Roman 字体，客户端缺少该字体时回退到 Times 或系统衬线字体，不加载远程字体。一篇论文命中多位研究者只列一次。真实发送同时要求通知配置启用、显式 `--send`、`ALLOW_SMTP_SEND=1`、可用凭据和持久发布回调。
 
 ## 本地验证
 
-使用 Linux Python/Node/uv。安装 uv 后执行 `uv sync --frozen`；Python 版本来自 `.python-version`。若 uv 本身安装在项目 `.venv` 内，切换解释器时可能被替换，建议将工具安装在独立环境。不要修改旧项目的环境。
+使用 Bash/WSL、Git、uv、Python 3.12+、Node.js 22+ 和 actionlint 1.7.12。先单独准备工具，再执行 `uv sync --frozen`；Python 版本来自 `.python-version`。若 uv 本身安装在项目 `.venv` 内，切换解释器时可能被替换，建议将工具安装在独立环境。不要修改旧项目的环境。
 
 ```bash
 uv sync --frozen
-uv run --frozen ruff check ai daily_arxiv scripts to_md tests
-uv run --frozen ruff format --check ai daily_arxiv scripts to_md tests
-uv run --frozen python -m unittest discover -s tests -v
-node --test tests/*.cjs
-bash -n run.sh
-python scripts/build_site.py --repository OWNER/REPO --output artifacts/site-review
+bash scripts/check.sh
+uv run --frozen --no-sync python scripts/build_site.py --repository OWNER/REPO --output artifacts/site-review
 ```
 
-测试使用模拟服务，不需要真实邮箱/模型凭据。构建只注入仓库身份、语言、有效分类、匹配摘要和现有认证哈希，不复制邮件设置或生成数据。输出目录必须不存在。网站需要保留原有外部字体/图表资源的可访问性。
+`scripts/check.sh` 与 CI 共用，离线核验锁文件、Ruff、Python/Node 测试、脚本语法、活跃工作流及 diff 空白；Python 测试包含站点构建。它使用已准备的 `.venv`，不自动安装、同步或下载。工具不在 PATH 时，通过 `ARXIV_UV`、`ARXIV_NODE`、`ARXIV_ACTIONLINT` 指定可执行文件。actionlint 的可选 ShellCheck/Pyflakes 集成固定关闭，避免本地与 CI 检查范围不同。
+
+测试使用模拟服务，不需要真实邮箱/模型凭据。网站预览与部署统一使用 `scripts/build_site.py`，认证密码通过环境变量 `ACCESS_PASSWORD` 提供，不改写源码中的认证配置。构建按显式静态文件清单复制资源，只注入仓库身份、语言、有效分类、匹配摘要和认证哈希，不复制邮件设置或生成数据。输出目录必须不存在。网站需要保留原有外部字体/图表资源的可访问性。
 
 ## 历史迁移
 

@@ -14,12 +14,27 @@ jobs:
         with:
           persist-credentials: false
       - uses: astral-sh/setup-uv@v6
-      - run: uv sync --frozen
-      - run: uv run --frozen ruff check ai daily_arxiv scripts to_md tests
-      - run: uv run --frozen ruff format --check ai daily_arxiv scripts to_md tests
-      - run: uv run --frozen python -m unittest discover -s tests -v
+      - name: Install locked dependencies
+        run: uv sync --frozen
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: node --test tests/*.cjs
-      - run: bash -n run.sh && git diff --check
+      - name: Prepare pinned actionlint
+        id: actionlint
+        run: |
+          set -euo pipefail
+          tool_dir=$(mktemp -d "$RUNNER_TEMP/actionlint.XXXXXX")
+          archive="$tool_dir/actionlint.tar.gz"
+          trap 'CODEX_TEMP_CLEANUP=1 rm -f -- "$archive"' EXIT
+          curl --fail --silent --show-error --location \
+            https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz \
+            --output "$archive"
+          printf '%s  %s\n' \
+            8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8 \
+            "$archive" | sha256sum --check --strict
+          tar -xzf "$archive" -C "$tool_dir" actionlint
+          echo "path=$tool_dir/actionlint" >> "$GITHUB_OUTPUT"
+      - name: Run shared checks
+        env:
+          ARXIV_ACTIONLINT: ${{ steps.actionlint.outputs.path }}
+        run: bash scripts/check.sh

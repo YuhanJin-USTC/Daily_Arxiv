@@ -1,4 +1,0 @@
-exclude:
-  - data/*.md
-include:
-  - data/*.json

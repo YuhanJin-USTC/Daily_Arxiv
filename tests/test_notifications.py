@@ -103,6 +103,24 @@ class NotificationTests(unittest.TestCase):
             self.assertEqual(self.dispatch(state)["sent"], 0)
         self.assertEqual(self.sent, [])
 
+    def test_configured_initials_never_enqueue_or_send_mail(self):
+        config = settings()
+        self.config["researchers"] = config["researchers"]
+        self.config["categories"] = config["categories"]
+        for researcher in config["researchers"]:
+            for author in researcher["suspected_aliases"]:
+                with self.subTest(author=author):
+                    state = self.queue([paper(authors=[author])])
+                    matches = state["discoveries"]["2610.12345"]["matches"]
+                    self.assertTrue(matches)
+                    self.assertTrue(
+                        all(match["kind"] == "suspected" for match in matches)
+                    )
+                    self.assertEqual(state["deliveries"], {})
+                    self.assertEqual(preview_messages(state, self.config, DAY), {})
+                    self.assertEqual(self.dispatch(state)["sent"], 0)
+        self.assertEqual(self.sent, [])
+
     def test_multiple_authors_and_recipients_one_paper_each(self):
         state = self.queue(
             [paper(authors=["Alexey Arefiev", "Jorge Vieira", '<Other & "Author">'])]
@@ -268,6 +286,41 @@ class NotificationTests(unittest.TestCase):
         state = self.queue([paper("2610.22222")], state)
         self.assertNotIn("later", state["deliveries"])
         self.assertEqual(len(state["discoveries"]["2610.12345"]["recipients"]), 2)
+
+    def test_new_recipient_only_receives_future_reliable_discoveries(self):
+        historical = paper("2610.11111", authors=["John Patrick Palastro"])
+        unmatched = paper("2610.22222", authors=["John Patrick Palastro"])
+        state = self.queue(
+            [historical, paper(), unmatched], new_state([historical["id"]])
+        )
+        frozen = copy.deepcopy(state)
+        config = settings()
+        recipient = next(
+            item
+            for item in config["notifications"]["recipients"]
+            if item["id"] == "xiangtang"
+        )
+        self.config["researchers"] = config["researchers"]
+        self.config["categories"] = config["categories"]
+        self.config["notifications"]["recipients"].append(recipient)
+        state = self.queue([historical, paper("2610.12345v3"), unmatched], state)
+        self.assertEqual(state, frozen)
+
+        day = "2026-10-22"
+        future = paper("2610.33333", authors=["John Patrick Palastro"])
+        state = self.queue([future], state, day)
+        self.assertEqual(set(state["deliveries"]["xiangtang"]), {future["id"]})
+        for identifier, discovery in frozen["discoveries"].items():
+            self.assertEqual(state["discoveries"][identifier], discovery)
+        self.assertEqual(self.dispatch(state, day=day)["sent"], 3)
+        message = next(
+            message for message in self.sent if str(message["To"]) == recipient["email"]
+        )
+        text = message.get_body(preferencelist=("plain",)).get_content()
+        self.assertIn("John P. Palastro", text)
+        self.assertIn(future["id"], text)
+        for identifier in (historical["id"], unmatched["id"], "2610.12345"):
+            self.assertNotIn(identifier, text)
 
     def test_no_new_papers_retries_explicit_failure_with_limit(self):
         state = self.queue()

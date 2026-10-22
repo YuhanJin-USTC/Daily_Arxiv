@@ -15,6 +15,25 @@ sys.path.insert(1, str(ROOT / "daily_arxiv"))
 from ai.config import settings, subscribed_categories
 from daily_arxiv.researchers import config_digest
 
+STATIC_FILES = (
+    "index.html",
+    "login.html",
+    "settings.html",
+    "statistic.html",
+    "assets/logo2-removebg-preview.png",
+    "css/settings.css",
+    "css/statistic.css",
+    "css/styles.css",
+    "js/app.js",
+    "js/auth-config.js",
+    "js/auth.js",
+    "js/data-config.js",
+    "js/login.js",
+    "js/papers.js",
+    "js/settings.js",
+    "js/statistic.js",
+)
+
 
 def build(output, repository, data_base_url=""):
     if output.exists():
@@ -22,11 +41,10 @@ def build(output, repository, data_base_url=""):
     if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repository):
         raise ValueError("Expected owner/repository")
     output.mkdir(parents=True)
-    for directory in ("assets", "css", "images", "js"):
-        if (ROOT / directory).exists():
-            shutil.copytree(ROOT / directory, output / directory)
-    for file in ROOT.glob("*.html"):
-        shutil.copyfile(file, output / file.name)
+    for name in STATIC_FILES:
+        target = output / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ROOT / name, target)
     config = settings()
     language = config["language"]
     categories = subscribed_categories()

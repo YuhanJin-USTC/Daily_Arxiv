@@ -128,6 +128,52 @@ class DailyIntegrationTests(unittest.TestCase):
         self.assertTrue((self.source / "data/ai-checkpoints/English.json").exists())
         self.assertTrue((self.source / QUEUE).exists())
 
+    def test_researcher_refresh_updates_highlights_without_mail_backfill(self):
+        self.row["authors"] = ["David R. Blackman"]
+        self.config["researchers"] = [
+            researcher
+            for researcher in self.config["researchers"]
+            if researcher["id"] != "david-rhys-blackman"
+        ]
+        self.discover()
+        queue_bytes = (self.source / QUEUE).read_bytes()
+        raw_bytes = (self.source / f"data/{self.day}.jsonl").read_bytes()
+        config = settings()
+        self.config["researchers"] = config["researchers"]
+        self.config["notifications"]["recipients"].append(
+            next(
+                recipient
+                for recipient in config["notifications"]["recipients"]
+                if recipient["id"] == "xiangtang"
+            )
+        )
+        publish = Mock()
+        refresh_index(self.source, self.config, publish)
+        publish.assert_called_once_with([INDEX])
+        matches = json.loads((self.source / INDEX).read_text())["papers"][
+            self.row["id"]
+        ]
+        self.assertEqual(len(matches), 1)
+        self.assertEqual(matches[0]["researcher_id"], "david-rhys-blackman")
+        self.assertEqual(matches[0]["kind"], "reliable")
+        self.assertEqual((self.source / QUEUE).read_bytes(), queue_bytes)
+        self.assertEqual(
+            (self.source / f"data/{self.day}.jsonl").read_bytes(), raw_bytes
+        )
+        self.discover([], "2")
+        self.assertEqual((self.source / QUEUE).read_bytes(), queue_bytes)
+        transport = Mock()
+        report = send_notifications(
+            self.source,
+            self.config,
+            Mock(),
+            transport,
+            {"ALLOW_SMTP_SEND": "1"},
+            self.day,
+        )
+        self.assertEqual(report["sent"], 0)
+        transport.assert_not_called()
+
     def test_send_without_durable_publisher_refused(self):
         self.discover()
         with self.assertRaisesRegex(ValueError, "durable"):

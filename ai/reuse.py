@@ -60,14 +60,16 @@ class SuccessfulSummaries:
         ] if reused else []
 
 
-def generation_provenance():
+def generation_provenance(config=None):
     from pathlib import Path
 
     from .config import settings
 
+    if config is None:
+        config = settings()
     root = Path(__file__).resolve().parent
     return {
-        "profile": settings()["deepseek"],
+        "profile": config["deepseek"],
         "prompt_sha256": {
             name: digest(root / name)
             for name in ("system.txt", "template.txt", "structure.py")

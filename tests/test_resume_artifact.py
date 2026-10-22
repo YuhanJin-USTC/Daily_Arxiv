@@ -424,7 +424,7 @@ class ArtifactTests(unittest.TestCase):
         config["deepseek"] = {**config["deepseek"], "model": "different"}
         with (
             patch("scripts.resume_artifact.settings", return_value=config),
-            self.assertRaises(ValueError),
+            self.assertRaisesRegex(ValueError, "model profile changed"),
         ):
             prepare(
                 "append",
@@ -433,3 +433,4 @@ class ArtifactTests(unittest.TestCase):
                 self.artifact,
                 ids=(self.identifier,),
             )
+        self.assertFalse(self.output.exists())

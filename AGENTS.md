@@ -25,10 +25,11 @@
 - Daily and manual data operations honor `ENABLE_DATA_WRITES`; AI and email retain their separate gates. Maintenance runs only from `main`, and browser/auth jobs do not receive model or sending credentials beyond their own task.
 - Mail uses English plain text plus an escaped HTML alternative with inline Times New Roman, Times and serif fallbacks. Never load remote fonts or change delivery identity for formatting.
 - Keep mail recipients/SMTP configuration out of site bundles; credentials only in Secrets/environment. Do not infer authentication from recipient addresses. Preserve repository-specific authentication and Pages subpaths.
+- Website builds copy the explicit static-file allowlist in `scripts/build_site.py`. Use that build for local authentication previews and Pages; never rewrite source authentication settings or copy whole source directories into the bundle.
 
 ## Checks and handoff
 
-- Read nearby files first; match existing organization, concise English comments and tests. Run Ruff check/format, Python unittest, Node tests, shell syntax, workflow validation and relevant builds. Services must be mocked in tests.
+- Read nearby files first; match existing organization, concise English comments and tests. Prepare locked dependencies separately, then run `bash scripts/check.sh` for the shared local/CI lockfile, Ruff, Python/Node tests, shell syntax, site-build tests, workflow and whitespace checks. The script does not install tools or dependencies; services must be mocked in tests.
 - For UI changes, inspect 1440/768/390 widths, keyboard selection, fast toggling, range/filter/detail state, stats deduplication and missing-language fallback. State clearly when browser inspection is unavailable.
 - Dependency changes require a matching `uv.lock`; do not silently substitute unlocked tests for locked validation.
 - Keep one-time evidence in ignored `artifacts/upgrade/STATE.md`; do not commit credentials, caches, previews, checkpoints or personal work logs to source. Before resuming a large upgrade, read that state and necessary diffs.
