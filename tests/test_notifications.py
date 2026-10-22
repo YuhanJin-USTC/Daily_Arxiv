@@ -1,4 +1,8 @@
 import copy
+from email.message import EmailMessage
+from email.parser import BytesParser
+from email import policy
+from html.parser import HTMLParser
 import json
 import os
 from pathlib import Path
@@ -22,7 +26,9 @@ from daily_arxiv.notifications import (
     new_state,
     preview_messages,
     resolve,
+    set_email_content,
 )
+from ai.config import settings
 from daily_arxiv.researchers import build_index
 from test_researchers import CATEGORIES, RESEARCHERS, paper
 
@@ -32,6 +38,15 @@ ENV = {
     "SMTP_USERNAME": "fictional-user",
     "SMTP_PASSWORD": "fictional-client-password",
 }
+
+
+class HTMLAudit(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.elements = []
+
+    def handle_starttag(self, tag, attrs):
+        self.elements.append((tag, dict(attrs)))
 
 
 def configuration():
@@ -94,11 +109,15 @@ class NotificationTests(unittest.TestCase):
         )
         previews = preview_messages(state, self.config, DAY)
         self.assertEqual(len(previews), 2)
-        text = previews["first"].get_content()
+        text = previews["first"].get_body(preferencelist=("plain",)).get_content()
         self.assertIn("Alexey Arefiev, Jorge Vieira", text)
         self.assertIn('<Other & "Author">', text)
         self.assertEqual(text.count("arXiv:"), 1)
-        self.assertEqual(previews["first"].get_content_type(), "text/plain")
+        self.assertEqual(previews["first"].get_content_type(), "multipart/alternative")
+        self.assertEqual(
+            [part.get_content_type() for part in previews["first"].iter_parts()],
+            ["text/plain", "text/html"],
+        )
         self.assertEqual(self.dispatch(state)["sent"], 2)
         self.assertEqual(
             [str(message["To"]) for message in self.sent],
@@ -126,6 +145,7 @@ class NotificationTests(unittest.TestCase):
         self.assertNotIn(
             "Jorge Vieira",
             preview_messages(state, self.config, DAY)["first"]
+            .get_body(preferencelist=("plain",))
             .get_content()
             .split("Matched researchers: ")[1],
         )
@@ -143,6 +163,82 @@ class NotificationTests(unittest.TestCase):
             self.sent.append(message)
 
         self.assertEqual(self.dispatch(state, transport=transport)["sent"], 2)
+
+    def test_html_escapes_metadata_and_only_links_validated_urls(self):
+        author = '<script>alert("author")</script> & Other'
+        row = paper(authors=["Alexey Arefiev", author])
+        row["title"] = (
+            '<img src="https://tracker.example/pixel" onerror="alert(1)"> & "Study"'
+        )
+        self.config["researchers"][0]["display_name"] = '<Researcher & "Label">'
+        self.config["researchers"][0]["aliases"].append("Alexey Arefiev")
+        self.config["notifications"]["site_url"] = (
+            'https://example.org/daily-arxiv/?q="<tag>"&x=1'
+        )
+        message = preview_messages(self.queue([row]), self.config, DAY)["first"]
+        plain = message.get_body(preferencelist=("plain",)).get_content()
+        html = message.get_body(preferencelist=("html",)).get_content()
+        self.assertIn(row["title"], plain)
+        self.assertIn(author, plain)
+        self.assertIn("font-family: 'Times New Roman', Times, serif", html)
+        self.assertIn("&lt;img", html)
+        self.assertIn("&lt;script&gt;", html)
+        self.assertIn("&lt;Researcher &amp; &quot;Label&quot;&gt;", html)
+        self.assertIn("&quot;&lt;tag&gt;&quot;&amp;x=1", html)
+        audit = HTMLAudit()
+        audit.feed(html)
+        self.assertLessEqual(
+            {tag for tag, _ in audit.elements}, {"html", "body", "div", "p", "br", "a"}
+        )
+        links = {attrs["href"] for tag, attrs in audit.elements if tag == "a"}
+        self.assertEqual(
+            links,
+            {
+                self.config["notifications"]["site_url"],
+                "https://arxiv.org/abs/2610.12345",
+            },
+        )
+        self.assertFalse(
+            any(
+                name.startswith("on") or name in ("src", "srcset")
+                for _, attrs in audit.elements
+                for name in attrs
+            )
+        )
+
+    def test_multipart_preserves_original_plain_digest(self):
+        message = preview_messages(self.queue(), self.config, DAY)["first"]
+        expected = (
+            "New papers by researchers you follow (2026-10-21)\n\n"
+            "These matches use confirmed names or aliases. Names alone cannot establish identity.\n"
+            "AI interpretations may still be pending.\n\n"
+            "1. A <plasma> & photon study\n"
+            "Authors: Alexey Arefiev\n"
+            "Matched researchers: Alexey Arefiev\n"
+            "arXiv: https://arxiv.org/abs/2610.12345\n"
+            "Site: https://example.org/daily-arxiv/\n"
+        )
+        restored = BytesParser(policy=policy.default).parsebytes(message.as_bytes())
+        self.assertEqual(
+            restored.get_body(preferencelist=("plain",)).get_content(), expected
+        )
+        self.assertIn(
+            "Times New Roman", restored.get_body(preferencelist=("html",)).get_content()
+        )
+
+    def test_html_rejects_non_http_or_credentialed_links(self):
+        for url in (
+            "javascript:alert(1)",
+            "data:text/html,<script>",
+            "mailto:a@example.org",
+            "//example.org/",
+            "https://user:secret@example.org/",
+            "https://example.org:bad/",
+            "https://example.org/ path",
+            "https://example.org/\x00",
+        ):
+            with self.subTest(url=url), self.assertRaises(ValueError):
+                set_email_content(EmailMessage(), "Site: " + url, [url])
 
     def test_repeated_run_new_version_crosslist_and_ai_do_not_notify_twice(self):
         state = self.queue()
@@ -334,7 +430,7 @@ class NotificationTests(unittest.TestCase):
         self.assertEqual(self.saved, [])
 
     def test_default_cli_only_creates_previews(self):
-        state = self.queue()
+        state = enqueue_discoveries(new_state(), [paper()], DAY, settings())
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory)
             state_file = path / "state.json"
@@ -359,6 +455,22 @@ class NotificationTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("no messages sent", result.stdout)
             self.assertEqual(state_file.read_bytes(), before)
+            emails = list((path / "preview").glob("*.eml"))
+            self.assertEqual(len(emails), len(state["deliveries"]))
+            self.assertTrue(emails)
+            for email in emails:
+                message = BytesParser(policy=policy.default).parsebytes(
+                    email.read_bytes()
+                )
+                self.assertEqual(message.get_content_type(), "multipart/alternative")
+                self.assertEqual(
+                    email.with_suffix(".txt").read_text(),
+                    message.get_body(preferencelist=("plain",)).get_content(),
+                )
+                self.assertEqual(
+                    email.with_suffix(".html").read_text(),
+                    message.get_body(preferencelist=("html",)).get_content(),
+                )
 
     def test_queue_requires_complete_raw_metadata(self):
         row = paper()

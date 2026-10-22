@@ -20,6 +20,7 @@
 - Diagnose SMTP connection/auth failures with the manual auth-only check before another send. Keep diagnostics allowlisted; never record server response text, credentials or authentication payloads.
 - Changing a frozen release-probe sender requires an explicit audited rebind from failed state. Preserve attempts, recipient and Message-ID; never rebind sent, sending or uncertain probes. Confirm replacement SMTP Secrets before authenticating with a new provider.
 - All data workflows share `concurrency.group: arxiv-data`, `cancel-in-progress: false`; verify remote data HEAD before writes. Never force-push to recover a conflict. Configuration refresh updates highlights only, never historic mail.
+- Mail uses English plain text plus an escaped HTML alternative with inline Times New Roman, Times and serif fallbacks. Never load remote fonts or change delivery identity for formatting.
 - Keep mail recipients/SMTP configuration out of site bundles; credentials only in Secrets/environment. Do not infer authentication from recipient addresses. Preserve repository-specific authentication and Pages subpaths.
 
 ## Checks and handoff

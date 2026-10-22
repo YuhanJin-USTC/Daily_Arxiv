@@ -5,8 +5,10 @@ from datetime import date, datetime, timezone
 from email.message import EmailMessage
 from email.utils import format_datetime
 import hashlib
+from html import escape
 import json
 import os
+import re
 import smtplib
 import socket
 import ssl
@@ -225,8 +227,52 @@ def _identifier(recipient, identifiers, day):
     return hashlib.sha256(value.encode()).hexdigest()[:32]
 
 
+def set_email_content(message, text, urls=()):
+    """Keep plain text and add a self-contained serif HTML alternative."""
+    links = sorted(set(urls), key=len, reverse=True)
+    for url in links:
+        parsed = urlparse(url)
+        parsed.port
+        if (
+            parsed.scheme not in ("http", "https")
+            or not parsed.hostname
+            or parsed.username is not None
+            or parsed.password is not None
+            or any(char.isspace() or ord(char) < 32 or ord(char) == 127 for char in url)
+        ):
+            raise ValueError("Email links require an HTTP(S) URL without credentials")
+    pattern = re.compile("|".join(re.escape(url) for url in links)) if links else None
+
+    def html_text(value):
+        if pattern is None:
+            return escape(value)
+        pieces, position = [], 0
+        for match in pattern.finditer(value):
+            pieces.append(escape(value[position : match.start()]))
+            safe_url = escape(match.group(), quote=True)
+            pieces.append(f'<a href="{safe_url}">{safe_url}</a>')
+            position = match.end()
+        pieces.append(escape(value[position:]))
+        return "".join(pieces)
+
+    message.set_content(text)
+    paragraphs = [
+        '<p style="margin: 0 0 16px;">'
+        + html_text(paragraph).replace("\n", "<br>\n")
+        + "</p>"
+        for paragraph in message.get_content().rstrip("\n").split("\n\n")
+    ]
+    message.add_alternative(
+        '<!DOCTYPE html><html lang="en"><body>'
+        "<div style=\"font-family: 'Times New Roman', Times, serif; font-size: 16px; line-height: 1.5;\">"
+        + "\n".join(paragraphs)
+        + "</div></body></html>\n",
+        subtype="html",
+    )
+
+
 def render_message(state, recipient_id, identifiers, day, site_url, sender):
-    """Plain text prevents author/title HTML from becoming markup."""
+    """Render one English digest with a plain-text alternative."""
     deliveries = state["deliveries"][recipient_id]
     recipients = {
         deliveries[identifier]["recipient"]["email"] for identifier in identifiers
@@ -273,7 +319,14 @@ def render_message(state, recipient_id, identifiers, day, site_url, sender):
                 "",
             ]
         )
-    message.set_content("\n".join(text))
+    set_email_content(
+        message,
+        "\n".join(text),
+        [
+            site_url,
+            *("https://arxiv.org/abs/" + identifier for identifier in identifiers),
+        ],
+    )
     return message
 
 

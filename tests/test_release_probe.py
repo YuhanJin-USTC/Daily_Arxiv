@@ -20,7 +20,7 @@ from scripts.release_probe import (
     rebind_sender,
     resolve_probe,
 )
-from test_notifications import DAY, ENV, configuration
+from test_notifications import DAY, ENV, HTMLAudit, configuration
 from test_researchers import paper
 
 
@@ -48,12 +48,46 @@ class ReleaseProbeTests(unittest.TestCase):
     def test_preview_is_infrastructure_only_and_has_no_side_effects(self):
         before = copy.deepcopy(self.state)
         message = preview(self.state, self.config, day=DAY)
-        self.assertIn("not a paper digest", message.get_content())
-        self.assertIn("no historical paper notification", message.get_content())
-        self.assertNotIn("arxiv.org/abs/", message.get_content())
+        plain = message.get_body(preferencelist=("plain",)).get_content()
+        html = message.get_body(preferencelist=("html",)).get_content()
+        self.assertEqual(message.get_content_type(), "multipart/alternative")
+        self.assertIn("not a paper digest", plain)
+        self.assertIn("no historical paper notification", plain)
+        self.assertNotIn("arxiv.org/abs/", plain)
+        self.assertIn("font-family: 'Times New Roman', Times, serif", html)
         self.assertEqual(str(message["To"]), "first@example.org")
         self.assertEqual(self.state, before)
         self.assertEqual(self.sent, [])
+
+    def test_probe_html_escapes_site_url_and_keeps_plain_text(self):
+        site = 'https://example.org/?q="<test>"&x=1'
+        self.config["notifications"]["site_url"] = site
+        message = preview(self.state, self.config, day=DAY)
+        plain = message.get_body(preferencelist=("plain",)).get_content()
+        self.assertEqual(
+            plain,
+            (
+                "This is the one-time English delivery test for the bilingual Daily Arxiv site.\n\n"
+                "This message tests SMTP delivery only. It is not a paper digest, and no historical paper notification is being sent.\n\n"
+                "Site: " + site + "\nProbe ID: initial-release-v1\n\n"
+                "The sending state was saved before SMTP. Please retain this message as delivery evidence.\n"
+            ),
+        )
+        html = message.get_body(preferencelist=("html",)).get_content()
+        self.assertIn("&quot;&lt;test&gt;&quot;&amp;x=1", html)
+        audit = HTMLAudit()
+        audit.feed(html)
+        self.assertLessEqual(
+            {tag for tag, _ in audit.elements}, {"html", "body", "div", "p", "br", "a"}
+        )
+        self.assertEqual(
+            [attrs["href"] for tag, attrs in audit.elements if tag == "a"], [site]
+        )
+
+    def test_probe_html_rejects_non_http_site_url(self):
+        self.config["notifications"]["site_url"] = "javascript:alert(1)"
+        with self.assertRaises(ValueError):
+            preview(self.state, self.config, day=DAY)
 
     def test_exactly_one_configured_recipient_and_durable_sending_before_transport(
         self,

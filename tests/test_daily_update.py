@@ -39,6 +39,9 @@ class DailyIntegrationTests(unittest.TestCase):
             "pdf": "https://arxiv.org/pdf/2610.12345",
         }
         self.config = copy.deepcopy(settings())
+        self.config["notifications"]["recipients"] = [
+            {"id": "yuhanjin", "email": "recipient@example.org", "enabled": True}
+        ]
         self.day = "2026-10-21"
 
     def discover(self, rows=None, suffix="1"):

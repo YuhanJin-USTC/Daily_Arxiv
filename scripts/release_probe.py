@@ -17,7 +17,12 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(1, str(ROOT / "daily_arxiv"))
 from ai.config import settings
 from ai.storage import write_json
-from daily_arxiv.notifications import DeliveryFailure, SMTPTransport, validate_state
+from daily_arxiv.notifications import (
+    DeliveryFailure,
+    SMTPTransport,
+    set_email_content,
+    validate_state,
+)
 from scripts.publish_data import Publisher
 
 PROBE_ID = "initial-release-v1"
@@ -105,12 +110,14 @@ def message_for(record):
         datetime.fromisoformat(record["date"]).replace(tzinfo=timezone.utc)
     )
     message["Message-ID"] = record["message_id"]
-    message.set_content(
+    set_email_content(
+        message,
         "This is the one-time English delivery test for the bilingual Daily Arxiv site.\n\n"
         "This message tests SMTP delivery only. It is not a paper digest, and no historical paper notification is being sent.\n\n"
         "Site: " + record["site_url"] + "\n"
         "Probe ID: " + PROBE_ID + "\n\n"
-        "The sending state was saved before SMTP. Please retain this message as delivery evidence.\n"
+        "The sending state was saved before SMTP. Please retain this message as delivery evidence.\n",
+        [record["site_url"]],
     )
     return message
 
