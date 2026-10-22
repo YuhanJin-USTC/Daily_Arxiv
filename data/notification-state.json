@@ -8469,6 +8469,21 @@
         }
       ],
       "sent_date": "2026-10-21"
+    },
+    "recipient-layout-v1:xuanwu": {
+      "probe_id": "recipient-layout-v1:xuanwu",
+      "recipient": {
+        "id": "xuanwu",
+        "email": "xuanw@mail.ustc.edu.cn"
+      },
+      "date": "2026-10-22",
+      "site_url": "https://yuhanjin-ustc.github.io/daily-arxiv/",
+      "sender": "yhjin1005@qq.com",
+      "message_id": "<daily-arxiv-release-dcd0e6f6bb23359a29918a6227a3c550@yuhanjin-ustc.github.io>",
+      "status": "sending",
+      "attempts": 1,
+      "last_error": null,
+      "resolutions": []
     }
   }
 }
