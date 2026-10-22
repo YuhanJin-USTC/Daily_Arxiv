@@ -5,7 +5,7 @@ on:
       phase:
         description: Explicit release check; each phase preserves prior results
         type: choice
-        options: [crawl, ai, smtp-auth, mail-sender, mail]
+        options: [crawl, ai, smtp-auth, mail-sender, mail, recipient-mail]
         required: true
       paper_id:
         description: One genuinely new post-baseline arXiv ID for the AI probe
@@ -13,6 +13,10 @@ on:
         default: ''
       evidence_note:
         description: Public evidence for a failed probe sender change; never credentials
+        type: string
+        default: ''
+      recipient_id:
+        description: Enabled recipient ID for the explicit one-time layout test
         type: string
         default: ''
 permissions:
@@ -128,6 +132,19 @@ jobs:
           uv run --frozen python scripts/release_probe.py --source ../published \
             --repository "$GITHUB_REPOSITORY" --rebind-sender \
             --note "$EVIDENCE_NOTE" --publish
+      - name: Send one durable recipient layout test
+        if: inputs.phase == 'recipient-mail'
+        working-directory: code
+        env:
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          ALLOW_SMTP_SEND: '1'
+          RECIPIENT_ID: ${{ inputs.recipient_id }}
+          DAY: ${{ steps.prepare.outputs.day }}
+        run: |
+          uv run --frozen python scripts/release_probe.py --source ../published \
+            --repository "$GITHUB_REPOSITORY" --recipient-test "$RECIPIENT_ID" \
+            --date "$DAY" --send --publish
       - name: Save persistent state evidence
         if: always() && inputs.phase != 'smtp-auth'
         run: |
