@@ -89,7 +89,7 @@ QQ 邮箱配置步骤：登录[网页版邮箱](https://mail.qq.com/)，在设�
 2. 用户授权后创建 `yuhanjin-ustc/daily-arxiv` 并推送源码及审核的数据分支。先核对目标名称归属/内容；目标存在冲突则停止。发布时确认 origin 指向该 GitHub 仓库；克隆时继承的本地源远端只能保留作来源，绝不能向它 push。
 3. 配置 Secrets：`OPENAI_API_KEY`、`ACCESS_PASSWORD`、`SMTP_USERNAME`、`SMTP_PASSWORD`。配置 Pages 使用 GitHub Actions。缺少 ACCESS_PASSWORD 时，既有鉴权逻辑会开放阅读；为保持旧站密码访问行为，必须先配置该 Secret 再部署。
 4. 经单独授权，实测邮件和少量真正新论文的双语生成。检查 durable queue、各语言恢复和费用，不用迁移历史作自动补发。优先手动运行，暂不同时打开两套定时任务。
-5. 启用 `ENABLE_PAGES=true`、`ENABLE_DATA_WRITES=true` 后，手动 dispatch Deploy website 与 Refresh researcher highlights（变量变化本身不会重跑先前跳过的任务），核对仓库链接、GitHub Pages 子路径、鉴权、缺译、匹配版本及三种屏幕宽度。按授权启用 `ENABLE_AI`、`ENABLE_EMAIL`。
+5. 启用 `ENABLE_PAGES=true`、`ENABLE_DATA_WRITES=true` 后，手动 dispatch Deploy website 与 Refresh researcher highlights（变量变化本身不会重跑先前跳过的任务），核对仓库链接、GitHub Pages 子路径、鉴权、缺译、匹配版本及三种屏幕宽度。运行 Verify deployed website 时可填写已完成双语的新论文 `paper_id`，核对该篇实际显示的两种 AI 内容，避免仅检查缺译论文。按授权启用 `ENABLE_AI`、`ENABLE_EMAIL`。
 6. 切换前再次只读核对两个旧仓库最新 data SHA，重新制作全量候选并验证迁移期间增量，保留旧候选和来源证据。若新仓库已经有 smoke test 产物，先冻结并保留该数据提交，将最新旧站数据作为有来源/hash 的增量审查合入；保留新仓库已付费的健康 AI、检查点、discovery 状态和通知队列，严禁用重新初始化的迁移候选整体替换。仅为从旧站新导入且尚未在新仓库发现的 ID 增加历史基线；遇到元数据/健康 AI 冲突需再次交由用户判断。当前迁移工具处理两个源快照，已有运行状态的第三方合并需要独立审查的增量方案，不是一键覆盖。完成基线核对后，短时停用旧定时任务，完成最终增量检查，再启用新站 `ENABLE_DAILY=true`；避免漏收论文或长期重复付费。
 7. 经授权在旧站和旧 README 增加迁移入口；保留旧仓库、历史页面和可回退定时配置，不自动跳转或删除。
 
