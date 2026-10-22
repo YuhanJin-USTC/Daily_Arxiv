@@ -8480,10 +8480,11 @@
       "site_url": "https://yuhanjin-ustc.github.io/daily-arxiv/",
       "sender": "yhjin1005@qq.com",
       "message_id": "<daily-arxiv-release-dcd0e6f6bb23359a29918a6227a3c550@yuhanjin-ustc.github.io>",
-      "status": "sending",
+      "status": "sent",
       "attempts": 1,
       "last_error": null,
-      "resolutions": []
+      "resolutions": [],
+      "sent_date": "2026-10-22"
     }
   }
 }
