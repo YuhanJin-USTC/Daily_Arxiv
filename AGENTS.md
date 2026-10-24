@@ -9,6 +9,16 @@
 - Use one implementation with explicit English/Chinese arguments. Do not add a frontend framework, service or database for these features.
 - Keep five regular Actions entrypoints: Tests, Daily arXiv, Deploy website, Refresh researcher highlights and Maintenance. Maintenance retains `release-check.yml` for its existing history; retired workflow definitions belong in `docs/workflow-archive/`, not the active workflow directory.
 
+## Research Workflow
+
+- This is the independent `daily_arxiv` source root with mapping `none`. Resolve `CONTROL_ROOT`, the local project path and device identity from the verified device-local `workspace.toml`; keep the same root ID across devices.
+- Before work, use `python3 -B "<CONTROL_ROOT>/tools/researchctl.py" context "root:daily_arxiv/<exact-directory>" --view compact --json`, replacing the placeholders. Use `root:daily_arxiv` for root-wide work; matching is exact unless recursion is explicitly requested.
+- Record one substantive completed result with an event-only `checkpoint` at its exact owner. Retain purpose, result, accepted reasons, checks and limits in existing summary/evidence fields. Do not log ordinary discussion or planning, create empty Project/Study/Case membership, or invent historical work.
+- Keep research authority in the control repository. Do not copy its metadata, SQLite or saved plans into this source tree, the `data` branch, pipeline state or website bundles. The application and Actions gain no Research Workflow runtime dependency or automatic recording hook.
+- Registration does not pair paper data with simulation Cases, authorize another root, or change source/data separation, paid model, SMTP or publication gates. Preserve existing project boundaries and explicit user constraints.
+- After changing devices, preserve local work and obtain separate synchronization authorization, then complete `doctor`, `event merge` and `validate` before context or any portable write. Do not copy device identity, local paths, SQLite, saved plans or approval digests between devices.
+- A device without this project may read synchronized logical memory, but local access and new events require its verified root registration. New policy targets require local preview, real user approval and digest-bound apply; retain cumulative device approvals.
+
 ## Data and delivery invariants
 
 - Validate raw coverage once. Raw normalized IDs define the paper set; each language may be complete or pending independently. Never hide raw papers because AI is absent.
@@ -38,3 +48,17 @@
 - Confirm Git remotes before publication. The legacy local source may be retained as `source-chinese`; never push there. `origin` must identify the authorized target GitHub repository. New GitHub repo creation/push/deployment, real SMTP/paid model calls and old-site changes need separate explicit release authorization. Activation variables are disabled by absence.
 - Preserve old sites, branches and migration snapshots until the user explicitly approves any specific deletion. PR descriptions state final behavior, tests, data preservation evidence and known limits.
 - When the user has enabled automatic branch deletion after merge, completed PR branches may follow that setting. Keep `main/data`; archive and obtain specific approval before deleting unmerged work. Local `main` tracks `origin/main`, uses fast-forward pulls and defaults to `origin`; temporary migration remotes are not required for normal use.
+<!-- research-workflow:policy:start -->
+<!-- digest: 53b828bcd3473143cd53c8eb3790393d6fec47f065abe2b14e0e167f32b593b7 -->
+## Managed Research Workflow Policy
+
+- `case-confirmation`: "A Case target does not imply a Case edit. For explicit registration or simulation-definition changes, finish files/checks, show the saved preview, actually ask and await the user, then apply the exact plan. A digest is not consent; unchanged accepted definitions add no revision."
+- `external-operations`: "Do not run cluster, simulation, MATLAB, network, sync, build, or Git mutations without explicit user authorization."
+- `framework-authority`: "Use Research Workflow 0.2.3 and the unversioned researchctl CLI. Preserve journal-only Case authority, original Event fields, historical migrate/tombstone bindings, immutable streams, and fail-closed forks."
+- `indexing`: "Treat SQLite and saved plans as device-local derived state. Queries may refresh the disposable index; never synchronize it or use it as authority."
+- `multi-device`: "Synchronize and check portable authority before context or any portable write after switching devices, including event-only work. Keep local TOML/device/paths, upgrade devices sequentially, and stop old metadata writers until local acceptance. External sync remains separately authorized."
+- `propagation`: "Preview pending policy semantics, exact targets and differences; obtain real user approval of the stable digest, record it through policy approve, then apply. Preserve cumulative device approvals and unmanaged AGENTS bytes; Data/Notes and body patches require exact separate scope."
+- `recording`: "Restore bounded Case, Study, Project, or exact root/path memory. Record one substantive result as an event at the most specific owner; retain purpose, result, accepted reasons, validation level and limits in existing summary/evidence. Do not log ordinary Q&A or create empty membership or pending queues."
+- `workspace-routing`: "Resolve local access through verified roots and explicit mappings. Logical memory may be queried without a local mapping, but new writes require local registration. Keep Data read-only and Notes access within exact authorized links/sections."
+
+<!-- research-workflow:policy:end -->
