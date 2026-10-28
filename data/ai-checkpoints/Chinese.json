@@ -15,18 +15,5 @@
       "structure.py": "89d66dbc153d12de5372060fde36551108d45821c890f1d3675da4d478cc24ee"
     }
   },
-  "records": {
-    "2610.36479": {
-      "summary_sha256": "5cfbc28bcf1cbd86385d5e0e96f4cee50e7329e4c9a13822f4f146433d7430ef",
-      "source_sha256": "42d1eef9f404cc9e680995dfd0aabb0cfba3e3da1d894ecde1293d76c5fd4715",
-      "raw_sha256": "3c7eca547c6e8546146fef1eeb6734899d1d3f98294cba6c594c452ca007067b",
-      "AI": {
-        "tldr": "通过共溅射将Zr掺入Nb3Sn薄膜，随着Zr原子分数增加，表面形貌改善、体与表面空洞密度降低；在最佳Zr含量下超导性能提升且表面氧化铌更薄，表明Nb3Sn:Zr是推进SRF腔性能极限的有前景材料。",
-        "motivation": "Nb3Sn有望在粒子加速器用超导射频腔以及用于轴子暗物质搜索、在多特斯拉磁场下工作的高Q0腔中超越铌基SRF腔的性能，因此需要研究Zr掺入对Nb3Sn薄膜微观结构和超导性能的影响。",
-        "method": "采用共溅射将Zr掺入Nb3Sn基体，并研究不同Zr原子分数下Nb3Sn薄膜的微观结构和超导性能变化。",
-        "result": "随着Zr原子分数增加，表面形貌改善，体空洞和表面空洞密度降低；在最佳Zr含量下，超导性能改善，并形成更薄的表面氧化铌层。",
-        "conclusion": "共溅射的Nb3Sn:Zr被确定为有前景的材料，可推进SRF腔的性能极限。"
-      }
-    }
-  }
+  "records": {}
 }
