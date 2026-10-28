@@ -1,10 +1,10 @@
 ## Problem
 
-What failed and who was affected?
+What failed or needs improvement, and who is affected? Link the related issue.
 
 ## Change
 
-Describe the resulting behavior. For shared changes, identify the corresponding PR in the other language repository.
+Describe the resulting behavior and the scope of the change. Both languages share this repository.
 
 ## Validation
 

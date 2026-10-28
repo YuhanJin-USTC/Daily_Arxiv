@@ -154,6 +154,6 @@ git -C ../daily-arxiv-english-data push -u origin HEAD
 
 ## 8. 保持两个项目长期一致
 
-当前只维护合并后的 Daily-Arxiv 仓库，不再向两个旧项目移植代码。English/Chinese 共用明确传入语言的实现与 CI，仓库身份由网站构建自动注入；旧源码与历史成果保留用于追溯。
+当前只维护合并后的 Daily_Arxiv 仓库，不再向两个旧项目移植代码。English/Chinese 共用明确传入语言的实现与 CI，仓库身份由网站构建自动注入；旧源码与历史成果保留用于追溯。
 
 `.venv`、`__pycache__`、`.ruff_cache`、`.env`、`_site` 和运行 artifacts 已纳入忽略规则。临时写入文件会自动清理。工作流 artifacts 保留 14 天，失败 checkpoint 是可恢复证据，确认不再需要后再删除；不要把它们复制到源码仓库。

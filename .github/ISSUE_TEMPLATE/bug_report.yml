@@ -1,0 +1,30 @@
+name: Bug report
+description: Report a reproducible problem.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Keep credentials and private research material out of this public issue.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Commit or workflow run, browser or local tool versions, and relevant sanitized output.

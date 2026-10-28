@@ -182,7 +182,7 @@ suspected_aliases = ["I-L. Yeh"]
 
 [tool.daily_arxiv.notifications]
 enabled = true
-site_url = "https://yuhanjin-ustc.github.io/daily-arxiv/"
+site_url = "https://yuhanjin-ustc.github.io/Daily_Arxiv/"
 
 [[tool.daily_arxiv.notifications.recipients]]
 id = "yuhanjin"

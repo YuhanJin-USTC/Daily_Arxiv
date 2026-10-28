@@ -1,10 +1,10 @@
-# 双语 Daily-Arxiv 配置、迁移和发布
+# 双语 Daily_Arxiv 配置、迁移和发布
 
 本项目将共享原始论文与两种 AI 解读分开维护。首页与统计页面默认 English；EN / ZH只切换 AI 内容，标题、作者、原始摘要与 arXiv 链接不翻译。个人关键词和作者过滤只保存在当前浏览器，不控制仓库邮件。旧存储键不删除，旧站登录凭据不迁移。
 
 ## 配置
 
-编辑 `pyproject.toml` 的 `[tool.daily_arxiv]`，提交并推送到 `main`（代码功能改动使用 PR）。只修改本地文件或只推送开发分支，生产配置不会改变。`categories` 是订阅分类；非空 Actions 变量 `CATEGORIES` 同时覆盖抓取、匹配和网页分类。研究者列表使用稳定 `id`、`display_name`、`enabled`、确认 `aliases`、未确认 `suspected_aliases`。停用时保留稳定 ID。当前名单以该配置为准；别名应有身份核验依据，不确定缩写保留为疑似，不触发邮件。不要仅凭缩写、姓氏或相似拼写确认身份。姓名匹配仅限订阅分类内已经抓到的论文，不能解决全部同名问题。
+编辑 `pyproject.toml` 的 `[tool.daily_arxiv]`，通过短期分支和 PR 合入 `main`。只修改本地文件或只推送开发分支，生产配置不会改变。`categories` 是订阅分类；非空 Actions 变量 `CATEGORIES` 同时覆盖抓取、匹配和网页分类。研究者列表使用稳定 `id`、`display_name`、`enabled`、确认 `aliases`、未确认 `suspected_aliases`。停用时保留稳定 ID。当前名单以该配置为准；别名应有身份核验依据，不确定缩写保留为疑似，不触发邮件。不要仅凭缩写、姓氏或相似拼写确认身份。姓名匹配仅限订阅分类内已经抓到的论文，不能解决全部同名问题。
 
 启用发布后的配置 push 会重新构建历史高亮。索引绑定配置和有效分类摘要；构建与数据刷新先后完成时，网页会暂时提示索引待更新，不展示旧配置标记。新增研究者/收件人不会追发历史。
 
@@ -15,19 +15,20 @@
 | `notifications.recipients` | 下一次 Daily 冻结新发现时使用新名单 | 既有队列沿用原收件人 cohort，不追发历史 |
 | SMTP 身份或授权码 | 公共参数 push；凭据另改 Actions Secrets | 收件人地址不能代替 SMTP 登录名 |
 
-日常维护本地 `main` 即可，远端 `data` 专门保存生成结果，不需手动编辑或合入源码：
+日常建议先记入 GitHub Issue，确定同批修改后从干净且已同步的 `main` 建短期分支。远端 `data` 专门保存生成结果，不需手动编辑或合入源码：
 
 ```bash
 git switch main
 git pull --ff-only
+git switch -c chore/paper-subscriptions
 # Edit pyproject.toml.
 git diff -- pyproject.toml
 git add pyproject.toml
 git commit -m "Update paper subscriptions"
-git push
+git push -u origin HEAD
 ```
 
-`main` 应跟踪新仓库的 `origin/main`。功能开发使用短期分支与 PR；批准自动清理的仓库可以在合并后删除开发分支。本地分支若有独有提交，先保留、审查，再决定是否删除。旧来源 remote 无需作为日常 push 目标。
+随后在 `YuhanJin-USTC/Daily_Arxiv` 创建关联 Issue 的 PR，检查通过并审阅后合并。`main` 应跟踪该仓库的 `origin/main`。批准自动清理的仓库可以在合并后删除开发分支。本地分支若有独有提交，先保留、审查，再决定是否删除。旧来源 remote 无需作为日常 push 目标；共享 `update_git` 命令只用于明确的 `main` 发布，不用于开发分支。
 
 `notifications.recipients` 配置稳定收件人 ID、邮箱与开关，当前名单以 `pyproject.toml` 为准；地址随公开配置保存，不打包进网页。`notifications.smtp` 使用 `smtp.qq.com:465`、`security="ssl"`，发件地址为 `yhjin1005@qq.com`。认证通过 `username_env`、`password_env` 指定的环境变量读取，默认 `SMTP_USERNAME`、`SMTP_PASSWORD`。QQ 邮箱使用客户端授权码，不要把授权码发到聊天、写入 TOML 或命令参数。
 
@@ -106,9 +107,17 @@ python scripts/notify.py --state DATA_CHECKOUT/data/notification-state.json --pr
 
 QQ 邮箱配置步骤：登录[网页版邮箱](https://mail.qq.com/)，在设置中开启包含 SMTP 的第三方客户端服务，按页面完成安全验证并生成授权码。在仓库 Actions Secrets 中将 `SMTP_USERNAME` 设置为 `yhjin1005@qq.com`，将 `SMTP_PASSWORD` 替换为该邮箱生成的客户端授权码；不要填写 QQ 登录密码或一次性验证码。参见 [QQ 邮箱授权码说明](https://service.mail.qq.com/detail/0/75)。授权码失效或被撤销后需生成新码并更新 Secret。不要在日志或本地浏览器测试文件中复制 Secrets。
 
-## 发布与回退
+## 当前仓库与设备交接
 
-本地成果完成不代表已发布。创建远端、push、部署、真实发信/调用付费模型和旧站修改须在用户授权的发布范围内执行。
+当前仓库名为 `YuhanJin-USTC/Daily_Arxiv`，Pages 入口为 `https://yuhanjin-ustc.github.io/Daily_Arxiv/`。源码目录统一放在各设备的 `Tool_Project/Daily_Arxiv`；实际本机路径以 Research Workflow 的设备配置为准，根 ID `daily_arxiv` 不变。
+
+每台设备独立 clone，继续使用现有 Git/SSH 配置。离开设备前保留并推送任务分支，另一设备先 fetch 再接续；避免两端同时编辑同一分支。源码、文档、测试和锁文件经 Git 共享，`.venv`、本机凭据、缓存、历史验收目录及设备配置不整体同步。新设备的依赖准备是独立步骤，不能以同步为由自动安装软件。代理记录工作还须先满足 Research Workflow 的设备检查流程。
+
+仓库重命名沿用现有仓库及 `main/data` 历史，不重新初始化数据、不重做双语迁移或付费生成。构建继续按仓库身份生成数据地址与浏览器存储键；新站需重新登录和设置个人偏好，不增加旧存储兼容参数。日常源码或配置修改通过 PR 发布；真实 SMTP、付费模型及数据写入仍受既有授权和开关约束。
+
+## 历史首次迁移的发布与回退
+
+以下保留最初从两个旧站合并到 `daily-arxiv` 的迁移过程；旧仓库名和切换步骤是历史事实，不是重命名后的日常发布步骤。本地成果完成不代表已发布。创建远端、push、部署、真实发信/调用付费模型和旧站修改须在用户授权的发布范围内执行。
 
 1. 用户验收代码、测试、迁移报告、网页/邮件预览；所有源项目继续保留。
 2. 用户授权后创建 `yuhanjin-ustc/daily-arxiv` 并推送源码及审核的数据分支。先核对目标名称归属/内容；目标存在冲突则停止。发布时确认 origin 指向该 GitHub 仓库；克隆时继承的本地源远端只能保留作来源，绝不能向它 push。

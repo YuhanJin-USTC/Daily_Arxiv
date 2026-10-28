@@ -1,23 +1,24 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const {validateSiteUrl, validatePaperId, selectPublishedAI, assertPublishedDetail, isSitePage, redact, runChecks} = require('../scripts/check_live_site.cjs');
-const site = 'https://yuhanjin-ustc.github.io/daily-arxiv/';
+const site = 'https://yuhanjin-ustc.github.io/Daily_Arxiv/';
 
 test('live browser credentials can only target the authorized repository Pages root', () => {
   assert.equal(validateSiteUrl(), site);
   assert.equal(validateSiteUrl(site), site);
-  for (const value of ['https://example.org/daily-arxiv/', 'http://yuhanjin-ustc.github.io/daily-arxiv/',
-    'https://yuhanjin-ustc.github.io/another-repo/', 'https://yuhanjin-ustc.github.io/daily-arxiv/?redirect=https://example.org',
-    'https://user:pass@yuhanjin-ustc.github.io/daily-arxiv/', 'https://yuhanjin-ustc.github.io:8443/daily-arxiv/',
-    'https://yuhanjin-ustc.github.io/daily-arxiv/#credentials', 'https://yuhanjin-ustc.github.io.evil.example/daily-arxiv/']) {
+  for (const value of ['https://example.org/Daily_Arxiv/', 'http://yuhanjin-ustc.github.io/Daily_Arxiv/',
+    'https://yuhanjin-ustc.github.io/daily-arxiv/',
+    'https://yuhanjin-ustc.github.io/another-repo/', 'https://yuhanjin-ustc.github.io/Daily_Arxiv/?redirect=https://example.org',
+    'https://user:pass@yuhanjin-ustc.github.io/Daily_Arxiv/', 'https://yuhanjin-ustc.github.io:8443/Daily_Arxiv/',
+    'https://yuhanjin-ustc.github.io/Daily_Arxiv/#credentials', 'https://yuhanjin-ustc.github.io.evil.example/Daily_Arxiv/']) {
     assert.throws(() => validateSiteUrl(value), /authorized/);
   }
 });
 
 test('login redirects stay inside the authorized path and reject URL credentials', () => {
   assert.equal(isSitePage(site + 'login.html?redirect=index.html', site, ['login.html']), true);
-  for (const value of ['https://example.org/daily-arxiv/login.html', 'https://yuhanjin-ustc.github.io/old/login.html',
-    'https://user:pass@yuhanjin-ustc.github.io/daily-arxiv/login.html', site + 'settings.html']) {
+  for (const value of ['https://example.org/Daily_Arxiv/login.html', 'https://yuhanjin-ustc.github.io/old/login.html',
+    'https://user:pass@yuhanjin-ustc.github.io/Daily_Arxiv/login.html', site + 'settings.html']) {
     assert.equal(isSitePage(value, site, ['login.html']), false);
   }
 });

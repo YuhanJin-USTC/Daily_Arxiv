@@ -41,7 +41,7 @@ jobs:
       - name: Verify live authentication and reader
         env:
           ACCESS_PASSWORD: ${{ secrets.ACCESS_PASSWORD }}
-          SITE_URL: https://yuhanjin-ustc.github.io/daily-arxiv/
+          SITE_URL: https://yuhanjin-ustc.github.io/Daily_Arxiv/
           PLAYWRIGHT_MODULE: ${{ runner.temp }}/arxiv-browser/node_modules/playwright
           BROWSER_REPORT_DIR: ${{ runner.temp }}/arxiv-browser-report
           VERIFY_PAPER_ID: ${{ inputs.paper_id }}
