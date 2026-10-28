@@ -31,7 +31,7 @@ function browser(options = {}) {
   const ctx = vm.createContext({console: {error() {}, warn() {}, log() {}}, localStorage, setTimeout, clearTimeout,
     document: {addEventListener() {}, getElementById: get, querySelector: get, querySelectorAll: () => [], createElement: element, body: element()},
     window: {addEventListener() {}, scrollTo() {}}, alert() {},
-    DATA_CONFIG: {namespace: 'new-repo', language: 'Chinese', researchersDigest: 'current', categories: ['physics.plasm-ph'], getDataUrl: path => `/daily-arxiv/${path}`},
+    DATA_CONFIG: {namespace: 'new-repo', language: 'Chinese', researchersDigest: 'current', categories: ['physics.plasm-ph'], getDataUrl: path => `/Daily_Arxiv/${path}`},
     ...options});
   vm.runInContext(read('js/papers.js'), ctx);
   return {ctx, elements, get, localStorage};
@@ -135,7 +135,7 @@ test('raw file and only requested language are fetched; missing or broken AI sti
     assert.equal(papers.length, 1);
     assert.equal(papers[0].aiAvailable, false);
     assert.ok(fetched.every(url => !url.includes('English')));
-    assert.ok(fetched.includes('/daily-arxiv/data/2026-10-20.jsonl'));
+    assert.ok(fetched.includes('/Daily_Arxiv/data/2026-10-20.jsonl'));
   }
 });
 

@@ -1,0 +1,24 @@
+name: Feature request
+description: Suggest an improvement for a future maintenance batch.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Suggested change
+    validations:
+      required: true
+  - type: textarea
+    id: use_case
+    attributes:
+      label: Use case
+      description: Describe the task or problem this would help with.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: What observable result would make the change complete?
+    validations:
+      required: true

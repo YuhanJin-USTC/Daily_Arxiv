@@ -1,10 +1,10 @@
-# daily-arXiv AI enhanced
+# Daily_Arxiv
 
-**[Open the website — English / Chinese AI summaries](https://yuhanjin-ustc.github.io/daily-arxiv/)**
+**[Open the website — English / Chinese AI summaries](https://yuhanjin-ustc.github.io/Daily_Arxiv/)**
 
 The website is deployed on GitHub Pages and opens at the password screen. Use the configured site password to sign in, then select EN / ZH.
 
-[![Tests](https://github.com/YuhanJin-USTC/daily-arxiv/actions/workflows/test.yml/badge.svg)](https://github.com/YuhanJin-USTC/daily-arxiv/actions/workflows/test.yml)
+[![Tests](https://github.com/YuhanJin-USTC/Daily_Arxiv/actions/workflows/test.yml/badge.svg)](https://github.com/YuhanJin-USTC/Daily_Arxiv/actions/workflows/test.yml)
 
 Daily arXiv announcements with validated AI summaries and a static GitHub Pages reader. One repository stores shared raw metadata and separate English and Chinese AI interpretations. English is the default; EN / ZH switches only the AI content. The two legacy projects remain historical sources.
 
@@ -62,6 +62,22 @@ The check script validates the lockfile offline, Ruff, Python tests including si
 Keep dependency changes and the updated `uv.lock` together; do not substitute an unlocked pip installation for validation. Local `run.sh` uses `.venv/bin/python`; set `ARXIV_PYTHON` to another virtual environment's interpreter when needed. Website previews use `scripts/build_site.py` and a new output directory; supply `ACCESS_PASSWORD` through the environment to build authentication. The build copies its explicit static-file allowlist and renders configuration in the output, leaving source files unchanged.
 
 No keys or live model calls are needed for tests. `bash run.sh DATA_CHECKOUT NEW_OUTPUT` crawls once and prepares a separate raw candidate without changing the supplied checkout. Only an explicit third argument `--generate` enables model requests for both languages; this also processes eligible pending languages when no papers are newly discovered. It never publishes or sends mail. The data checkout must be a separate checkout of the repository's `data` branch.
+
+## Collaboration and devices
+
+Keep suggestions and bugs in [GitHub Issues](https://github.com/YuhanJin-USTC/Daily_Arxiv/issues), using the bug or feature template. Group related accepted issues into a milestone when they are ready for one maintenance batch. Implement each coherent change on a short-lived branch, link its issue in a pull request, and merge after review and the existing checks pass. See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+The public repository is `YuhanJin-USTC/Daily_Arxiv`; this device keeps its independent checkout at `/home/yuhanjin/Tool_Project/Daily_Arxiv`. `Tool_Project` is a directory of independent projects. Each device uses its own clone and existing Git/SSH configuration:
+
+```bash
+git clone git@github.com:YuhanJin-USTC/Daily_Arxiv.git ~/Tool_Project/Daily_Arxiv
+```
+
+Before changing devices, commit or otherwise preserve local work and push the task branch. On the next device, fetch `origin` and continue that branch; avoid editing the same branch concurrently on two devices. Update a clean local `main` with `git pull --ff-only` before starting a new task. Resolve divergence through a reviewed merge or rebase; never force synchronization or overwrite another device's work.
+
+Git carries source, the repository's own `AGENTS.md`, documentation, tests and the lockfile. Prepare dependencies separately with the existing local toolchain. Keep `.venv`, `artifacts`, credentials, editor state and Research Workflow's device-local configuration out of synchronization. The control repository's portable metadata and policy history follow its existing synchronization procedure; historical approvals do not authorize a new device or target. Generated paper data remains on the repository's `data` branch; personal browser preferences remain local to each browser. Research agents keep the root ID `daily_arxiv` and verify the new device's own registry before recording work.
+
+The renamed Pages site is `/Daily_Arxiv/`. Repository-based browser storage uses the new repository identity, so sign in and set browser preferences again; no storage migration or compatibility settings are added. Existing source/data history and historical migration evidence remain separate from this rename.
 
 ## Workflows
 

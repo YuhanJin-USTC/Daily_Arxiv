@@ -182,7 +182,7 @@ class DailyIntegrationTests(unittest.TestCase):
     def test_publication_rejects_local_origin_before_any_git_mutation(self):
         path = self.source / "data/pipeline-state.json"
         write_json(path, {})
-        publisher = Publisher(self.source, "yuhanjin-ustc/daily-arxiv")
+        publisher = Publisher(self.source, "yuhanjin-ustc/daily_arxiv")
         with patch.object(
             publisher, "git", return_value="/home/yuhanjin/daily-arxiv-chinese"
         ) as git:

@@ -17,14 +17,14 @@ class PreviewHandler(SimpleHTTPRequestHandler):
 
     def translate_path(self, path):
         path = unquote(urlsplit(path).path)
-        if path == "/daily-arxiv/assets/researcher-index.json":
+        if path == "/Daily_Arxiv/assets/researcher-index.json":
             return str(self.index)
-        if path.startswith("/daily-arxiv/data/"):
-            root, relative = self.data / "data", path.removeprefix("/daily-arxiv/data/")
-        elif path == "/daily-arxiv/assets/file-list.txt":
+        if path.startswith("/Daily_Arxiv/data/"):
+            root, relative = self.data / "data", path.removeprefix("/Daily_Arxiv/data/")
+        elif path == "/Daily_Arxiv/assets/file-list.txt":
             root, relative = self.data / "assets", "file-list.txt"
-        elif path.startswith("/daily-arxiv/"):
-            root, relative = self.site, path.removeprefix("/daily-arxiv/")
+        elif path.startswith("/Daily_Arxiv/"):
+            root, relative = self.site, path.removeprefix("/Daily_Arxiv/")
         elif path.startswith("/before/") and self.before:
             root, relative = self.before, path.removeprefix("/before/")
         else:
@@ -55,7 +55,7 @@ def main():
         before=args.before,
     )
     server = ThreadingHTTPServer(("127.0.0.1", args.port), handler)
-    print(f"Local preview: http://127.0.0.1:{args.port}/daily-arxiv/", flush=True)
+    print(f"Local preview: http://127.0.0.1:{args.port}/Daily_Arxiv/", flush=True)
     server.serve_forever()
 
 

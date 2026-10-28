@@ -1,8 +1,9 @@
-# Daily-Arxiv maintenance
+# Daily_Arxiv maintenance
 
 ## Scope and layout
 
 - Maintain this single bilingual repository. Legacy Chinese/English repositories are read-only sources; do not synchronize code changes back to them.
+- The project is `Daily_Arxiv`, an independent repository under `Tool_Project`; its authorized GitHub identity is `YuhanJin-USTC/Daily_Arxiv`. Keep Python package/module names and the Research Workflow root ID `daily_arxiv` stable.
 - Source lives on `main`; generated raw/AI/Markdown, pipeline state, notification state and public indexes live on `data`. Never mix generated data into source commits.
 - Public settings belong only in `[tool.daily_arxiv]` in `pyproject.toml`. Preserve the existing model profile and moderation/quality checks unless separately requested.
 - `ai/` owns model access, quality, provenance and recovery; `daily_arxiv/daily_arxiv/` owns crawl/history, researcher matching and notification semantics; `scripts/` owns staging/application/publication/build; `to_md/` owns rendering; `js/`, `css/` and HTML own the static reader.
@@ -16,7 +17,7 @@
 - Record one substantive completed result with an event-only `checkpoint` at its exact owner. Retain purpose, result, accepted reasons, checks and limits in existing summary/evidence fields. Do not log ordinary discussion or planning, create empty Project/Study/Case membership, or invent historical work.
 - Keep research authority in the control repository. Do not copy its metadata, SQLite or saved plans into this source tree, the `data` branch, pipeline state or website bundles. The application and Actions gain no Research Workflow runtime dependency or automatic recording hook.
 - Registration does not pair paper data with simulation Cases, authorize another root, or change source/data separation, paid model, SMTP or publication gates. Preserve existing project boundaries and explicit user constraints.
-- After changing devices, preserve local work and obtain separate synchronization authorization, then complete `doctor`, `event merge` and `validate` before context or any portable write. Do not copy device identity, local paths, SQLite, saved plans or approval digests between devices.
+- After changing devices, preserve local work and obtain separate synchronization authorization, then complete `doctor`, `event merge` and `validate` before context or any portable write. Do not copy device identity, local paths, SQLite or saved plans between devices. Portable policy history and cumulative approvals synchronize with the control repository; historical approval is not consent for a new device or target.
 - A device without this project may read synchronized logical memory, but local access and new events require its verified root registration. New policy targets require local preview, real user approval and digest-bound apply; retain cumulative device approvals.
 
 ## Data and delivery invariants
@@ -39,10 +40,13 @@
 
 ## Checks and handoff
 
+- Use GitHub Issues for the maintenance backlog and short-lived `fix/`, `feat/` or `chore/` branches with linked PRs. Keep each change coherent and review it before merge. Public issues, source and reports must not contain credentials or private research material.
+- Keep each device's clone and environment independent. Preserve/push local task work before handoff, fetch before resuming, and use fast-forward-only updates for clean `main`. Review divergence; never force synchronization. The shared `update_git` helper must not publish a feature branch as `main`.
+- Repository identity determines Pages, raw-data URLs and browser storage namespaces. Preserve the existing derivation instead of adding rename-specific compatibility flags or storage migration logic.
 - Read nearby files first; match existing organization, concise English comments and tests. Prepare locked dependencies separately, then run `bash scripts/check.sh` for the shared local/CI lockfile, Ruff, Python/Node tests, shell syntax, site-build tests, workflow and whitespace checks. The script does not install tools or dependencies; services must be mocked in tests.
 - For UI changes, inspect 1440/768/390 widths, keyboard selection, fast toggling, range/filter/detail state, stats deduplication and missing-language fallback. State clearly when browser inspection is unavailable.
 - Dependency changes require a matching `uv.lock`; do not silently substitute unlocked tests for locked validation.
-- Keep one-time evidence in ignored `artifacts/upgrade/STATE.md`; do not commit credentials, caches, previews, checkpoints or personal work logs to source. Before resuming a large upgrade, read that state and necessary diffs.
+- Keep the existing upgrade evidence in ignored `artifacts/upgrade/STATE.md`; before resuming a large upgrade, read that state and necessary diffs. Keep later task evidence in its own ignored artifacts directory. Do not commit credentials, caches, previews, checkpoints or personal work logs to source.
 - Remove obsolete generated caches, duplicate checkouts and previews after acceptance. Retain compact provenance, unique raw snapshots, sourced paid checkpoints and interpreter targets still used by `.venv`; verify retained copies before deleting duplicates.
 - Follow the user's deletion rules. Never discard pre-existing changes. Remove only your own temporary outputs when obsolete, marking cleanup with `CODEX_TEMP_CLEANUP=1` and exact paths.
 - Confirm Git remotes before publication. The legacy local source may be retained as `source-chinese`; never push there. `origin` must identify the authorized target GitHub repository. New GitHub repo creation/push/deployment, real SMTP/paid model calls and old-site changes need separate explicit release authorization. Activation variables are disabled by absence.

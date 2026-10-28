@@ -3,8 +3,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const {createHash} = require('node:crypto');
 
-const REPOSITORY = 'yuhanjin-ustc/daily-arxiv';
-const SITE = 'https://yuhanjin-ustc.github.io/daily-arxiv/';
+const REPOSITORY = 'yuhanjin-ustc/daily_arxiv';
+const SITE = 'https://yuhanjin-ustc.github.io/Daily_Arxiv/';
 const AI_FIELDS = ['tldr', 'motivation', 'method', 'result', 'conclusion'];
 
 function validatePaperId(value) {
@@ -43,9 +43,9 @@ function assertPublishedDetail(actual, expected, language) {
 
 function validateSiteUrl(value = SITE) {
   const url = new URL(value);
-  if (url.origin !== new URL(SITE).origin || url.pathname !== '/daily-arxiv/' ||
+  if (url.origin !== new URL(SITE).origin || url.pathname !== '/Daily_Arxiv/' ||
       url.username || url.password || url.search || url.hash) {
-    throw new Error('SITE_URL must be the authorized Daily-Arxiv Pages URL.');
+    throw new Error('SITE_URL must be the authorized Daily_Arxiv Pages URL.');
   }
   return url.href;
 }

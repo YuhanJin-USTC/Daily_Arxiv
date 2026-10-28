@@ -23,3 +23,5 @@ artifacts/
 .coverage
 .DS_Store
 .ruff_cache/
+.aws/
+.codex/
