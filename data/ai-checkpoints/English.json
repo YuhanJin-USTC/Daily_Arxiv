@@ -15,5 +15,18 @@
       "structure.py": "89d66dbc153d12de5372060fde36551108d45821c890f1d3675da4d478cc24ee"
     }
   },
-  "records": {}
+  "records": {
+    "2610.36479": {
+      "summary_sha256": "5cfbc28bcf1cbd86385d5e0e96f4cee50e7329e4c9a13822f4f146433d7430ef",
+      "source_sha256": "42d1eef9f404cc9e680995dfd0aabb0cfba3e3da1d894ecde1293d76c5fd4715",
+      "raw_sha256": "3c7eca547c6e8546146fef1eeb6734899d1d3f98294cba6c594c452ca007067b",
+      "AI": {
+        "tldr": "Zr was co-sputtered into Nb3Sn films to modify microstructure and superconducting properties. Increasing Zr improved surface morphology and reduced void densities; an optimal Zr content enhanced superconducting properties and produced a thinner surface niobium oxide, supporting Nb3Sn:Zr as promising for advanced SRF cavities.",
+        "motivation": "Nb3Sn may outperform niobium-based superconducting radio-frequency cavities in particle accelerators and in high-Q0 cavities for axion dark matter searches operating in multi-tesla magnetic fields. The paper investigates whether Zr incorporation can improve Nb3Sn film properties.",
+        "method": "Zr was incorporated into the Nb3Sn matrix by co-sputtering. The resulting films were studied for changes in microstructure and superconducting properties as a function of Zr atomic fraction.",
+        "result": "As Zr atomic fraction increased, surface morphology improved and bulk and surface void densities decreased. At the optimal Zr content, superconducting properties improved and a thinner surface niobium oxide formed. The exact optimal Zr content and quantitative property values are not provided in the abstract.",
+        "conclusion": "Co-sputtered Nb3Sn:Zr is identified as a promising material for advancing the performance limits of SRF cavities."
+      }
+    }
+  }
 }
