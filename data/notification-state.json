@@ -24558,6 +24558,2817 @@
           "email": "jiashifeng@mail.ustc.edu.cn"
         }
       ]
+    },
+    "2610.41806": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41806",
+        "title": "Transverse Confinement in Cascaded Inverse-Cherenkov Acceleration via Phase-Trajectory Control and Injection Matching",
+        "authors": [
+          "Yuanhao Liu",
+          "Nanshun Huang",
+          "Xionghao Yuan",
+          "Xingheng Wang",
+          "Juhao Wu",
+          "Haixiao Deng"
+        ],
+        "summary": "Sub-relativistic electrons in micron-scale dielectric laser accelerators face coupled challenges of longitudinal dephasing and transverse defocusing, often imposing stringent requirements on injector emittance. Here, we demonstrate a combined strategy of phase-trajectory control and injection matching for sustained, confined acceleration. By coordinating the refractive-index and section-length sequences with the injected beam's Twiss parameters, we control accumulated phase slippage while maintaining transverse confinement. In a seven-section inverse-Cherenkov accelerator simulation, a 100-keV electron bunch with an initial normalized transverse emittance of 1 nm-rad and a relative kinetic-energy spread of 0.1% reaches 1154.7 keV over 1.545 mm, with a transverse rms beam size below 1 $μ$m throughout the accelerating channels. The exit normalized emittance is 1.92 nm-rad, and the relative RMS kinetic-energy spread is 0.6%, with no particle loss under the specified tracking-acceptance criterion. The results demonstrate that coordinated structural sequencing and injection matching can relax injector-emittance requirements by up to approximately two orders of magnitude, offering a route toward compact dielectric accelerators for ultrafast electron diffraction, microscopy, and chip-scale coherent radiation.",
+        "categories": [
+          "physics.acc-ph"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41826": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41826",
+        "title": "Switching off a high-harmonic polarization channel by anti-unitary symmetry",
+        "authors": [
+          "Milad Jangjan",
+          "Francisco Navarrete",
+          "Dieter Bauer"
+        ],
+        "summary": "We study polarization-resolved high-harmonic generation in a laser-driven two-leg Su--Schrieffer--Heeger ladder with asymmetric dimerization under periodic boundary conditions. A field linearly polarized along the ladder can generate both longitudinal and transverse radiation, whose harmonic content is controlled by lattice symmetry and electronic filling. Using symmetry analysis of the time-dependent density matrix, we show that reflection symmetry enforces odd-order harmonics in the longitudinal response and, when the transverse response is nonzero, even-order harmonics in the transverse direction. At half filling, an additional anti-unitary symmetry relating the occupied and empty bands suppresses the transverse current completely. A unitary chiral symmetry in the clean ladder relates the same bands but fails to enforce this cancellation, showing that band swapping alone is insufficient: the suppression requires both a density-matrix constraint that persists during the driven evolution and the appropriate transformation of the transverse-current operator. Moving away from half filling lifts this cancellation and allows transverse emission, while the reflection selection rule remains whenever reflection symmetry is preserved. Numerical calculations at quarter and half filling, combined with onsite potentials that selectively break the relevant symmetries, confirm these two distinct mechanisms. Thus, reflection symmetry determines which harmonic orders occur, whereas the interplay of anti-unitary symmetry and filling controls whether the transverse HHG channel is present at all.",
+        "categories": [
+          "physics.atom-ph"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.40953": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.40953",
+        "title": "Variational surface matching for multichannel molecular photoionization",
+        "authors": [
+          "Carlos Marante",
+          "Vicent J Borràs",
+          "Jesús González Vázquez",
+          "Fernando Martín",
+          "Luca Argenti"
+        ],
+        "summary": "We present an improved method for computing multichannel scattering states in the \\ASTRA{} (AttoSecond TRAnsitions) molecular ionization code. Our pole-free Galerkin method with variational surface matching (PFG-VSM) yields a boundary response that is stationary with respect to errors in the interior wave function. Compared with matching based on directly evaluated radial derivatives, this formulation yields substantially faster convergence and greater numerical stability as the number of open channels increases. Comparison with a numerical solution of the exactly separable $\\mathrm H_2^+$ problem establishes the accuracy attainable in a hybrid Gaussian--B-spline basis for a polycentric potential, independently of many-electron close-coupling approximations. A direct comparison of the two matching prescriptions for CO demonstrates the stability of the variational formulation under radial-basis coarsening. For neon, agreement with the NewStock atomic ionization code tests the treatment of the continuum degeneracies that arise when rotational symmetry is represented in $D_{2h}$. The excellent agreement with the independent \\XCHEM{} molecular ionization code for CO partial cross sections and molecular-frame photoelectron angular distributions, both away from and across resonances, is a strong confirmation of the correctness of both codes. A comparison for pyrazine extends this validation to a larger polyatomic target.",
+        "categories": [
+          "physics.atom-ph"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.40952": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.40952",
+        "title": "Characteristics of VHF and UHF band detection using Stark shifting in Rydberg-atom sensors",
+        "authors": [
+          "Rajavardhan Talashila",
+          "Noah Schlossberger",
+          "David S. La Mantia",
+          "Abby Halasi-Kun",
+          "Baran Kayim",
+          "Michael A. Viray",
+          "Robert Wyllie",
+          "Christopher L. Holloway",
+          "Nikunjkumar Prajapati"
+        ],
+        "summary": "We present a characterization of the sensitivity of broadband electric field measurements in the Very High Frequency (VHF) and Ultra High Frequency (UHF) bands using AC stark shifting of Rydberg states. The dependence of the sensitivity and dynamic range of the field measurements using nD5/2 states of cesium for principal quantum numbers n= 60, 70, 80, 90 and 100 is presented, detailing the intricacies involved. The frequencies considered for the measurement range from 50 MHz to 900 MHz for which a transverse electromagnetic (TEM) cell is used to excite the Rydberg atoms with the RF fields. The corresponding sensitivities achieved are in the $(μV/m)/\\sqrt{Hz}$ range. A general trend of better sensitivity for higher principal quantum numbers is observed. This work paves the way for a better understanding of the AC Stark dependent field measurements using Rydberg sensors.",
+        "categories": [
+          "physics.atom-ph",
+          "physics.optics",
+          "quant-ph"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.42113": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.42113",
+        "title": "Magnetic Johnson noise from arbitrarily shaped conductors: experimental validation of the fluctuation-dissipation finite-element method",
+        "authors": [
+          "S. M. Clayton",
+          "Y. J. Kim",
+          "T. E. Chupp",
+          "A. Epstein",
+          "J. M. Feltman",
+          "A. Fratangelo",
+          "T. M. Ito",
+          "I. J. Rhudy",
+          "F. H. Sottrel",
+          "W. A. Terrano",
+          "K. L. Wood"
+        ],
+        "summary": "Magnetic Johnson noise--magnetic noise caused by thermal current fluctuations in conducting materials--can interfere with measurements and limit their sensitivity. As the sensitivity of experiments increases, it becomes increasingly important to accurately estimate the magnetic Johnson noise from experimental components with complex shapes during both the design and analysis phases. A particularly powerful approach is to combine the fluctuation-dissipation theorem with finite-element calculations. This versatile approach can be used to calculate the magnetic Johnson noise from conductors of arbitrary geometry for a wide range of frequencies and for magnetic field detectors with general geometries, such as a finite-sized loop or a gradiometer. Using a SQUID gradiometer array, we measured the magnetic Johnson noise from conductors with complex geometries and compared the results with calculations performed using this method. The calculations reproduce both the measured noise amplitude and its frequency dependence, providing an experimental validation of this method. We also performed a detailed analysis of how the geometry and material parameters affect the frequency dependence of magnetic Johnson noise.",
+        "categories": [
+          "physics.app-ph",
+          "nucl-ex",
+          "physics.atom-ph",
+          "physics.bio-ph",
+          "physics.ins-det"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41917": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41917",
+        "title": "Focusing through coupled multimode fibers for miniaturized single-atom tweezer arrays",
+        "authors": [
+          "Benjamin P. Maddox",
+          "Daniel K. Ruttley"
+        ],
+        "summary": "Real-world deployment of quantum technologies requires systems in low SWaP-C packages. Quantum platforms based on ultracold atoms typically trap and control atoms with optical tweezers using light focused through bulky objective lenses, which are costly and sensitive to misalignment. Multimode fibers (MMFs) offer a compact route to focusing light, but their use in forming optical tweezers for cold atoms has been limited to a single fiber. Here we use a 2x1 MMF fused coupler to obtain two independent control paths sharing a common distal facet. We form near-diffraction-limited tweezers through each channel, suppress interference by applying a small frequency offset between the channels, and demonstrate that the tweezer separation is insensitive to misalignment of the input coupling. This work provides a route to reconfigurable single-atom arrays in low SWaP-C environments.",
+        "categories": [
+          "physics.optics",
+          "physics.atom-ph",
+          "quant-ph"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41075": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41075",
+        "title": "Minimal model of sticky collisions in modulated optical traps",
+        "authors": [
+          "Hubert J. Jóźwiak",
+          "Tijs Karman"
+        ],
+        "summary": "Collisional loss of ultracold bialkali molecules is predicted to occur through photo-excitation of collision complexes. However, recent measurements in modulated optical traps report an unexpected lack of excess survival, at odds with theoretical predictions and earlier experiments. We develop a minimal quantum scattering model that treats collisions as a coherent process occurring in the presence of the modulated trap. We demonstrate that quantum reflection from the long-range potential fundamentally alters loss dynamics, removing the tension between recent experiments and predicted sticking times. This framework provides new testable predictions such as a strong dependence on collision energy, initial molecular state, and long-range interactions, that are absent in the currently used phenomenological model.",
+        "categories": [
+          "cond-mat.quant-gas",
+          "physics.atom-ph"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41033": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41033",
+        "title": "Vacuum amplification across a programmable bosonic Bogoliubov stability boundary in a trapped-ion chain",
+        "authors": [
+          "Lu Qi",
+          "Duanyang Wang",
+          "Kenneth R. Brown"
+        ],
+        "summary": "A quantum oscillator always carries vacuum fluctuations, and modulating its parameters converts them into correlated pairs of real quanta. This vacuum amplification underlies squeezed light and Hawking radiation. In a closed quadratic system, pair creation competes with the energy splitting of the modes, and growth turns exponential only once pairing overcomes the splitting. Here we realize this competition in two motional modes of a trapped-ion chain. A two-mode-squeezing drive creates the pairs, and a beam-splitter coupling splits the motion into two coupled modes at different frequencies. The two rates are tuned and calibrated independently. Starting near the motional ground state, we cross the stability boundary in two ways. First, with the drive at the sum of the two bare-mode frequencies, the phonon number stays bounded until the pairing rate exceeds the splitting and grows exponentially beyond it. Second, tuning the drive into resonance with one coupled mode lowers the threshold to zero, and only that mode is amplified into a squeezed vacuum. Separate control of the two interactions makes the threshold for vacuum amplification programmable. This control can be used to simulate particle creation and quantum phase transitions, and to operate parametrically driven bosonic devices close to their stability limit.",
+        "categories": [
+          "quant-ph",
+          "physics.atom-ph"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41026": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41026",
+        "title": "Electron Scattering with ASTRA: Helium and Molecular Hydrogen",
+        "authors": [
+          "Siddhartha Chattopadhyay",
+          "Thomas C. Allison",
+          "Luca Argenti"
+        ],
+        "summary": "We present an implementation of electron-impact scattering in ASTRA, a close-coupling method based on transition density matrices previously applied to molecular photoionization. The scattering states are obtained with a pole-free Galerkin method with variational surface matching, which yields the scattering matrix and the channel-resolved amplitudes for elastic and electronically inelastic integral cross sections and molecular-frame differential cross sections. For helium, ASTRA reproduces elastic and inelastic cross sections over a broad energy range, resolves the He$^-$(1s2s$^2$ $^2$S$^e$) Feshbach resonance in both energy and angle, and captures the principal interference structures in the n=2 excitation angular distributions, in selected channels matching measured differential-cross-section ratios more closely than available benchmark calculations. For molecular hydrogen, target polarization and interchannel coupling are represented through additional close-coupling channels, without a fitted polarization potential or a separately constructed (N+1)-electron correlation space. Compared with the restricted-channel description, the expanded calculations substantially improve agreement with UKRmol+ for elastic and inelastic cross sections. We further report fully orientation-resolved three-dimensional molecular-frame angular distributions for state-resolved electron-impact excitation. These reveal pronounced stereodynamic effects that vanish upon orientational averaging: at 15 eV, excitation of the b$^3Σ_u^+$ state is more than eight times stronger for incident momentum parallel rather than perpendicular to the molecular axis. These results connect conventional scattering benchmarks with orientation-resolved collision dynamics and open the way to larger molecular targets.",
+        "categories": [
+          "physics.chem-ph",
+          "physics.atom-ph",
+          "physics.plasm-ph"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41003": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41003",
+        "title": "Tunable Three-Body Interactions in Microwave-Shielded Polar Molecules",
+        "authors": [
+          "Hanwei Yang",
+          "Tijs Karman"
+        ],
+        "summary": "We show that microwave shielding, which enables collisionally stable ultracold polar molecules, also leads to genuine nonadditive three-body interactions comparable to the shielding interaction itself. Their magnitude, sign, and geometrical dependence can be flexibly controlled through microwave parameters and orientation. Interaction strengths can reach the ten kilohertz-scale for ultrapolar molecules in typical optical lattices. The nonadditive three-body interactions can stabilize novel many-body phases, and should be accounted for in quantum simulation with microwave shielded molecules.",
+        "categories": [
+          "cond-mat.quant-gas",
+          "physics.atom-ph",
+          "physics.chem-ph",
+          "quant-ph"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.40771": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.40771",
+        "title": "Gapless and Non-Equilibrium Topology in Blockaded Ladders",
+        "authors": [
+          "Ramanjit Sohal",
+          "Hannes Bernien",
+          "Ruben Verresen"
+        ],
+        "summary": "We propose a multi-leg PXYP model as a minimal setting to explore constraint-induced intertwinement between itinerant and internal degrees of freedom. We argue that the Rydberg-like blockade induces correlations in squeezed space, providing a unified mechanism for nontrivial string order both in and out of equilibrium. In a two-leg geometry, this leads to an intrinsically gapless topological ground state, which can terminate at a supersymmetric multicritical point. This mechanism also leads to the preservation of string order for parametrically long times after a quench, which we verify using tensor network simulations and a classical stochastic approximation to the dynamics. In a three-leg geometry, the blockade leads to an additional emergent $U(1)$ symmetry, resulting in a multicomponent Luttinger liquid where both itinerant and internal degrees of freedom are critical. This family of models arises naturally in a range of quantum simulator platforms such as Rydberg tweezer arrays and dipolar atoms in optical lattices.",
+        "categories": [
+          "cond-mat.str-el",
+          "cond-mat.quant-gas",
+          "physics.atom-ph",
+          "quant-ph"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.42034": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.42034",
+        "title": "A Momentum-weighted Interface Stabilization Approach for Fluid-Structure Interaction with Strong Added-Mass Effects",
+        "authors": [
+          "Nihar Bhardwaj Darbhamulla",
+          "Xiaoyu Mao",
+          "Aditya Narkhede",
+          "David Brown",
+          "Rajeev K. Jaiman"
+        ],
+        "summary": "Partitioned fluid-structure interaction (FSI) schemes permit the reuse of optimized standalone solvers but can become unstable under strong fluid added-mass effects, particularly when structural inertia is small relative to fluid inertia. This work traces the instability to the discrepancy between the interface pressure Schur complements of the monolithic and Dirichlet- Neumann partitioned systems, as revealed by a fixed-point analysis of the linearized FSI problem. Motivated by this analysis, a momentum-weighted interface stabilization (MWIS) is proposed, in which the interface pressure block of the fluid subproblem is augmented by an operator constructed from the fluid and structural interface momentum operators. The augmentation is consistent by construction, vanishing at convergence so that the monolithic solution is recovered. A sparse diagonal approximation of the operator, derived from element metrics, limits intersolver data exchange to quantities comparable in size to standard interface coupling data while requiring minimal modifications to the standalone solvers. Numerical experiments, spanning a linear model and established nonlinear FSI benchmarks, demonstrate improved coupling robustness in regimes of strong added-mass where the standard Dirichlet-Neumann scheme diverges.",
+        "categories": [
+          "physics.comp-ph"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41788": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41788",
+        "title": "Query-Efficient Quantum Multi-Objective Optimization for Materials Configuration Search via Bayesian Weight Selection",
+        "authors": [
+          "Onur Boyar",
+          "Seiji Takeda",
+          "Akihiro Kosugi",
+          "Indra Priyadarsini S",
+          "Lisa Hamada",
+          "Sina Klampt"
+        ],
+        "summary": "Materials design is a multi-objective problem, and recent advances in quantum optimization make it possible to bring quantum solvers to bear on such problems. The realistic near-term win, though, is not raw quantum advantage but making an expensive, noisy quantum solver usable by spending its calls wisely. Quantum Approximate Multi-Objective Optimization (QAMOO) traces a Pareto front by solving a family of scalarized Ising problems, one per objective-weight vector, with QAOA --- but chooses those weights \\emph{non-adaptively}, sampling them at random, blind to what it has already found. We recast weight selection as \\emph{multi-objective Bayesian optimization}: our method, BW-QAMOO (Bayes-Weighted QAMOO), picks each next weight by expected hypervolume improvement (EHVI) under a Gaussian-process (GP) surrogate over the weight-to-objective map. On a frustrated alloy-configuration benchmark across $m\\in\\{3,4\\}$ objectives and $n\\in\\{10,11,12\\}$ sites, BW-QAMOO reaches the same Pareto hypervolume as QAMOO's random sampling with a median 33% fewer scalarized solves across the 90/95\\% targets and 60--74\\% fewer than a uniform-grid baseline), on a genuine (simulated) QAOA solver; a paired Wilcoxon test confirms the saving is significant, and the advantage grows with the objective count m as the weight simplex expands and blind sampling wastes more of the budget. This is a \\emph{query-efficiency} result, and we close with the open challenges on the path to real alloy data and hardware.",
+        "categories": [
+          "physics.comp-ph",
+          "quant-ph"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41778": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41778",
+        "title": "High-fidelity simulation and reduced-order modeling of optical pumping in quantum devices",
+        "authors": [
+          "Keyu Xu",
+          "Kezheng Yan",
+          "Jinbo Hu",
+          "Yanqing Shi",
+          "Xiaorui Xu",
+          "Nan Zhao",
+          "Qian Wang"
+        ],
+        "summary": "Spatially resolved modeling of optically pumped alkali-metal vapors requires the solution of a high-dimensional nonlinear diffusive quantum master equation (DQME) coupled to state-dependent light propagation. We develop a structure-preserving computational framework for this coupled three-dimensional system in the high-pressure limit. The high-fidelity solver combines second-order finite differences, explicit pseudo-time marching, and an exponential-integrator discretization of the light-propagation equation. The scheme preserves the density-matrix trace, while a derived global pseudo-time-step restriction guarantees nonnegative, bound-preserving population updates and frozen-coefficient $1$-norm stability. In the absence of a closed-form solution for the general coupled problem, the solver is verified against complementary analytical reductions, pumping-rate asymptotics, and a light-propagation invariant, all of which are accurately recovered. Tensorized GPU implementation reduces the per-iteration cost by more than two orders of magnitude relative to a single-core CPU. For repeated parameter queries, we further construct an intrusive POD--Galerkin reduced-order model. The quadratic spin-exchange term is treated by an exact nonlinear quadratic expansion, whereas the nonpolynomial and nonlocal optical-pumping term is hyper-reduced using the discrete empirical interpolation method. At out-of-sample parameter points, the reduced model closely reproduces the full-order population and polarization fields while achieving speedup of more than \\(7\\times10^3\\) relative to the single-core CPU full-order solver. The resulting hierarchy connects verified high-fidelity simulation with efficient reduced-order prediction for spatially resolved alkali-metal spin dynamics.",
+        "categories": [
+          "physics.comp-ph"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.42106": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.42106",
+        "title": "Hard Constraint Projection in a Physics Informed Neural Network (Burgers)",
+        "authors": [
+          "Miranda J S Horne",
+          "Peter K Jimack",
+          "Amirul Khan",
+          "He Wang"
+        ],
+        "summary": "Physics informed machine learning provides a framework to study and simulate fluid dynamics, potentially at a fraction of the computational cost of traditional numerical methods, with the goal of improving the explainability, accuracy and robustness of purely data driven machine learning methods. In this work, we extend the hard constraint projection (HCP) method developed by Chen et al. [Journal of Computational Physics, 445, 110624, 2021] from a linear partial differential equation (PDE) to a nonlinear PDE: the 1D Burgers' equation. To strictly impose a discrete approximation of the governing equation, the Burgers' equation is first locally discretised (using a finite difference stencil) then decomposed into a constraint matrix and a prediction matrix. Using tools from linear algebra, the constraint matrix is used to construct a projection matrix. A physics informed neural network (PINN) [Raissi et al. Journal of Computational Physics, 378, 686, 2019] is used to predict the velocity, and a final unlearnable layer projects the velocity prediction to the hyperplane of exact solutions to a discretised form of the Burgers' equation. Our initial results indicate that the HCP-PINN initially trains similarly to an equivalent PINN, and as the PINN loss plateaus, the HCP-PINN loss continues to decline. When tested on a previously unseen uniform grid of points covering the domain, the HCP-PINN exhibits higher accuracy, converging to a data error approximately an order of magnitude lower than the comparable PINN. We also observe that the inclusion of the HCP layer results in better observance of the governing PDE. Our findings suggest that the HCP-PINN can be more robust to the selection of physics collocation points, and less dependent on collocation point quantity.",
+        "categories": [
+          "physics.flu-dyn",
+          "cs.LG"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41662": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41662",
+        "title": "A variational phase-field theory of cohesive fracture at finite deformation",
+        "authors": [
+          "Ye Feng"
+        ],
+        "summary": "This paper formulates a kinematically and variationally consistent phase-field theory for cohesive fracture at finite deformation. The theory introduces an independent compliance-damage field, which accommodates both diffuse distributions and singular concentrations. The phase-field is thereby freed from the dual burden of describing crack geometry and material degradation. A rank-one additive split of the deformation gradient makes separation explicit through independent crack-strain and reference-normal fields. All fields are governed by a single principle of minimum potential energy, which consistently couples nonlinear bulk deformation, crack separation, and crack-plane rotation. One-dimensional energy comparisons show that minimization favors Dirac-type concentration of compliance damage and crack strain. Strong displacement discontinuities thus emerge naturally at a finite phase-field length without being prescribed a priori, while the phase-field remains continuous. The concentrated energy recovers the exact bulk--interface structure of a sharp-crack cohesive zone model. General objective hyperelastic bulk potentials and admissible mixed-mode cohesive laws can therefore be prescribed independently, with the nominal traction--separation law unaffected by the bulk law or phase-field length. Diffuse damage can coexist with concentrated cracks, retaining deformation modes for bulk-energy relaxation during nucleation. Two- and three-dimensional examples validate the theory across large stretches, finite rotations, and complex crack paths. Notably, the computed near-tip Cauchy stress closely matches the analytical 1/r crack-tip asymptotic solution of Long et al. (2011) outside the cohesive zone.",
+        "categories": [
+          "physics.comp-ph",
+          "cond-mat.mtrl-sci",
+          "cond-mat.soft"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.42089": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.42089",
+        "title": "Onset of Radiatively Driven Convection in Ice-Covered Freshwater Lakes",
+        "authors": [
+          "Benjamin J. Smith",
+          "Bingfei Yan",
+          "Till J. W. Wagner",
+          "Nimish Pujara",
+          "Jennifer A. Franck"
+        ],
+        "summary": "This work investigates the formation and growth of Rayleigh-Taylor instabilities (RTIs) during the onset of radiatively driven convection (RDC) in seasonally ice-covered freshwater lakes. Two-dimensional direct numerical simulations (DNS) and linear analysis allow for the investigation of how environmental factors, including thermal stratification, water clarity, and solar forcing influence RTI formation. It is found that for strongly stratified lakes, there is a period of dormancy before the water column forms a gravitationally unstable layer that allows RTI growth. Conversely, for weakly stratified lakes the water column can become unstable almost immediately, allowing for rapid RTI growth. A linear analysis is performed to investigate the early RTI growth dynamics, and its results compare well with DNS. Notably, the wavelengths and depths of RTIs, and their associated time-dependent growth rates, are all captured by the linearised dynamics. Predictions of RDC onset obtained using the linear model show good agreement with DNS results. When the analysis is applied to field measurements of ice-covered lakes, it is found that weakly stratified lakes may take a few hours before RDC onset whereas strongly stratified lakes may not see RDC onset after a full day of clear-sky spring conditions.",
+        "categories": [
+          "physics.flu-dyn"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41544": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41544",
+        "title": "AMPERe: an exactly divergence-free quadrature-by-expansion evaluator for near-surface Biot--Savart and virtual-casing fields in fusion geometries",
+        "authors": [
+          "H. Betar",
+          "Y. Sarazin",
+          "V. Grandgirard",
+          "D. Zarzoso"
+        ],
+        "summary": "Accurate magnetic-field evaluation on and near current-carrying surfaces is a recurring computational bottleneck in magnetic-confinement fusion. As targets approach the source surface, Biot--Savart and virtual-casing kernels become singular, causing standard Gauss--Legendre and upsampled trapezoidal quadratures to lose accuracy. We introduce AMPERe, a quadrature-by-expansion (QBX) evaluator for vector magnetostatic kernels on general three-dimensional, non-axisymmetric tokamak and stellarator geometries. The method develops a spherical-harmonic QBX formulation for the vector Biot--Savart and virtual-casing (Stratton--Chu) fields and expresses the resulting magnetic field as the analytic curl of a regular-solid-harmonic vector potential. This construction yields a divergence-free discrete field at every expansion order, provides analytic derivatives, and enables an a priori separation of truncation, quadrature, and geometric errors. On the rotating-ellipse benchmark of Malhotra et al. [1], QBX maintains a relative error of 2--5 x 10^{-6} throughout the near-surface regime at distance-independent cost, whereas upsampled trapezoidal quadrature exhibits O(1) errors and requires node counts scaling as (h/d)^2. AMPERe is implemented as a header-only, performance-portable Kokkos library supporting CPU and GPU backends, with target-specific and local-correction accelerations validated against the baseline. The method is further demonstrated on realistic Wendelstein 7-X configurations, including sheet-current and virtual-casing field evaluations.",
+        "categories": [
+          "physics.comp-ph",
+          "math-ph",
+          "physics.plasm-ph"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.42016": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.42016",
+        "title": "Physics-Informed Latent Neural ODEs for Reduced-Order Modeling of Hydrogen, Ammonia, and Methane Combustion Kinetics",
+        "authors": [
+          "Jay Patel",
+          "Shubhangi Bansude"
+        ],
+        "summary": "Detailed chemical kinetic mechanisms are computationally expensive in reacting-flow simulations because of their high dimensionality and numerical stiffness. We develop an end-to-end physics-informed autoencoder neural ordinary differential equation (PI-AE-NODE) framework in which an encoder compresses the thermochemical state into a low-dimensional latent space, a Neural ODE advances it continuously in time, and a decoder reconstructs the temperature and all species mass fractions. Elemental conservation, mass conservation, and enthalpy consistency are embedded in the training objective. The framework is applied to H$_2$/air, NH$_3$/air, and CH$_4$/air autoignition using detailed mechanisms of increasing size and complexity, which are represented accurately with only a few latent variables. Compared with an otherwise identical data-driven model, the physical constraints improve ignition delay prediction and conservation behaviour. The models reproduce major and intermediate species evolution at both training and unseen conditions, and their latent dynamics permit efficient explicit integration, with the computational advantage over the detailed mechanisms increasing with mechanism size.",
+        "categories": [
+          "physics.flu-dyn"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41500": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41500",
+        "title": "Characterization of Phase Transitions with the Annealed Importance Sampling Algorithm",
+        "authors": [
+          "A. Prat Pou",
+          "E. Romero",
+          "J. Marti",
+          "F. Mazzanti"
+        ],
+        "summary": "We We explore the use of the Annealed Importance Sampling (AIS) algorithm as a numerical tool to study phase transitions and critical phenomena. By mapping physical systems such as Ising and spin-glass models directly onto Restricted Boltzmann Machines (RBMs), and extending the analysis to both synthetic and trained architectures, we use a unified RBM framework to compare the performance of AIS against standard Monte Carlo methods in regimes characterized by strong fluctuations and complex energy landscapes. The unified RBM formulation allows for massively parallel sampling, offering a scalable and precise alternative to traditional Monte Carlo methods. Building on a simple, heuristic mean-field AIS initialization derived from the weights of the network, the proposed scheme enhances sampling efficiency and accuracy across all systems considered, proving its effectiveness as a tool to detect and characterize phase transitions in discrete spin and spin-like systems. Our results show that a properly initialized AIS reliably estimates thermodynamic observables, including the partition function and magnetization, while accurately detecting both paramagnetic-ferromagnetic and paramagnetic-spin-glass phase transitions across various system sizes.",
+        "categories": [
+          "physics.comp-ph",
+          "cond-mat.dis-nn"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41975": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41975",
+        "title": "Novel Mixed Approximate Deconvolution Large-Eddy Simulation Models for Two-Phase Flows",
+        "authors": [
+          "Mohammad Bagher Molaei",
+          "Ehsan Amani",
+          "Morteza Ghorbani"
+        ],
+        "summary": "Approximate Deconvolution (AD) frameworks for Large-Eddy Simulation (LES) offer a promising approach for modeling multiscale interactions in turbulent multiphase flows. However, some conventional formulations exhibit structural inconsistencies, identified in our previous work [Amani E., Molaei M.B., Ghorbani M. 2024 Novel mixed approximate deconvolution subgrid-scale models for large-eddy simulation. Physics of Fluids 36] which can impact the accuracy and robustness of AD-LES. To address this issue, the present study extends a family of structurally consistent AD closures to turbulent two-phase flows. Specifically, we introduce the Alternative Local Dynamic Model with Kinetic energy equation (A-LDMK), an improved non-equilibrium one-equation mixed eddy-viscosity AD framework. These closures are evaluated through a posteriori analyses of a single-phase turbulent channel flow and a turbulent two-phase gas-liquid mixing layer. The results indicate that the consistent frameworks enhance numerical stability and can sustain energy backscatter under less restrictive stability constraints compared to standard dynamic procedures. Specifically, the proposed A-LDMK provides the most accurate prediction of the multiscale primary atomization cascade in terms of droplet size distribution, compared to the other assessed closures.",
+        "categories": [
+          "physics.flu-dyn"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.42098": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.42098",
+        "title": "Field-resolved observation and quantification of the instantaneous Kerr response in semiconductors",
+        "authors": [
+          "Haifeng Lin",
+          "Hannes Kempf",
+          "Hinduja Bhuvanendran",
+          "Aitor De Andrés",
+          "Markus Ludwig",
+          "Nicolò Maccaferri"
+        ],
+        "summary": "The optical Kerr effect, whereby the refractive index of a material changes with light intensity, underpins nonlinear photonics and emerging mid-infrared technologies. Accurate determination of the nonlinear refractive index is therefore essential, yet conventional intensity-based techniques infer the nonlinear phase shift indirectly from changes in beam propagation or optical spectra. Moreover, methods such as the $z$-scan cannot resolve the temporal evolution of the nonlinear response, making it difficult to distinguish instantaneous Kerr nonlinearities from delayed contributions, including free-carrier effects. Here, we investigate the nonlinear optical response of germanium at $5 μ\\mathrm{m}$ using field-resolved degenerate pump-probe spectroscopy. By measuring the transmitted probe electric field as a function of pump-probe delay, we directly retrieve the pump-induced phase shift and its temporal evolution while retaining sensitivity to changes in absorption. We observe cross-phase modulation that follows the pump intensity envelope and vanishes when the pump and probe no longer overlap, consistent with an instantaneous Kerr response. The phase shift scales linearly with pump intensity, yielding a nonlinear refractive index of $n_2=(0.87\\pm0.16)\\times10^{-17} \\mathrm{m}^2/\\mathrm{W}$. Our results establish the instantaneous Kerr effect as the dominant contribution to the measured nonlinear phase shift under our experimental conditions and demonstrate field-resolved pump-probe spectroscopy as a direct, time-resolved method for determining the nonlinear refractive index and distinguishing instantaneous from delayed optical responses.",
+        "categories": [
+          "physics.optics",
+          "cond-mat.mtrl-sci"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41305": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41305",
+        "title": "Feature-preserving interface reconstruction using piecewise circles and cusps",
+        "authors": [
+          "Jerry Liu",
+          "Kenneth Weiss",
+          "Jin Yao"
+        ],
+        "summary": "We present a geometric interface reconstruction method for Volume-of-Fluid (VOF) simulations that captures both curved interfaces and sharp features using only volume fraction data. We represent interfaces with linear facets, circular arcs, and corner facets formed by two lines or arcs joined within a single cell. We first propagate local orientation constraints through a graph and merge cells to resolve ambiguities, treating topological consistency as a first-class constraint. An optional conservative refinement improves $C^0$ continuity while preserving local volume constraints. Users can independently enable circular facets, corner facets, cell merging, and continuity refinement to balance accuracy and computational cost. In its simplest configuration, our method provides a fast local line-fitting scheme competitive with state-of-the-art PLIC methods. On standard static benchmarks, the full configuration reconstructs identifiable lines, circles, and sufficiently resolved corners to numerical precision on coarse, perturbed Cartesian meshes. On varying-curvature interfaces, it achieves third-order convergence in facet-gap error and approximately first-order convergence in curvature error. These results demonstrate global volume conservation and accurate reconstruction of curved and corner features.",
+        "categories": [
+          "physics.comp-ph",
+          "math.NA",
+          "physics.flu-dyn"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41959": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41959",
+        "title": "Compound drop impacts on substrates of different temperatures",
+        "authors": [
+          "Benjamin Gorin",
+          "Mete Abbot",
+          "Daniel Bonn",
+          "Hamid Kellay"
+        ],
+        "summary": "In this paper, we report the impacts of isothermal compound drops for various combinations of viscous fluids. We extend an existing parameter-free model based on kinematic closure of drop impact to predict the maximum spreading diameter of both the core and the shell of compound drops. Then, we report impacts of compound drops on a cold surface. By using two liquids with different melting/freezing temperatures, it is possible to freeze either one of the two liquids or both and doing so, different patterns of frozen drops are obtained.",
+        "categories": [
+          "physics.flu-dyn"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.42003": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.42003",
+        "title": "Gearbox cavities: Ultrahigh wave confinement via broken rotational symmetry",
+        "authors": [
+          "Alessio Amaolo",
+          "Sean Molesky",
+          "Alejandro W. Rodriguez",
+          "George Shaker",
+          "Steven G. Johnson",
+          "Pengning Chao"
+        ],
+        "summary": "Cavity enhancement of emission from a point source typically relies on structures that preserve its cylindrical symmetry, such as circular Bragg gratings. Combining inverse design with fundamental limits, we show that breaking this symmetry is necessary to maximize the local density of states in lossless two-dimensional cavities. Symmetry-broken designs exceed limits over all cylindrically symmetric structures by up to eight orders of magnitude, acting as ``gearboxes'' that convert the source's emission into high-angular-momentum waves trapped behind a centrifugal barrier.",
+        "categories": [
+          "physics.optics"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41152": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41152",
+        "title": "Machine Learning-Enabled Time-Skipping Method: Theory and Perturbation-Based Verification",
+        "authors": [
+          "Isaac C. Bannerman",
+          "Shaowu Pan",
+          "Lucy T. Zhang"
+        ],
+        "summary": "Simulating the time evolution of practical mechanics problems requires many time steps. This cost is further compounded by the iterative nature of implicit solvers. We present a cycle-based Machine Learning-enabled Time-skipping (MLT) method. In each cycle, several time steps are skipped, a machine learning (ML) prediction bridges the gap to initialize one solver step, and the physics-based solver then runs for several steps to correct any accumulated errors. Using the Implicit Function Theorem, we derive first-order estimates that characterize how ML prediction errors propagate. These estimates identify when errors remain bounded across cycles and guide the choice of cycle parameters, independent of model architecture. We verify these estimates on the Allen-Cahn equation and a forced variant using controlled synthetic perturbations that emulate ML errors. Wall-clock measurements confirm the theoretical speedup is realizable in practice. The MLT method provides a robust framework for accelerating time-marching in dynamic simulations.",
+        "categories": [
+          "physics.comp-ph"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41947": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41947",
+        "title": "Turbulence on Hybrid Lattices: regular grids meet self similar cascade models",
+        "authors": [
+          "Lorenzo Manfredini",
+          "Özgür D. Gürcan",
+          "Sai Swetha Venkata Kolluru",
+          "Berengere Dubrulle"
+        ],
+        "summary": "Turbulent cascades in high Reynolds number regimes span many decades in scale, which can be challenging for numerical simulations. Cascade models that use logarithmic discretization can help, but these have limited capabilities to describe spatial structures or real space details. Hybrid Lattices (HLs) are proposed in order to provide a novel framework to investigate turbulent cascades in Fourier space, combining regular grids and cascade models based on logarithmic discretisations. The approach consists of a regular spectral region, capable of resolving large scale coherent structures, that is extended in a recurrent, asymptotically self similar fashion, spanning many decades in scale. The idea comes from shell models and their extensions, namely the logarithmic lattices, the nested polyhedra models or the spiral chain models. The logarithmic spacing factor of those models, such as the golden ratio, typically prevents interactions between a regular grid and a self similar model. HLs are constructed by expanding a regular region in Fourier space through recurrence relations (e.g. the Fibonacci recurrence relation), generating an asymptotically logarithmic lattice where Cartesian components remain integer multiples of the regular Fourier space grid spacing. This way, the resulting grid preserves triadic interactions linking regular and recurrent regions, allowing energy transfer across these different regions. However, the sharp reduction in triads connecting the two regions creates a bottleneck effect, and in order to address this issue, a region of ghost points at the boundary had to be introduced, efficiently allowing the flux to leak into the recurrent part. The HL framework is then tested for the one dimensional Burgers equation, and for two dimensional incompressible Navier Stokes turbulence.",
+        "categories": [
+          "physics.flu-dyn",
+          "nlin.CD"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41701": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41701",
+        "title": "Photonic Crystal Integrated Graphene-Silicon Schottky Diodes for Resonant Infrared Photodetection",
+        "authors": [
+          "Lorenzo Pettorosso",
+          "Michael Horodynski",
+          "Dmitry K. Polyushkin",
+          "Thomas Mueller"
+        ],
+        "summary": "Narrowband infrared (IR) photodetection has become a critical technology for the next generation of smart low-power photodetectors. In this work, we present a device based on a graphene-silicon Schottky junction with narrowband response in the short-wave IR (SWIR) regime. Integrating a photonic crystal (PhC) slab in the device enables a wavelength dependant tailoring of graphene absorption. The devices were characterized by photocurrent measurement, which was enhanced more than two orders of magnitude by the PhC integration. The sharp enhancements obtained can also be predicted by numerical simulation. This approach offers a highly scalable, tunable, CMOS-compatible architecture for narrowband IR photodetection, paving the way for next-generation, low-power IR sensors.",
+        "categories": [
+          "physics.optics"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41756": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41756",
+        "title": "Machine learning surrogates for multi-geometry EDGE2D-EIRENE studies of MAST Upgrade",
+        "authors": [
+          "George K. Holt",
+          "Lorenzo Zanisi",
+          "Romain Futtersack",
+          "James Simpson"
+        ],
+        "summary": "Two-dimensional edge plasma transport simulations provide a detailed description of divertor plasma behaviour, but their computational cost limits large parameter scans and iterative modelling. We present a database of 23,379 converged EDGE2D-EIRENE simulations for MAST Upgrade (MAST-U), spanning three divertor magnetic configurations, variations in separatrix density and input power, deuterium fuelling locations, and nitrogen seeding rates and locations. Independent multilayer perceptron surrogates are trained for twelve scalar outputs, including divertor front positions, target electron temperature and core-edge boundary quantities. On a held-out test set, the surrogates achieve $0.9462 \\leq R^2 \\leq 0.9994$, substantially outperforming linear regression baselines. Dense surrogate scans quantify the dependence of carbon radiation front motion on separatrix density, divertor geometry and fuelling location. Nitrogen seeding scans reveal a strong dependence on seeding location, with high-field-side seeding rapidly reducing core-boundary electron temperature, while divertor seeding produces little response. Batch inference for all twelve outputs at 786,432 operating points takes 1.76 s on GPU, compared with a median wall time of 2.61 hours using four CPU cores for separate EDGE2D-EIRENE simulations. These models enable rapid comparison of geometry and source-location effects on divertor and core-boundary conditions within the sampled simulation domain.",
+        "categories": [
+          "physics.plasm-ph"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.40851": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.40851",
+        "title": "Benchmarking One-Dimensional Quantum Lattice Boltzmann Methods on Quantum Hardware",
+        "authors": [
+          "Melvina Quartey",
+          "Lucy T. Zhang"
+        ],
+        "summary": "Classical computational fluid dynamics (CFD) methods encounter significant computational bottlenecks in large systems and at high Reynolds number flows due to the rapid increase in degrees of freedom, even on flagship supercomputers. As quantum computers emerge, the Quantum Lattice Boltzmann Method (QLBM) has been proposed as a quantum-native alternative for solving fluid dynamics problems. However, until recently, nearly all studies have relied on classical quantum simulators rather than real quantum hardware. This study presents a benchmark of a one-dimensional QLBM implementation executed on three different IBM Quantum hardware. We design and test a quantum circuit for the advection-diffusion equation using amplitude encoding, a Bhatnagar-Gross-Krook (BGK)-type collision operator, and a streaming step with periodic boundary conditions. Our numerical experiments evaluate transpiled two-qubit gate count, total circuit depth, runtime, and accuracy metrics including maximum absolute error ($L_\\infty$ norm) and root-mean-square error (RMSE). We find that the present collision and streaming operators dominate the overall cost and become the primary scalability bottleneck on current hardware. To mitigate the prohibitive cost of full quantum state tomography on hardware-based benchmarking exercises, we introduce a sampler-based measurement strategy that reconstructs macroscopic density fields directly from computational-basis measurements. This approach substantially reduces measurement overhead while preserving the expected advection-diffusion dynamics on hardware. These results provide a quantitative assessment of QLBM performance in the noisy intermediate-scale quantum (NISQ) regime and identify the principal algorithmic and experimental limitations that must be addressed for QLBM to become viable for fluid dynamics.",
+        "categories": [
+          "physics.comp-ph",
+          "physics.flu-dyn",
+          "quant-ph"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41942": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41942",
+        "title": "Penetration of a sphere in a pool: Secondary pinch-off",
+        "authors": [
+          "Prasanna Kumar Billa",
+          "Cameron Tropea",
+          "Pallab Sinha Mahapatra"
+        ],
+        "summary": "The water entry of solid bodies, in particular spheres, has been the subject of numerous studies due to its relevance in multiple applications, especially focusing on cavity dynamics and the resulting forces and subsequent trajectories. The role of wettability in cavity formation and sustainability has been experimentally and theoretically addressed in the past; however, typically only up to the occurrence of a primary air cavity pinch-off. What is less explored is how wettability can influence higher-order pinch-offs. In the following study, especially secondary pinch-offs are shown to determine whether a sphere trajectory is terminally ascending, i.e., the sphere returns to the surface, or terminally descending: wettability is shown to be a strong influencing factor.\n  This study begins with a series of systematic experiments, comparing the entry and trajectory of spheres over a range of impact Reynolds and Froude numbers, but also with varying surface wettability. From time resolved trajectories, a force balance is computed, illustrating the role of buoyancy, arising from the volume of any sustained air cavity in the wake of the sphere. Secondary pinch-offs alter this volume; hence, the terminal trajectory. A force-scale comparison and local radial balance at the cavity neck are then presented, suggesting how wettability influences the secondary pinch-off.",
+        "categories": [
+          "physics.flu-dyn"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41531": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41531",
+        "title": "The Generalized Twin Image: Understanding Regularized Phase Retrieval",
+        "authors": [
+          "Zhiyuan Hu",
+          "Michael Unser",
+          "Jonathan Dong"
+        ],
+        "summary": "Image priors can dramatically improve phase retrieval reconstruction, but their effectiveness strongly varies between imaging modalities. We introduce the generalized twin image, which extends the classical twin-image ambiguity from Fourier phase retrieval to any invertible sensing operator, to understand this effectiveness. The ambiguity extends to undersampled and oversampled measurements, remaining exact under undersampling and for oversampled coded Fourier measurements. We show that it provides a simple criterion to assess regularization effectiveness: the image prior should favor the ground truth over its generalized twin image. We propose the total-variation ratio as a simple measure of this preference, and derive closed-form estimates for structured random phase retrieval models. Experiments with a pretrained denoiser demonstrate that the ratio predicts regularized reconstruction performance across different sensing models.",
+        "categories": [
+          "physics.optics",
+          "eess.IV"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41748": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41748",
+        "title": "Stabilization of counter propagating currents by energy conservation in collisions",
+        "authors": [
+          "Thomas Kluge",
+          "Jannis Schulz",
+          "Arthur Hirsch-Passicos",
+          "Pawel Ordyna",
+          "Ulrich Schramm"
+        ],
+        "summary": "Current filamentation generates magnetic fields and shapes electron transport in dense plasmas, where collisions can either suppress or enhance its growth. Here we show that conserving electron kinetic energy in a collisional model can change both the dominant instability and its characteristic wavelength. We develop a linear kinetic theory for drifting, anisotropic electron populations with a relaxation operator that conserves particle number and laboratory-frame kinetic energy while allowing momentum transfer to a stationary ion background. For counterstreaming currents, energy conservation maintains the stabilizing influence of charge separation over a broader range of collision frequencies than a model conserving particle number alone. At intermediate collision rates, the resulting suppression of transverse filamentation allows a nearly aperiodic oblique mode to dominate, reducing the maximum growth rate and shifting the wavelength of the fastest-growing perturbation. Two-dimensional particle-in-cell simulations support predicted growth rates of up to more than a magnitude lower than expected without energy conserving collision.",
+        "categories": [
+          "physics.plasm-ph"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41523": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41523",
+        "title": "A Hybrid Message-Passing and Electric-Field Representation for Electrostatic QM/MM Embedding with Machine Learning Interatomic Potentials",
+        "authors": [
+          "Raphael T. Husistein",
+          "Shobhit S. Chaturvedi",
+          "Thomas Weymuth",
+          "Beatriz Piniello",
+          "Sélène Forget",
+          "Kresten Lindorff-Larsen",
+          "Gemma C. Solomon",
+          "Markus Reiher"
+        ],
+        "summary": "Within a hybrid quantum mechanics/molecular mechanics approach a small region of a large atomistic system is described quantum mechanically, while the rest of the system is represented by a classical force field. Despite this, the computational cost of the quantum calculation severely limits the accessible simulation and sampling time. Replacing the quantum calculation with a machine learning interatomic potential (MLIP) trained on quantum reference data can greatly increase the accessible simulation time. However, the accuracy and efficiency strongly depend on the specific way in which the MLIP incorporates information about the classical (electrostatic) environment. Here, we demonstrate that existing strategies based purely on features derived from an external electric field fail to distinguish certain environments, ultimately limiting their accuracy. As a solution, we propose an extension to the equivariant TensorNet architecture that mitigates this shortcoming by incorporating classical atoms close to the quantum region into the message-passing scheme, combined with features derived from the electric field for describing the environment farther away. We show that this combination achieves higher accuracy than either approach alone.",
+        "categories": [
+          "physics.chem-ph",
+          "physics.bio-ph",
+          "physics.comp-ph",
+          "quant-ph"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41526": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41526",
+        "title": "Viscoelastic behavior at high volume fraction of magnetorheological suspensions in the presence of discontinuous shear thickening",
+        "authors": [
+          "Olga Volkova",
+          "Yan Grasselli",
+          "Georges Bossis"
+        ],
+        "summary": "This paper presents a study of the viscoelastic behavior of suspensions of carbonyl iron particles coated with a superplastifier molecule and dispersed in ethylene glycol. The experiments were done in plate-plate configuration with the rheometer MCR502 of Anton Paar. The discontinuous shear thickening (DST) transition manifests by a large jump of the storage and loss modulus. For low magnetic fields ( H <___50___kA/m) the increase of moduli is at least of two orders of magnitude compared to the one induced by the magnetic field in the absence of DST. The behavior of the critical strain and the critical stress where the transition happens are presented for different frequencies and fields and a qualitative interpretation of the observed behavior is presented.",
+        "categories": [
+          "physics.flu-dyn"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41503": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41503",
+        "title": "Ultraviolet Raman spectroscopy using multimode aluminum oxide waveguides",
+        "authors": [
+          "Roman Zakoldaev",
+          "Nikhil Jayakumar",
+          "Elie Vennat-Bresson",
+          "Jean-Claude Tinguely",
+          "Firehun Tsige Dullo",
+          "Balpreet Singh Ahluwalia"
+        ],
+        "summary": "Waveguide-based Raman spectroscopy offers a route toward compact and integrated photonic sensors. While most waveguide Raman platforms operate in the near-infrared, extending excitation toward the visible and ultraviolet is attractive because shorter excitation wavelengths can provide substantially stronger Raman scattering and access to resonance-enhanced molecular responses. This transition, however, places greater demands on the photonic material because of optical loss, absorption and waveguide-generated spectral background. Here, we investigate aluminum oxide ($Al_2O_3$) waveguides as a low-background platform for Raman spectroscopy at 532 nm and 325 nm using a back-collected excitation and detection geometry. At 532 nm, after normalization to the incident excitation power-time product, the measured $Al_2O_3$ background was more than two orders of magnitude lower than that of $Si_3N_4$. Under 325 nm excitation, the waveguides maintained a weak and reproducible spectral background across the investigated widths. Using immersion oil as a model analyte deposited over the waveguide surface, we demonstrate that analyte-specific Raman fingerprints can be recovered above the waveguide background at both wavelengths. Signal-to-background ratio and spectral contrast were used to quantify analyte visibility relative to the waveguide background, and both metrics consistently confirmed clear detection of the analyte bands. These results demonstrate that $Al_2O_3$ combines low measured spectral background with operation from the visible into the ultraviolet, providing a promising route toward integrated Raman spectroscopy at shorter excitation wavelengths.",
+        "categories": [
+          "physics.optics"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41623": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41623",
+        "title": "An approximate separation of the electron and positron degrees of freedom in the Dirac-Heisenberg-Wigner formalism",
+        "authors": [
+          "Gert Brodin",
+          "Sebastian Lundström"
+        ],
+        "summary": "Here we study the quantum relativistic phase-space description of the Dirac field referred to as the Dirac--Heisenberg--Wigner (DHW) formalism. By applying a systematic expansion procedure in weak electromagnetic fields (compared to the Schwinger critical field) and slow temporal and long spatial scales (compared to the Compton scales), the 16 scalar phase-space functions of the DHW equations can be reduced to 8 scalars. By making a further change of variables, the equations can be interpreted as four evolution equations for the electron degrees of freedom and four for the positron degrees of freedom. We refer to these equations as the weakly coupled electron-positron (WCEP) limit of the DHW equations. Unlike the case after a Foldy--Wouthuysen transformation has been made, the electron and positron degrees of freedom remain weakly coupled. Naturally, further approximations can be made on the 4+4 equations so that only 4 equations for one particle species remain. Importantly, the expansion scheme can be carried out to all orders, in which case the reduced 4+4 model, contrary to other reduced models, will cover most quantum relativistic effects. Specifically, this includes vacuum polarization, a phenomenon that otherwise has been added phenomenologically, but here appears naturally as a feature of the general expansion scheme.",
+        "categories": [
+          "physics.plasm-ph",
+          "hep-ph"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.40794": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.40794",
+        "title": "FLUCS: a modular GPU-native framework for fluid and plasma turbulence",
+        "authors": [
+          "T. Adkins",
+          "P. G. Ivanov"
+        ],
+        "summary": "We present FLUCS, an open-source framework for solving systems of partial differential equations efficiently on graphics processing units (GPUs), targeting models of fluid and plasma turbulence. It comprises a set of numerical solvers specialised for a well-defined class of problems and independently developed systems that supply specific systems of equations. This allows different models to share numerical infrastructure while retaining control over their individual implementation and optimisation. The present release provides a Fourier pseudospectral solver for one-, two-, and three-dimensional periodic domains solved on a single NVIDIA GPU, with integrating-factor time integration and several time-stepping and dealiasing methods. We verify its convergence, quantify its computational costs, and demonstrate its application to three reduced models of fusion and astrophysical plasma turbulence.",
+        "categories": [
+          "physics.plasm-ph",
+          "physics.comp-ph",
+          "physics.flu-dyn"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41467": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41467",
+        "title": "Hydrodynamic regimes of the edge-tone in a simplified recorder mouthpiece",
+        "authors": [
+          "A. Tassawar",
+          "R. Velasco-Segura",
+          "P. Rendon",
+          "M. Fosas de Pando",
+          "R. Ostilla-Mónico"
+        ],
+        "summary": "The acoustic mechanism of flue instruments originates in the interaction of an air jet with a sharp edge, the labium. Previous studies have examined isolated edge-tones or full instruments in which acoustic resonance obscures the underlying hydrodynamics, and a systematic understanding of how geometric parameters govern jet stability is lacking. We present a large-scale parametric study of the jet-labium interaction in a simplified recorder mouthpiece without a resonator, using more than 200 two-dimensional direct numerical simulations with an immersed boundary method. We vary the mouth distance, the labium angle, the vertical offset of the labium, and the Reynolds number (Re), and characterize the dynamics through spectra of the transverse force on the labium. The baseline configuration oscillates as a predominantly periodic Stage I edge-tone with Strouhal number St ~ 0.07, nearly constant for Re >= 330 and for all labium angles at the baseline mouth distance, so the frequency is set by the geometry rather than by viscosity. The mouth distance has the strongest influence: it is the only parameter that introduces a second oscillation stage, and the Stage I frequency is inversely proportional to it. The second stage is weakly present at five and six windway heights, established from six and a half, and dominant from eight, where it strongly modulates the amplitude. The vertical offset mainly affects the strength of the oscillation, and the labium angle does not change the instability mechanism. A baseline configuration is identified for future aeroacoustic coupling studies.",
+        "categories": [
+          "physics.flu-dyn"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41392": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41392",
+        "title": "Reconfigurable Generation of Terahertz Spiral Vector Beams Based on All-Dielectric Cascaded Metasurfaces",
+        "authors": [
+          "Hongjun Chen",
+          "Yuxin Tang",
+          "Jianming Li",
+          "Jitao Li",
+          "Li Luo",
+          "Tingting Tang",
+          "Jie Li",
+          "Jianquan Yao"
+        ],
+        "summary": "The reconfigurable generation of complex structured terahertz (THz) fields, and vector beams in particular, remains a significant challenge. Here, we propose a novel all-dielectric cascaded-metasurface scheme for the reconfigurable generation of THz spiral vector beams. By combining an isotropic phase-compensation layer with an anisotropic circular-polarization-sensitive layer, together with a new phase design tailored to spiral beams, we achieve independent control of the left- and right-handed circularly polarized (LCP and RCP) components through the relative rotation angle between the two layers. Under linearly polarized THz wave illumination, THz vector beams with switchable spiral numbers of 1-3 and reversible circular-polarization handedness are demonstrated at frequencies around 0.9 THz. Moreover, owing to the longitudinal evolution characteristic of spiral beams, the three generated THz vector beams exhibit azimuthal rotations of 279.9°, 125.7° and 75.5°, respectively, along the propagation direction. Such complex THz vector beams, which combine reconfigurability with longitudinal evolution, are expected to find applications in emerging fields such as next-generation wireless communications and THz imaging. The proposed generation scheme also offers a useful reference for the reconfigurable generation of high-dimensional vector beams.",
+        "categories": [
+          "physics.optics"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41450": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41450",
+        "title": "Accelerating Computation and Resolving Extraneous Roots in the Kinetic Plasma Dispersion Relation Solver BO",
+        "authors": [
+          "Xizhi Tian",
+          "Huasheng Xie",
+          "Long Wei"
+        ],
+        "summary": "Kinetic dispersion relations are widely used to study waves and instabilities in space, astrophysical, and laboratory plasmas. Iterative root searches depend on initial guesses and may fail to converge or miss important branches. The BO/PDRK solvers [Comput. Phys. Commun. 244, 343-371 (2019)] use rational pole expansions to transform the nonlinear dispersion relation into a matrix eigenvalue problem, obtaining all roots of the approximated relation in one calculation. However, high cyclotron harmonics enlarge the matrix and slow computation, while extraneous roots are difficult to separate from physical modes. We develop BO-T (BO-Tian), an improved version of BO combining two methods. First, for matrix reduction, BO-T applies rank factorization to combined residue matrices, preserving the rational dispersion relation and accounting for the removed pole eigenvalues. Second, for root screening, BO-T uses contour comparison between approximate and reference kinetic dispersion matrices along a closed contour enclosing no poles. This provides a sufficient condition for preserving local root counts, with error bounds for isolated roots and criteria for growth rate signs. Benchmarks on representative electrostatic and electromagnetic cases show speedups of about 10 to 140 for matrix assembly and eigenvalue calculation, exceeding 30 in most cases with high cyclotron harmonics. Root screening recovers the main unstable branches in agreement with published and archived dispersion curves.",
+        "categories": [
+          "physics.plasm-ph",
+          "physics.space-ph"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41304": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41304",
+        "title": "ART of PIV: Agentic Real-Time Particle Image Velocimetry for Active Flow Control",
+        "authors": [
+          "Antonio Terpin",
+          "Francesco Banelli",
+          "Alan Bonomi",
+          "Raffaello D'Andrea"
+        ],
+        "summary": "Particle image velocimetry (PIV) measures fluid motion from images of tracer particles, but its accuracy depends on choices throughout the estimation pipeline, including image preprocessing, flow estimation, and postprocessing. These choices are typically left to expert tuning, and a fixed configuration can become less accurate as conditions change. This matters especially when PIV supplies feedback for real-time control, where measurements must be both accurate and fast, and flow conditions vary. We introduce ART of PIV -- short for Agentic Real-Time and also a nod to the art of tuning a PIV pipeline -- which automates pipeline choice for each image pair. A learned agent selects a configuration according to a chosen measurement objective from a library assembled for a specified speed budget. Across cross-correlation, classical optical-flow, and learning-based estimators, ART of PIV reduces average end-point error (AEPE) by 12.2-22.4 % relative to the best single estimator at matched speed, with gains extending to 1000-4000 image pair/s. In a simulated local velocity regulation task, it reduces mean normalized closed-loop cost by 13.24-13.59 percentage points relative to a tuned fixed estimator, with the same classical controller in both cases. In a tabletop water channel, we illustrate two ways to tune ART of PIV for a fluidic pinball of three rotating cylinders: selecting between complementary optical-flow tunings for accuracy, and selecting regions of interest with coherent rotation or shear using a common flow estimator. For the first variant, we train a DreamerV3 reinforcement learning controller directly in the physical world and demonstrate tracking of a prescribed flow field in the wake of a fluidic pinball.",
+        "categories": [
+          "physics.flu-dyn",
+          "cs.AI",
+          "cs.CV"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41370": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41370",
+        "title": "Non-Hermitian Spectral Topology Shaped by Memory",
+        "authors": [
+          "Hao Pan",
+          "Bo Xue",
+          "Wanyue Xiao",
+          "Qiuyang Li",
+          "Yuqiong Cheng",
+          "Yumeng Wang",
+          "Kun Ding",
+          "Alex M. H. Wong",
+          "Shubo Wang"
+        ],
+        "summary": "Non-Hermitian spectral topology has transformed our understanding of bulk--boundary correspondence in open systems, yet its exploration has largely remained within the Markovian regime of instantaneous coupling. Here, we reveal how memory shapes non-Hermitian spectral topology by extending coupling asymmetry from space to time. Spatiotemporal nonreciprocity and memory-induced spectral multivaluedness give rise to nontrivial spectral topology on multi-sheeted Riemann surfaces, governed by both spatial connectivity and interaction history. Coherent interference among long-range memory channels can induce anomalous spectral winding and skin localization opposite to the dominant-coupling direction. Moreover, asymmetric retardation alone can generate non-Hermitian spectral topology and skin accumulation even in the absence of spatial coupling asymmetry. Channel dissipation further drives topological transitions that reverse the skin effect, with a critical point at matched channel and lattice decay rates. We validate the anomalous skin effect and its dissipation-controlled reversal through full-wave simulations and microwave experiments. Our results establish time nonlocality as a fundamental degree of freedom in non-Hermitian topology, revealing phenomena inaccessible within the Markovian paradigm.",
+        "categories": [
+          "physics.optics"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41241": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41241",
+        "title": "Plasmoid Instability in Inhomogeneous Current Sheets",
+        "authors": [
+          "Kazuma Ikeda",
+          "Ryusuke Numata"
+        ],
+        "summary": "Plasmoid instability in inhomogeneous current sheets is investigated using electromagnetic gyrokinetic simulations of collisionless magnetic reconnection. Simulations with and without small random perturbations are compared to examine the effects of symmetry breaking and spatial inhomogeneity. The current-sheet width immediately before disruption remains close to the electron skin depth, whereas the disruption aspect ratio varies significantly between primary and later current sheets. Random perturbations also produce asymmetric plasmoid topologies in which neighboring X points no longer share a common separatrix. These results suggest that spatial inhomogeneity is an important factor in the disruption of dynamically evolving current sheets.",
+        "categories": [
+          "physics.plasm-ph"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41224": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41224",
+        "title": "A Large Eddy Simulation Study of Turbine Pitch Motion Effects on Power Generation in Fully Developed Floating Wind Turbine Arrays",
+        "authors": [
+          "Yishu Zhang",
+          "Dennice F. Gayme",
+          "Charles Meneveau"
+        ],
+        "summary": "Interactions between floating wind turbines and the marine atmospheric boundary layer affect turbine wakes and power output. This study examines the impact of turbine representations and platform pitching motion on power predictions for aligned floating wind turbine arrays. Large-eddy simulations (LES) are performed for a fully developed wind turbine array boundary layer with periodic streamwise and spanwise boundary conditions and moving surface drag (MOSD) at the bottom surface. A proposed power-curve-aware extension of the conventional actuator disk model (PCADM) is compared with the traditional constant coefficient actuator disk model (CCADM), which is valid in principle only during Region 2 operation. Harmonic pitching motion matched to a representative ocean wave frequency is prescribed for IEA 15MW turbines mounted on the UMaine VolturnUS-S platform. Results demonstrate that the CCADM produces unphysical power overshoot when relative velocities induced by harmonic pitching periodically exceed rated speed, while the PCADM eliminates these unrealistic excursions from the actual turbine operating range. Various wind-wave conditions and relative pitching motions for an aligned farm with PCADM turbines are analyzed, including in-phase, opposite-phase, and incommensurate-phase row-to-row relative turbine motion. Results reveal that, depending on operational regions, turbine pitching motion can either increase or decrease mean turbine power output. Among the relative phases considered, in-phase motions produce larger fluctuations at the farm scale due to stronger turbine-turbine correlations. These findings highlight the importance of accounting for turbine motion and associated changes in operational regions when modeling turbine and wind farm power production in LES of offshore floating wind farms using actuator disk representations.",
+        "categories": [
+          "physics.flu-dyn"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41315": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41315",
+        "title": "Dual-rate optical frequency comb based on a cylindrical microresonator with a nanoscale radius variation",
+        "authors": [
+          "Alena Kolesnikova",
+          "Andrey Gelash",
+          "Ilya Vatnik"
+        ],
+        "summary": "We theoretically find that a cylindrical microresonator with nanoscale radius variation can be a source of coherent microcombs with two repetition rates, independently controlled by the device geometry. This phenomenon arises from the formation of two-dimensional axial-azimuthal dissipative Kerr solitons (2D DKS), which we discovered through numerical simulations of the nonlinearly coupled Lugiato-Lefever equations with realistic microresonator device parameters. We demonstrate that, despite the variation in the dispersion characteristics of azimuthal modes at different axial numbers, the spontaneous synchronization mechanism leads to a unified soliton repetition rate. We consider near-parabolic variations in the radius of a cylindrical resonator, compatible with the surface nanoscale axial photonics (SNAP) platform. In our example, we generate 2D DKS with an azimuthal rate of approximately 329 GHz and an axial rate of 6 GHz, which can be adjusted on demand by selecting the appropriate resonator geometry, thereby promising compact sources of frequency combs operating simultaneously across different frequency scales.",
+        "categories": [
+          "physics.optics"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41134": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41134",
+        "title": "Teacher-guided multi-task learning for integrated plasma monitoring on EAST",
+        "authors": [
+          "Yunhu Jia",
+          "Wenhui Hu",
+          "Bihao Guo",
+          "Qingquan Yang",
+          "Xin Lin",
+          "Haoyu Wang",
+          "Yao Huang",
+          "Yuehang Wang",
+          "Kai Wu",
+          "Zhengping Luo",
+          "Yanmin Duan",
+          "Jilei Hou",
+          "Ruirui Zhang",
+          "Jianqiu Zhu",
+          "Zijie Liu",
+          "Qiping Yuan",
+          "Bingjia Xiao"
+        ],
+        "summary": "This paper integrates tokamak plasma disruption prediction, Edge-Localized Mode (ELM) monitoring, Multifaceted Asymmetric Radiation From the Edge (MARFE) detection, and H/L-mode identification into a unified Multi-Task Learning (MTL) model. This integration aims to realize MTL's potential for improving task performance while reducing inference time. However, on datasets constructed from selected EAST discharges recorded between 2015 and 2020, this study found that the traditional MTL method underperformed the corresponding Single-Task Learning (STL) method on some tasks. This performance degradation is the well-known issue of negative transfer. To address this issue, this study proposes the teacher-guided MTL method, using task-specific STL ensembles (teachers) to guide the training of an MTL model (student). The ensemble teachers guide training through soft-target distillation losses for each task of the MTL student model, and increased weighting of each shot's peak-disruptivity window in the disruption prediction label-supervised loss. Test-set results showed that the teacher-guided MTL method outperformed the corresponding STL method in ROC-AUC for all four tasks, eliminating the negative transfer observed with the traditional MTL method. In addition, on the same single GPU or single physical CPU core, the MTL student model can substantially reduce the inference time required to generate all four task outputs compared with the four STL baseline models. This paper offers a promising route to plasma monitoring systems that cover a broader range of phenomena, improve per-task performance and reduce inference time with limited real-time computational resources, supporting future high-performance plasma operation.",
+        "categories": [
+          "physics.plasm-ph"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.40933": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.40933",
+        "title": "An analytical framework for wave-coherent airflow over fast surface waves",
+        "authors": [
+          "Aditya K. Aiyer"
+        ],
+        "summary": "Classical theories attribute wind-wave momentum transfer to a critical layer, where the mean wind speed equals the wave phase speed. For waves that travel faster than the near-surface wind, this layer may lie outside the wave boundary layer or be absent altogether. We develop an analytical description of the wave-coherent airflow in this regime for a prescribed mean wind, using a Wentzel--Kramers--Brillouin--Jeffreys (WKBJ) approximation to the viscous Orr--Sommerfeld equation in wave-following coordinates. The solution combines an outer Rayleigh mode, which carries the dominant wave-coherent motion, with a thin viscous Stokes layer that supplies the phase shift producing the pressure form stress. At leading order, the form stress scales with the inverse square root of the wave Reynolds number, with a coefficient set by an integral of the outer response, and transfers momentum from the waves to the air. For an exponential mean profile, the WKBJ approximation gives closed-form expressions for the wave-coherent response. To accommodate the rapid near-surface variation of realistic wall-bounded profiles, we develop a long-wave expansion near the surface and match it to the outer WKBJ mode (LW--WKBJ). For wall-modelled simulations, whose first resolved level lies above the viscous sublayer, we replace the molecular viscosity in the Stokes layer with a constant-stress effective viscosity. Using mean profiles from direct numerical simulations and wave-phase-resolved large-eddy simulations, the LW--WKBJ framework closely reproduces the dominant wave-coherent velocity and pressure obtained from numerical solutions and available simulation data. The predicted form-stress coefficients also agree well with the available LES estimates.",
+        "categories": [
+          "physics.flu-dyn"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41261": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41261",
+        "title": "Non-contact temperature sensing and optical scatter in cryogenically-cooled crystalline silicon",
+        "authors": [
+          "Disha Pankaj Kapasi",
+          "Travis Counihan",
+          "Kevin Kimes",
+          "Alina Sendowsky",
+          "Alexandra Gruson",
+          "Daniel Martinez",
+          "Michael Rezac",
+          "Kevin Silverio",
+          "Sean Sorto",
+          "Joshua R. Smith"
+        ],
+        "summary": "Cryogenic crystalline silicon is a promising optical material for next generation gravitational-wave detectors due to its low mechanical loss (a driver of thermal noise), high thermal conductivity and zero coefficient of thermal expansion at 123 K. In this paper, we report on the design and results of an experiment to measure the temperature of a flat-flat uncoated crystalline silicon sample using a non-contact sensing method relying on interference (optical fringes) made from reflections between the front and back surfaces. We also propose a scheme for implementation of this technique for cryogenic test masses in future gravitational-wave detectors such as Einstein Telescope and LIGO Voyager. Additionally, we characterize the optical scattering of the sample in vacuum at cryogenic temperatures by using a high-sensitivity infrared camera. We measured relatively constant scatter with an average bidirectional reflectance distribution function (BRDF) of $(4.43\\pm0.2)\\times 10^{-3}\\,\\mathrm{sr^{-1}}$ at a scattering angle of $θ_{s} = 7.5^\\circ$ over the (cold-plate) temperature range of 123-294 K and saw no evidence for growth of cryogenic molecular layers (ice) on the sample in our current setup.",
+        "categories": [
+          "physics.optics",
+          "physics.ins-det"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.40925": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.40925",
+        "title": "Equipartition between Alfvénic turbulence and energetic ions as the origin of the -5 common spectrum in the heliosphere",
+        "authors": [
+          "Stanislav Boldyrev",
+          "Daniel Humphrey",
+          "Vadim Roytershteyn"
+        ],
+        "summary": "Suprathermal ion tails throughout the heliosphere follow a ``common spectrum,'' $f(v)\\propto v^{-5}$. We show that scale-by-scale equipartition between strong Alfvénic turbulence and the ions it accelerates predicts both this exponent and the absolute amplitude, $F(v)=B^2/(16π^3 m_i v^5)$, with no free parameters. The prediction agrees within a factor of a few with ACE and Voyager 1 spectra across three decades in magnetic energy. We argue that this saturated level is reached where strong turbulence accelerates particles locally; quiet-time tails lie well below it, consistent with nonlocal acceleration.",
+        "categories": [
+          "physics.plasm-ph",
+          "astro-ph.GA",
+          "physics.space-ph"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41965": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41965",
+        "title": "Microswimmers lose by swimming selfishly",
+        "authors": [
+          "Albert Alonso"
+        ],
+        "summary": "At low Reynolds number, microswimmers are coupled by the flows they create, even when they are apart. The best way for each swimmer to push itself forward then depends on its neighbors, turning swimming together into a game. To study this, we optimize the shape changes of soft swimmers, alone and in pairs, with a differentiable Stokes solver. From random initial membrane motions, a lone swimmer converges to a traveling membrane wave. In a pair, the stroke of a swimmer affects its neighbor far more than the neighbor affects its own best stroke. For swimmers in line, this influence decays as $1/\\ell$ with their separation $\\ell$, whereas the incentive to respond decays as $1/\\ell^2$. Selfish swimmers, which maximize their own payoff, respond only to the weak incentive. The cooperative gain they miss decays only as $1/\\ell^2$, and their selfish adaptations leave the pair worse off than if both had kept their solitary strokes. Related swimmers, which also value the payoff of their neighbor, recover this gain, whereas competitors pay to hinder each other, both following a law that we derive analytically. Hydrodynamics alone thus makes swimming in company a social dilemma, whose outcome depends on how much the swimmers value each other.",
+        "categories": [
+          "cond-mat.soft",
+          "physics.bio-ph",
+          "physics.flu-dyn",
+          "q-bio.PE"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41259": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41259",
+        "title": "Intensity-Domain Demultiplexing of Orbital Angular Momentum Channels for Optical Communication",
+        "authors": [
+          "Junsu Kim",
+          "Jiwon Jung",
+          "Hyunchae Chun",
+          "Seung Ryong Park"
+        ],
+        "summary": "Orbital angular momentum (OAM) multiplexing has been limited in practice by the complexity and optical loss of the elements that separate the channels at the receiver side. Here we adopt the azimuthal harmonics of OAM petal patterns as the demultiplexing basis, which makes the receiver the optical counterpart of the circular antenna arrays used in radio OAM links: the petal pattern of topological charge $\\ell$ carries a single azimuthal harmonic of order $2\\ell$, so one Fourier transform of the azimuthal intensity profile returns every channel, without gratings or mode sorters. The petals are formed by projecting a vector vortex beam from a single q-plate onto a linear polarization. A two-channel system at 515 nm with a 16-position circular photoreceiver array reaches 5.2 Gb/s below the forward error correction threshold, 2.6 Gb/s per channel from a 1.4 GHz photoreceiver.",
+        "categories": [
+          "physics.optics",
+          "physics.app-ph"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.40892": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.40892",
+        "title": "Stress-enhanced diffusion in Yukawa crystals",
+        "authors": [
+          "M. E. Caplan",
+          "A. I. Chugunov",
+          "R. F. Serrano"
+        ],
+        "summary": "Self-diffusion in crystallized Coulomb (Yukawa) plasmas proceeds by the thermally activated formation of vacancy-interstitial pairs and the migration of these defects through the lattice, commonly known as Frenkel pairs in the materials literature. Molecular dynamics has recently resolved an Eyring law for diffusion in unstrained crystals, which we generalize to deformed crystals in this work. We simulate sheared Yukawa crystals and show that a static elastic strain exponentially enhances diffusion due to the additional elastic energy stored in the region that participates in Frenkel pair formation relative to the unstrained crystal: $D(\\varepsilon)=D_0(Γ^{*})\\exp[V^{*}σ/k_{\\rm B}T]$, with $σ=\\tfrac12μ\\varepsilon^{2}$ the elastic energy density stored by the shear strain $\\varepsilon$ and $V^{*}$ the activation volume. We find a single activation volume $N_{\\rm act} = n_iV^{*}\\simeq31$ suffices for typical astrophysical screenings with a reduction at higher screening. This suggests Frenkel pair formation requires only a brief coordination of the nearest neighbors at a thermal maximum in oscillation. Stress-enhanced diffusion supplies a microphysical mechanism for creep in strained neutron star crusts and crystallizing white dwarf cores.",
+        "categories": [
+          "physics.plasm-ph",
+          "astro-ph.HE",
+          "cond-mat.mtrl-sci"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41493": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41493",
+        "title": "As a matter of reconstruction -- varying the magnetic Prandtl number in implicit large eddy simulations",
+        "authors": [
+          "Vinay Kumar",
+          "Philipp Grete"
+        ],
+        "summary": "The magnetic Prandtl number ($\\mathrm{Pm}$), the ratio of viscosity to magnetic diffusivity, spans many orders of magnitude in astrophysical plasmas. It shapes how turbulence amplifies and structures magnetic fields. In direct numerical simulations (DNS) the viscosity and magnetic diffusivity can be controlled explicitly and independently, whereas in implicit large eddy simulations (ILES) they are set by the numerical scheme. We test whether, in a finite-volume code, $\\mathrm{Pm}$ can be varied through the reconstruction scheme by applying different methods to the hydro and magnetic variables. As a proof of concept, we simulate driven, subsonic, homogeneous magnetohydrodynamic turbulence using five pairs of hydrodynamic and magnetic reconstruction schemes at varying resolutions. We measure the effective viscosity and resistivity from the energy transfer between scales. Reconstructing the magnetic field at higher order than the fluid raises the effective magnetic Prandtl number and vice versa. We demonstrate that a mix of second- and third-order reconstruction alone results in a $\\gtrsim20\\times$ change in $\\mathrm{Pm}$. A comparison of DNS with matched explicit dissipation at these values agrees with the ILES. Mixed reconstruction thus offers a simple and efficient way to explore $\\mathrm{Pm} \\not\\simeq 1$ in ILES without adding explicit dissipation.",
+        "categories": [
+          "astro-ph.GA",
+          "astro-ph.HE",
+          "astro-ph.SR",
+          "physics.flu-dyn",
+          "physics.plasm-ph"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41000": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41000",
+        "title": "From proof of concept to practice: the next decade of artificial intelligence in metasurface photonics",
+        "authors": [
+          "Sensong An",
+          "Haoyue Jiang"
+        ],
+        "summary": "Over the past decade, artificial intelligence has learned to predict electromagnetic responses rapidly and generate high-performance metasurface designs. However, one question remains open: compared with conventional design workflows that contain no learned model, has it made the complete design workflow faster, and are the resulting devices better? We argue that the answer depends on the task. Reading 100 highly cited optical studies in depth, we distinguish the design tasks in which artificial intelligence is irreplaceable, clearly advantageous, or without clear advantage. In our view, the key to the next decade is not more successes in isolated tasks but making each success a foundation for the field, through shifts such as shared data, trained models, and physics written into learning. Whether artificial intelligence leaves lasting value in this field will depend on whether its benefits can be verified, its methods transferred, and its designs corrected by experiment.",
+        "categories": [
+          "physics.optics"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41773": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41773",
+        "title": "Decay of space plasma turbulence downstream of bow shocks: MMS magnetosheath unbiased campaign observations",
+        "authors": [
+          "Victor Montagud-Camps",
+          "Petr Hellinger",
+          "Sergio Toledo-Redondo",
+          "Andrea Verdini",
+          "Luca Sorriso-Valvo",
+          "Francesco Pecora",
+          "Julia E. Stawarz",
+          "Alexandros Chasapis",
+          "Emanuele Papini",
+          "Inmaculada F. Albert",
+          "Aida Castilla"
+        ],
+        "summary": "Turbulence properties in the solar wind change with increasing heliospheric distance. Observations from different missions have shown how spectral indices converge towards a $f^{-5/3}$ spectrum in the inertial range as the solar wind reaches one astronomical unit, and how the cascade rate decays as the plasma moves away from the Sun. We evaluate whether these properties display similar trends in a smaller astrophysical system, that of a planetary magnetosheath. Using data from the 2023 Magnetospheric Multiscale (MMS) unbiased magnetosheath campaign, we determine the evolution of the spectral indices and the cascade rate along 15 inbound magnetosheath crossings. WIND observations permitted to monitor the state of the solar wind during the campaign and allowed to study the impact of the upstream plasma conditions on the evolution of the cascade rate downstream the bow shock. Our results show an increase of the cascade rate between two to three orders of magnitude after the plasma crosses the bow shock into the magnetosheath. Once in the magnetosheath, turbulence develops with increasing distance to the bow shock in a way similar to solar wind observations, despite the smaller size of the system. Incompressible Hall-MHD scaling-law estimates of the cascade rate show a clear power-law decay of the cascade rate in the magnetosheath, particularly for the cases with upstream slow wind. This suggests that the way energy is injected into the system plays a role in the decay of turbulence as the plasma moves away from the bow shock.",
+        "categories": [
+          "astro-ph.SR",
+          "physics.plasm-ph"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41016": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41016",
+        "title": "Chirality inversion and odd transport in a suspension of living rotors",
+        "authors": [
+          "Isabelle Eisenmann",
+          "Pedro Cosme",
+          "Hannah van Sterkenburg",
+          "Hugo Franca",
+          "Titouan Seguy",
+          "Maria Tatulea-Codrean",
+          "Maziyar Jalaal"
+        ],
+        "summary": "Chiral symmetry breaking is a defining feature of life, visible at all scales from molecules to organisms. Yet how microscopic chirality propagates to shape the macroscopic properties of living matter remains poorly understood. Here, using a new experimental system of spinning microalgae, we show that a living chiral fluid behaves fundamentally differently from an externally driven one. As their density increases, cells self-assemble hydrodynamically into small rotating clusters which merge into a percolating chiral fluid. Strikingly, microscopic and macroscopic vorticity have opposite signs: individual cells all spin clockwise, yet clusters orbit counterclockwise. Combining experiments, theory and simulations, we show that both chirality inversion and percolation are direct consequences of the cells' internally driven nature. We then show how percolation reshapes transport, with even and odd diffusivities responding differently to the emerging network topology.",
+        "categories": [
+          "cond-mat.soft",
+          "physics.flu-dyn"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.40979": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.40979",
+        "title": "Microscopic Theory of Spin-Orbit Interactions of Light",
+        "authors": [
+          "Saeed Rahmanian Koshkaki",
+          "Ding Xu",
+          "Michael Fowler",
+          "Milan Delor",
+          "Arkajit Mandal"
+        ],
+        "summary": "Optical spin-orbit interactions (SOI), demonstrated experimentally in optical cavities, enable the polarization degrees of freedom of light to be described and controlled as an effective pseudospin, providing a foundation for spintronic-like control of light and the development of next-generation optical technologies. However, prior works describe this emergent effect using phenomenological models that fail to uncover its microscopic quantum origins, and as a result, a rigorous connection between material electronic structure and the optical SOI remains elusive. In this work, we address this fundamental challenge by developing a microscopic quantum theory starting from the non-relativistic quantum electrodynamical (QED) description of light-matter interactions. We show that this effect arises from virtual interactions between confined photons and material excitations. Crucially, our theoretical framework provides microscopic material-design principles for tuning the distinct components of optical SOI, which include the optical birefringence, photonic self-energies, TE-TM splitting, and optical Zeeman splitting, enabling precise engineering of effective magnetic fields, diabolical points, and pseudospin textures. We anticipate that the predictive capability of our microscopic theory will enable systematic screening and design of material systems for photonic spintronics and optical technologies.",
+        "categories": [
+          "physics.optics",
+          "quant-ph"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41343": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41343",
+        "title": "Spectroscopic observations of periodic bursty ejections during a dome-spire-shaped jet",
+        "authors": [
+          "Heesu Yang",
+          "Maria S. Madjarska",
+          "Kyoung-Sun Lee",
+          "Klaus Galsgaard"
+        ],
+        "summary": "Context: The study investigates the complexity of the formation and evolution of a dome-spire-shaped jet (or anemone jet) that originated in an active region and was presumably driven by null-point magnetic reconnection.\n  Aims: We aim to provide a quantitative estimation of multi-temperature plasma dynamics and physical parameters of the jet and its blob-like features, together with its temporal evolution in three-dimensional perspective.\n  Methods: For this, we analyze unique sit-and-stare spectral (Si IV, Mg II k, and C II) and slit-jaw imaging 1400 Å and 2796 Å observations obtained with the Interface Region Imaging Spectrograph (IRIS), with a slit uniquely positioned just above the assumed reconnection site. Co-observations taken with the Fast Imaging Solar Spectrograph of the Goode Solar Telescope in the chromospheric H$α$ and Ca II 8542.10 Å lines were also analyzed. These data are complemented by EUV imaging information from the Atmospheric Imaging Assembly on board the Solar Dynamics Observatory.\n  Results: The IRIS observations reveal that the jet is formed by multiple periodic ($\\sim$30 s) plasma ejections with blob-like appearance, each associated with strongly blueshifted Si IV 1402.77 Å transition-region emission reaching about $-300$ km/s. More importantly, the ejections are grouped into well-defined packets, each lasting approximately 3--5 min. In contrast, only a single Doppler component is observed in the chromospheric Ca II line. Multi-Gaussian decomposition of the Si IV line profiles reveals a highly accelerated plasma, with line-of-sight speed toward the observer increasing linearly from $\\sim$30 to 112 km/s over 66 s, corresponding to an acceleration of 1.3 km/s$^2$. The kinetic energy release rate is estimated in the range of $\\sim$1.0$\\times10^{24}$--1.0$\\times10^{25}$ erg\\,s$^{-1}$.",
+        "categories": [
+          "astro-ph.SR",
+          "physics.plasm-ph",
+          "physics.space-ph"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.40916": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.40916",
+        "title": "Nonlinear visco-elasto-plastic model for the stress-strain and stress-relaxation in metallic glass",
+        "authors": [
+          "Ankit Singh",
+          "Alessio Zaccone",
+          "Oleg Gendelman",
+          "Valeriy V. Ginzburg"
+        ],
+        "summary": "We develop a nonlinear visco-elasto-plastic (VEP) model for the stress-strain response of metallic glasses by connecting the deformation dynamics with the material relaxation time obtained from independent stress-relaxation measurements. The material is modeled as a Maxwell-type element, with a nonlinear elastic spring and a stretched-exponential dashpot whose behavior is determined from the separate stress-relaxation data. The model captures the effects of temperature and strain rate on the initial elastic response, stress overshoot, post-yield softening, and steady flow. We independently determine the reference material-time function $X_0(\\varepsilon)$ from the stress-relaxation response and the nonlinear material-time variable $X(\\varepsilon)$ from the elastic-viscoplastic strain decomposition based on the stress-strain response. We introduce an Eyring-type function or material-time ratio $φ(\\varepsilon)=X(\\varepsilon)/X_0(\\varepsilon)$ which quantifies the change of relaxation dynamics during nonlinear deformation. Our model provides a simple connection between structural relaxation and yielding in metallic glasses.",
+        "categories": [
+          "cond-mat.soft",
+          "cond-mat.mtrl-sci",
+          "physics.app-ph",
+          "physics.flu-dyn"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.40969": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.40969",
+        "title": "Comparison of melanin subtypes using pump-probe microscopy",
+        "authors": [
+          "Emma Bao",
+          "David Grass",
+          "Martin C. Fischer",
+          "Warren S. Warren"
+        ],
+        "summary": "Pump-probe microscopy (PPM) is used to probe excited state dynamics of endogenous chromophores to generate contrast that is unavailable in traditional forms of microscopy. Here we apply PPM to characterize melanin, a pigment central to photoprotection, skin and eye pigmentation, and melanoma pathogenesis. Melanin is notoriously difficult to analyze due to its structural and chemical complexity. We imaged melanin from six different lesion categories: cutaneous nevi, lentigo, cutaneous malignant melanoma, conjunctival melanocytic lesions, vulvar melanocytic lesions, and a murine melanoma model, across 21 independent biological samples and 109 regions of interest. Using model fitting, adapted phasor analysis, and support vector machine classification, we characterize and quantify excited-state dynamics as a surrogate for chemical and structural heterogeneity. Heterogeneity of melanin separates cutaneous from non-cutaneous lesions, but is not correlated with malignancy. Benign lentigo is the most heterogeneous population in the dataset, exceeding cutaneous malignant melanoma, while conjunctival lesions are the most homogeneous despite receiving direct solar exposure. Classification on full transient absorption curves separates most subtypes well above the six-class chance level. These findings demonstrate the ability of PPM to reveal subtle differences in melanin photophysics across diverse tissue environments, with implications for optical tissue classification and the understanding of melanoma pathogenesis.",
+        "categories": [
+          "physics.optics",
+          "physics.med-ph"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.40880": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.40880",
+        "title": "Subsonic terahertz plasmon instability in space-time plasmonic crystals",
+        "authors": [
+          "H. Terças",
+          "J. L. Figueiredo",
+          "P. Cosme"
+        ],
+        "summary": "We investigate collective plasma-wave dynamics in a two-dimensional electron fluid subected to a travelling periodic modulation of the effective plasma velocity. Using a hydrodynamic description combined with Floquet-Bloch theory, we show that the travelling modulation acts as a moving plasmonic crystal whose band structure is governed by an effective drift velocity in the comoving frame. We demonstrate that the closure of the Bragg gap at the edge of the Brillouin zone gives rise to an exceptional point and triggers a Krein-type instability through the coupling of positive- and negative-energy modes. Analytical expressions are derived for the instability threshold and growth rate, revealing that self-amplification can occur even when the electron drift remains subsonic in the laboratory frame. Numerical simulations of the nonlinear hydrodynamic equations confirm the theoretical predictions and show the evolution towards a saturated regime dominated by a coherent Floquet-Bloch mode. These results identify travelling plasmonic crystals as a novel platform for wave amplification and non-Hermitian band dynamics in electronic fluids.",
+        "categories": [
+          "cond-mat.mes-hall",
+          "cond-mat.other",
+          "cond-mat.quant-gas",
+          "physics.plasm-ph"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.40857": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.40857",
+        "title": "Frozen in Time: How a Physics Foundation Model Forgets Under Sim-to-Real Adaptation",
+        "authors": [
+          "Haaris Mian",
+          "Miles Cranmer",
+          "Alessandro Favero",
+          "Payel Mukhopadhyay"
+        ],
+        "summary": "Scientific foundation models (SciFMs) have achieved remarkable performance on a wide range of PDEs, including the ability to efficiently adapt to unseen data distributions with additional finetuning. As with all neural architectures, finetuning such models comes with the risk of catastrophic forgetting, whereby adapting to new tasks degrades prior knowledge of the model. We study catastrophic forgetting in Walrus-1.3B, a SciFM for continuum dynamics, over the course of a two-stage sim-to-real adaptation: first finetuning on simulated flow around a cylinder and then adapting to experimental data of the same system. We find that finetuning on the simulations rapidly degrades rollout performance on the original pretraining datasets, with one-step errors increasing up to 35x after just 20 epochs. Subsequent adaptation to real data further erodes performance on the simulated task. We characterize the potential drivers of forgetting, such as dataset dependence and task representation similarity. We then show that replaying as little as 1% simulated data during real-data finetuning recovers most of the lost simulation performance while retaining effective adaptation to the experimental dynamics. Our results identify catastrophic forgetting as a practical obstacle to sim-to-real adaptation of SciFMs and show that lightweight replay strategies significantly improve retention.",
+        "categories": [
+          "cs.LG",
+          "physics.flu-dyn"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.40903": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.40903",
+        "title": "Metadevices that compute: mathematical foundations and experimental implementations for neuromorphic nanophotonics",
+        "authors": [
+          "Xian Hadia",
+          "Odysseas Tsilipakos",
+          "Dimitrios C. Tzarouchis",
+          "Raphaël Pestourie"
+        ],
+        "summary": "Wave-based analog computing has re-emerged as a compelling alternative to digital electronics for specific linear-algebraic and machine-learning workloads, promising massively parallel, high-bandwidth, and energy-efficient information processing. Metamaterials, metasurfaces, and integrated metastructures (collectively, metadevices) now perform mathematical operations, solve integral and differential equations, multiply matrices, and implement trainable photonic neural networks directly in the wave domain. This focused review consolidates the mathematical foundations that underpin such devices, i.e., the mapping between linear operators and wave scattering, the feedback architectures that realize equation inversion, and the inverse-design and scientific machine-learning toolchains that make their synthesis and training tractable, and connects them to the rapidly growing body of experimental demonstrations, from free-space diffractive processors to reconfigurable guided-wave metastructures. We conclude with open problems and opportunities for this emerging neuromorphic nanophotonics ecosystem.",
+        "categories": [
+          "physics.optics"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41887": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41887",
+        "title": "Learning Nonlocal Interactions in Large-Scale Heterogeneous Metamaterials through Scientific Machine Learning",
+        "authors": [
+          "Dex Doksoo Lee",
+          "Jehyeon Shin",
+          "Yue Yu",
+          "Sunkyu Yu",
+          "Junsuk Rho",
+          "Wei Chen"
+        ],
+        "summary": "In multiscale systems, nonlocal interactions among spatially distributed constituents can unlock collective, potentially emergent behavior irreducible to individual constituent responses. Beyond characterization, nonlocality in multiscale systems is increasingly viewed as a design element across fracture mechanics, wave physics, and disordered systems. Existing nonlocality theories provide rigorous descriptions and mechanistic insight, but often require prescribed analytic forms, range, symmetries, or periodicity. Machine learning offers a data-driven route to learn interactions, yet principled approaches that tie the network design to physical theory remain nascent. Here we present domain-decomposition attention neural operator (DANO), which learns configuration-dependent interactions in heterogeneous systems governed by linear field equations from field data alone. Through a case study in large-scale optical metasurfaces, we demonstrate DANO's full-field prediction under geometric heterogeneity and across drive conditions, small-to-large domain transfer, and multifunctional inverse design, with learned interactions validated through physics-based interrogation. As an AI-for-Science tool, it supports interaction discovery and scalable, customizable design of nonlocal multiscale systems, including virtual-reality optics.",
+        "categories": [
+          "cs.CE",
+          "cs.LG",
+          "physics.optics"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41730": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41730",
+        "title": "Dipolar Exciton Polarons in a van der Waals Homobilayer",
+        "authors": [
+          "Yuxin Duan",
+          "Hongming Zhang",
+          "Yaofeng Zhu",
+          "Hang Zhou",
+          "Xinyue Zhang",
+          "Yan Liu",
+          "Song Luo",
+          "Long Zhang",
+          "Zhanghai Chen"
+        ],
+        "summary": "Fermi polarons exemplify how many-body interactions give rise to emergent quasiparticles, providing a fundamental framework for understanding interacting quantum matter. In electron-doped two-dimensional semiconductors, exciton polarons offer optical access to Fermi-polaron physics and electrical tunability, yet achieving stronger and more controllable exciton-electron interactions remains a key challenge. Here, we realize dipolar exciton polarons in an electrically tunable van der Waals homobilayer, where interlayer excitons with spatially separated electrons and holes act as quantum impurities carrying permanent electric dipole moments. These dipolar polarons exhibit substantially enhanced exciton-electron interactions, with binding energies more than four times those of conventional intralayer exciton polarons. We further demonstrate that Fermi-sea layer polarization provides an additional degree of freedom for controlling many-body interactions. In particular, the presence of a Fermi sea induces hybridization between oppositely oriented dipolar polarons, whereas confining the Fermi sea to a single layer suppresses this hybridization and produces orientation-selective many-body dressing. Our findings establish an experimental platform for dipolar-polaron physics in which dipole orientation and Fermi-sea layer polarization jointly govern many-body interactions, opening a route towards electrically tunable interactions and dipolar-polaron-mediated attraction between itinerant electrons.",
+        "categories": [
+          "cond-mat.mes-hall",
+          "physics.optics"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41524": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41524",
+        "title": "High-efficiency photonic GHZ measurements with linear optics",
+        "authors": [
+          "Stefan N. van den Hoven",
+          "Love A. Pettersson",
+          "Anders S. Sørensen",
+          "Stefano Paesani"
+        ],
+        "summary": "Probabilistic and destructive Bell-measurements, also known as fusions, constitute a fundamental primitive for photonic quantum technologies. These operations rely only on pairwise photonic interference, whereas the computational power of photonic quantum systems originates from many-body interference. Here, we introduce a family of high-efficiency linear-optical GHZ measurements based on four-mode interferometers and show that incorporating many-body interference into this ubiquitous primitive leads to more efficient entangling operations. For the four-photon case, the success probability is $9/32$, and adaptive variants ensure that unsuccessful events project onto useful stabilizer states. We further show that the approach naturally generalizes to larger GHZ measurements, yielding an exponentially higher success probability than previous linear-optical schemes. Finally, we demonstrate practical advantages for graph-state resource generation, entanglement distribution between remote spin-photon interfaces, and fusion-based quantum computing. Our results establish high-efficiency many-body measurements as a new primitive for scalable photonic quantum information processing.",
+        "categories": [
+          "quant-ph",
+          "physics.optics"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41481": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41481",
+        "title": "Cryogenic Optical Characteristics of S-FPL51 and S-LAH71: Refractive index, Transmission and Thermal expansion",
+        "authors": [
+          "J. A. van den Born",
+          "E. Elswijk",
+          "E. Dijkstra",
+          "P. van Nijnatten",
+          "A. W. Janssen",
+          "R. Navarro"
+        ],
+        "summary": "Several near-infrared instruments on upcoming extremely large telescopes use a combination of OHARA S-FPL51 and S-LAH71 glass prisms to correct for the atmospheric differential refraction. Because large parts of these instruments are contained within a vessel cooled to liquid nitrogen temperatures, the changes in optical and mechanical properties should be considered during the design phase.\n  In this report, we provide an update to our continuing efforts to characterize the S-FPL51 and S-LAH71 glass under cryogenic conditions. These efforts include a measurement of the refractive index (293 K, 100 K and 80 K), transmission measurements (293 K, 77 K and 43 K) and a determination of the coefficient of thermal expansion (between 293 K and 45 K). We will describe the cryogenic test setups that we have used to obtain our results, and provide summarizing equations of these material properties.\n  This characterization will prove useful for conceptual design trade-offs, mechanical interface solutions and detailed optical design for future near-infrared instrumentation on large telescopes.",
+        "categories": [
+          "astro-ph.IM",
+          "physics.optics"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41270": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41270",
+        "title": "Parametric Enhancement of an Optical Spring in a Dark Signal-Recycling Cavity",
+        "authors": [
+          "Kaido Suzuki",
+          "Ryo Iden",
+          "Ken-ichi Harada",
+          "Kentaro Somiya"
+        ],
+        "summary": "Optical springs tailor the response of precision sensors. Parametric amplification of the signal field stiffens the spring, extending the precision to higher frequencies. A Michelson interferometer operated at a dark fringe is the most direct way to separate the signal from the carrier for amplification. We experimentally demonstrate such quantum manipulation of the optical spring by placing an optical parametric amplifier in a cavity at the dark port, showing a significant increase of the optical-spring constant with the parametric gain within a factor of four below the oscillation threshold.",
+        "categories": [
+          "quant-ph",
+          "physics.optics"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41198": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41198",
+        "title": "Quantum Advantage in Beam-Displacement Estimation for Inter-Satellite Quantum-Secure Time Transfer",
+        "authors": [
+          "Ziqing Wang",
+          "Robert Malaney"
+        ],
+        "summary": "In this work, we investigate the practical feasibility of achieving a quantum advantage, in the context of inter-satellite quantum communication, of satellite position estimation. The investigation focuses on a quantum-enhanced scheme in which squeezing is added to the derivative mode of a Gaussian probe beam as a means of estimating photon-beam displacement. The performance of the scheme is compared against the standard quantum limit achieved by an optimal classical beam-displacement estimation scheme under a fair same-total-energy constraint. We find that although the benefit provided by squeezing rapidly diminishes as the inter-satellite distance increases due to diffraction-induced beam spreading and subsequent truncation by the finite receiver aperture, a quantum advantage can still be expected over inter-satellite distances up to approximately 100 km under practical satellite configurations. This distance scale between satellites is anticipated for Starlink-type satellite constellations.",
+        "categories": [
+          "quant-ph",
+          "physics.optics"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41092": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41092",
+        "title": "Spectral Information Content of Diffraction-Limited Images",
+        "authors": [
+          "Milo Langker",
+          "Hayden Greer",
+          "Benjamin Pope",
+          "Peter Tuthill"
+        ],
+        "summary": "High-resolution optical imaging is fundamentally limited by diffraction, which imprints wavelength-dependent structure onto the point spread function (PSF) of the optical system. This intrinsic chromaticity implies that in addition to spatial structure, images encode spectral information. We develop the theory of this spectral information content and provide strategies for its optimal extraction with calculations of Fisher information. We show that polychromatic PSF formation can be expressed as a convolution in logarithmic coordinates and define the corresponding spectral transfer function. We derive this function for the Airy disk and find algebraic decay in spectral log-frequency, implying the existence of arbitrarily fine spectral structure in the ideal, noiseless PSF. We use a differentiable forward model to numerically construct the spectral information eigenbasis and quantify the spectroscopic capability of diffraction-limited imaging across a range of noise and detector systematics. We demonstrate injection and recovery of the constrained spectral modes in a realistic simulated example and compare these results with previously reported methods. Our information-theoretic framework provides a generalisable method for spectral characterisation of PSFs spanning a variety of imaging contexts.",
+        "categories": [
+          "astro-ph.IM",
+          "physics.optics"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.41061": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.41061",
+        "title": "The spin-transfer inverse Faraday effect in Au/YIG thin film bilayers",
+        "authors": [
+          "Victor H. Ortiz",
+          "Daniel Russell",
+          "Fengyuan Yang",
+          "Roland K. Kawakami"
+        ],
+        "summary": "The inverse Faraday effect (IFE) (the generation of an effective magnetic field in a material upon irradiation with circularly polarized light) offers a pathway to ultrafast, non-thermal control of spin dynamics. In metallic/ferromagnetic-insulator (NM/FMI) bilayers, IFE-driven spin polarization in the metallic layer can be an alternative to generate magnon excitations in the magnetic insulator which otherwise would be inaccessible with photon energies below the insulator bandgap, but this avenue has remained mostly unexplored. In this work, we investigate the regime of spin-transfer via IFE in Au/YIG bilayers, by means of ultrafast time-resolved magneto-optical experiments. Understanding the mechanism of this spin-transfer IFE in these NM/FMI heterostructures is crucial for several reasons: it elucidates the fundamental coupling between light's angular momentum and collective spin modes at buried interfaces, it enables all-optical generation and manipulation of pure spin currents, and it paves the way toward THz-frequency spintronic devices leveraging the insulator's long magnon lifetimes.",
+        "categories": [
+          "cond-mat.mes-hall",
+          "physics.optics"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
+    },
+    "2610.40904": {
+      "date": "2026-11-02",
+      "paper": {
+        "id": "2610.40904",
+        "title": "Optical Quantum Memory Processing for Quantum Hashing",
+        "authors": [
+          "S. A. Moiseev",
+          "M. M. Minnegaliev"
+        ],
+        "summary": "Sender authentication is an important requirement for secure quantum communication networks. We propose programmable photon-echo quantum memory processing of a multi-time-bin photonic qudit for implementing a quantum-hash-based verification protocol. In this approach, using QM, sender (Alice) generates a quantum hash state by transforming a single stored photonic wave packet into the programmable photonic qudit. Bob's memory coherently maps the received time-bin photonic qudit into a single output mode according to phase encoding. Our scheme relies on a time-resolved coherent detection method introduced here, in which the coherent responses from individual time-bins are sequentially accumulated within Bob's spin coherence prior to the final sender verification. The key advantage of this coherent detection for quantum hashing is shown, and its potential applications are also discussed. The performed analysis demonstrates that experimentally verified parameters of contemporary optical quantum memories enable a proof of principle realization of the proposed architecture. These results reveal an additional role for quantum memories, serving not only as synchronization and repeater resources for long-distance quantum communication, but also as active elements for quantum hashing in conventional quantum key distribution systems.",
+        "categories": [
+          "quant-ph",
+          "physics.optics"
+        ]
+      },
+      "matches": [],
+      "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+      "recipients": [
+        {
+          "id": "yuhanjin",
+          "email": "jinyuhan@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xuanwu",
+          "email": "xuanw@mail.ustc.edu.cn"
+        },
+        {
+          "id": "xiangtang",
+          "email": "xiangtang@mail.ustc.edu.cn"
+        },
+        {
+          "id": "shifengjia",
+          "email": "jiashifeng@mail.ustc.edu.cn"
+        }
+      ]
     }
   },
   "deliveries": {},
