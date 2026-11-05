@@ -687,6 +687,15 @@
         "kind": "suspected",
         "basis": "unconfirmed_alias"
       }
+    ],
+    "2611.04162": [
+      {
+        "researcher_id": "liangliang-ji",
+        "display_name": "Liangliang Ji",
+        "author": "Liangliang Ji",
+        "kind": "reliable",
+        "basis": "full_name"
+      }
     ]
   }
 }
