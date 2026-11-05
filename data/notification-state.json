@@ -36466,13 +36466,13 @@
     },
     "shifengjia": {
       "2611.04162": {
-        "status": "pending",
+        "status": "sending",
         "recipient": {
           "id": "shifengjia",
           "email": "jiashifeng@mail.ustc.edu.cn"
         },
-        "attempts": 0,
-        "batch_id": null,
+        "attempts": 1,
+        "batch_id": "ca6f14d73b060b5be0e3de9bc459a5d9",
         "last_error": null
       }
     }
@@ -36507,6 +36507,15 @@
       "site_url": "https://yuhanjin-ustc.github.io/Daily_Arxiv/",
       "sender": "yhjin1005@qq.com",
       "sent_date": "2026-11-05"
+    },
+    "ca6f14d73b060b5be0e3de9bc459a5d9": {
+      "recipient_id": "shifengjia",
+      "paper_ids": [
+        "2611.04162"
+      ],
+      "date": "2026-11-05",
+      "site_url": "https://yuhanjin-ustc.github.io/Daily_Arxiv/",
+      "sender": "yhjin1005@qq.com"
     }
   },
   "resolutions": [],
