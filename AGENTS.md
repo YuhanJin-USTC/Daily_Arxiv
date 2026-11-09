@@ -17,6 +17,8 @@
 
 ## Data and delivery invariants
 
+- Generate optional English keywords and Laser–Plasma topic matches only for newly discovered papers during ordinary English enhancement. The five summary fields retain their existing validation and recovery rules.
+- Rank reader cards using backend researcher evidence and shared English topic metadata. Preserve raw paper visibility, category counts and the existing notification eligibility rules.
 - Validate raw coverage once. Raw normalized IDs define the paper set; each language may be complete or pending independently. Never hide raw papers because AI is absent.
 - Preserve migration baselines: historical gaps never enter automatic AI or email backfill. Post-baseline language work must continue on runs with no new papers.
 - Retain healthy JSONL bytes, accepted partial fields, full LICENSE and original attribution. Conflicting raw metadata/healthy same-language content stops migration for user review. Use new candidate directories and exact source/candidate hashes.

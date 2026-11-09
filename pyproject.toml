@@ -79,8 +79,8 @@ suspected_aliases = ["B. Shen", "B. F. Shen"]
 id = "jorge-vieira"
 display_name = "Jorge Vieira"
 enabled = true
-aliases = ["Jorge M. Vieira"]
-suspected_aliases = ["J. Vieira"]
+aliases = ["Jorge M. Vieira", "J. Vieira"]
+suspected_aliases = []
 
 [[tool.daily_arxiv.researchers]]
 id = "xiaomei-zhang"
@@ -179,6 +179,20 @@ display_name = "I-Lin Yeh"
 enabled = true
 aliases = []
 suspected_aliases = ["I-L. Yeh"]
+
+[[tool.daily_arxiv.researchers]]
+id = "zhengming-sheng"
+display_name = "Zhengming Sheng"
+enabled = true
+aliases = ["Zheng-Ming Sheng"]
+suspected_aliases = ["Z. M. Sheng", "Z.-M. Sheng"]
+
+[[tool.daily_arxiv.researchers]]
+id = "alexander-pukhov"
+display_name = "Alexander Pukhov"
+enabled = true
+aliases = []
+suspected_aliases = ["A. Pukhov", "A. M. Pukhov"]
 
 [tool.daily_arxiv.notifications]
 enabled = true

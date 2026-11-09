@@ -15,8 +15,12 @@ from .errors import AuthenticationFailure, EnhancementError, safe_failure
 from .quality import index_records, read_records, validate_records
 from .storage import digest, write_json, write_jsonl
 from .reuse import generation_provenance
-from .structured_output import enhance_fields
-from .structured_output import valid_fields
+from .structured_output import (
+    DERIVED_PAPER_FIELDS,
+    enhance_fields,
+    valid_fields,
+    validated_topics,
+)
 
 
 def is_sensitive(content):
@@ -69,16 +73,37 @@ def check_github_code(content):
     return {"code_url": match.group(0).rstrip(".,)")} if match else {}
 
 
-def process_single_item(chain, item, language):
+def process_single_item(chain, item, language, *, topics_enabled=False):
     language = validate_language(language)
     item = copy.deepcopy(item)
-    if is_sensitive(item.get("summary", "")):
+    item.pop("topics_enabled", None)
+    existing_topics = item.pop("topics", None)
+    topic_title = (
+        item.get("title", "") if topics_enabled and language == "English" else None
+    )
+    if is_sensitive(item.get("summary", "")) or (
+        topic_title is not None and is_sensitive(topic_title)
+    ):
         raise EnhancementError(
             "Content check rejected a paper; manual review required.", item
         )
     item.update(check_github_code(item.get("summary", "")))
-    outcome = enhance_fields(chain, item["summary"], language, existing=item.get("AI"))
+    outcome = enhance_fields(
+        chain,
+        item["summary"],
+        language,
+        existing=item.get("AI"),
+        topic_title=topic_title,
+        existing_topics=existing_topics,
+    )
     item["AI"] = outcome.fields
+    if outcome.topics is not None:
+        try:
+            if not is_sensitive("\n".join(outcome.topics["keywords"])):
+                item["topics"] = outcome.topics
+        except EnhancementError:
+            # Optional labels can be omitted when their moderation is unavailable.
+            pass
     if not outcome.complete:
         item["AI_status"] = {
             "status": "incomplete",
@@ -108,22 +133,28 @@ def process_single_item(chain, item, language):
     return item
 
 
-def process_all_items(data, language, chain=None, progress=None):
+def process_all_items(
+    data, language, chain=None, progress=None, *, topics_enabled=False
+):
     """Sequential requests stop on the first error; no queued batch after 401."""
     if not data:
         raise EnhancementError("Empty input; publication blocked.")
     owned = chain is None
     chain = chain or DeepSeekSummaryChain()
     completed = []
+    options = {"topics_enabled": True} if topics_enabled else {}
     try:
         for item in data:
             try:
-                completed.append(process_single_item(chain, item, language))
+                completed.append(process_single_item(chain, item, language, **options))
             except Exception as error:
                 safe = safe_failure(error)
                 safe.completed = completed
                 if safe.record is None:
                     safe.record = copy.deepcopy(item)
+                    if isinstance(safe.record, dict):
+                        safe.record.pop("topics_enabled", None)
+                        safe.record.pop("topics", None)
                 if progress is not None:
                     progress(completed, safe.record)
                 raise safe from None
@@ -136,7 +167,7 @@ def process_all_items(data, language, chain=None, progress=None):
             chain.close()
 
 
-def resume_rows(rows, checkpoint_path, source_hash, language):
+def resume_rows(rows, checkpoint_path, source_hash, language, *, topics_enabled=False):
     import json
 
     checkpoint = json.loads(checkpoint_path.read_text())
@@ -145,7 +176,10 @@ def resume_rows(rows, checkpoint_path, source_hash, language):
         or checkpoint.get("language") != language
     ):
         raise ValueError("Checkpoint belongs to another input or language")
-    if checkpoint.get("provenance") != generation_provenance():
+    topics_enabled = topics_enabled and language == "English"
+    if checkpoint.get("provenance") != generation_provenance(
+        topics_enabled=topics_enabled
+    ):
         raise ValueError("Checkpoint model or prompt provenance is absent or changed")
     saved = list(checkpoint.get("completed", []))
     saved.extend(checkpoint.get("pending", []))
@@ -157,12 +191,19 @@ def resume_rows(rows, checkpoint_path, source_hash, language):
     result = copy.deepcopy(rows)
     for row in result:
         if row["id"] in by_id:
-            if by_id[row["id"]].get("summary") != row.get("summary"):
+            previous = by_id[row["id"]]
+            if previous.get("summary") != row.get("summary"):
                 raise ValueError("Checkpoint abstract differs from the raw snapshot")
             row["AI"] = {
-                **valid_fields(by_id[row["id"]].get("AI")),
+                **valid_fields(previous.get("AI")),
                 **valid_fields(row.get("AI")),
             }
+            if topics_enabled:
+                if previous.get("title") != row.get("title"):
+                    raise ValueError("Checkpoint title differs from the raw snapshot")
+                topics = validated_topics(previous.get("topics"))
+                if topics is not None:
+                    row["topics"] = topics
     return result
 
 
@@ -209,7 +250,7 @@ def main(argv=None):
                 read_records(source), allow_identical_duplicates=True
             ).values()
         )
-        if any("AI" in row or "AI_status" in row for row in data):
+        if any(DERIVED_PAPER_FIELDS.intersection(row) for row in data):
             raise ValueError(
                 "Raw input contains unbound AI fields; use a verified checkpoint"
             )

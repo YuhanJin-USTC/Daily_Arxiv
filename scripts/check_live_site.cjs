@@ -2,6 +2,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const {createHash} = require('node:crypto');
+const {validatedTopics, consistentTopics} = require('../js/papers.js');
 
 const REPOSITORY = 'yuhanjin-ustc/daily_arxiv';
 const SITE = 'https://yuhanjin-ustc.github.io/Daily_Arxiv/';
@@ -26,7 +27,9 @@ function selectPublishedAI(rawRows, enhancedRows, id) {
   const fields = AI_FIELDS.map(field => enhanced[0].AI[field]);
   assert.ok(enhanced.every(row => AI_FIELDS.every((field, i) => row.AI[field] === fields[i])), 'Verified AI fields conflict.');
   assert.notEqual(fields[0], raw[0].summary, 'Verified TL;DR must differ from the raw abstract.');
-  return {id, abstract: raw[0].summary, fields};
+  const topics = consistentTopics(enhanced.filter(row => raw[0].title && row.title === raw[0].title)
+    .map(row => validatedTopics(row.topics)));
+  return {id, abstract: raw[0].summary, fields, topics};
 }
 
 function assertPublishedDetail(actual, expected, language) {
@@ -64,6 +67,114 @@ function redact(value, password) {
     return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, redact(item, password)]));
   }
   return value;
+}
+
+async function checkReaderUpdates(page, width, shot) {
+  await page.evaluate(() => loadPapersByDate('2026-10-20'));
+  await page.locator('[data-category="physics.optics"]').click();
+  const card = page.locator('.paper-card[data-id="2610.26476"]');
+  assert.ok(await card.evaluate(el => el.classList.contains('researcher-card-reliable')));
+  assert.match(await card.locator('.researcher-reliable').innerText(), /J\. Vieira/);
+  assert.match(await card.locator('.researcher-suspected').innerText(), /J\. P\. Palastro/);
+  const ranks = await page.locator('.paper-card').evaluateAll(cards => cards.map(el =>
+    el.classList.contains('researcher-card-reliable') ? 0 :
+      el.classList.contains('researcher-card-suspected') ? 1 : el.querySelector('.laser-plasma-keyword') ? 2 : 3));
+  assert.deepEqual(ranks, [...ranks].sort((a, b) => a - b));
+  await shot('researchers');
+  await card.getByRole('button', {name: /Details/}).focus();
+  await page.keyboard.press('Space');
+  assert.equal(await page.locator('#chatgptLink').getAttribute('href'), 'https://chatgpt.com/');
+  let downloadCheck = 'covered on desktop';
+  if (width === 1440) {
+    const button = page.locator('#downloadPaperPdf');
+    const fallback = page.locator('#pdfDownloadFallback');
+    // The embedded reader can emit a second event for the arXiv URL.
+    const waitBlob = () => page.waitForEvent('download', {predicate: item => item.url().startsWith('blob:'), timeout: 60000});
+    await button.focus();
+    const [outcome] = await Promise.all([
+      Promise.race([waitBlob(), fallback.waitFor({state: 'visible', timeout: 60000})]),
+      page.keyboard.press('Space'),
+    ]);
+    let download = outcome;
+    downloadCheck = 'live PDF';
+    if (!download) {
+      assert.equal(await page.locator('#suggestedPdfName').inputValue(), '2026-ArXiv-A.-Konzel-Spatiotemporal-spherical-Gaussian-pulses.pdf');
+      const url = await page.locator('#pdfLink').getAttribute('href');
+      assert.equal(url, 'https://arxiv.org/pdf/2610.26476');
+      await page.route(url, route => route.fulfill({contentType: 'application/pdf',
+        headers: {'Access-Control-Allow-Origin': '*'}, body: '%PDF-1.7\n%%EOF'}));
+      try {
+        [download] = await Promise.all([waitBlob(), button.click()]);
+      } finally {
+        await page.unroute(url);
+      }
+      downloadCheck = 'live manual fallback and mocked PDF bytes';
+    }
+    assert.equal(download.suggestedFilename(), '2026-ArXiv-A.-Konzel-Spatiotemporal-spherical-Gaussian-pulses.pdf');
+    const file = await fs.promises.open(await download.path(), 'r');
+    try {
+      const header = Buffer.alloc(5);
+      await file.read(header, 0, header.length, 0);
+      assert.equal(header.toString(), '%PDF-');
+    } finally {
+      await file.close();
+      await download.delete();
+    }
+  }
+  await page.locator('#closeModal').click();
+
+  // Exercise overflow even when the site's configured categories already fit.
+  await page.evaluate(() => {
+    const categories = Array.from({length: 22}, (_, i) => 'sample.category-' + i);
+    renderCategoryFilter({sortedCategories: categories, categoryCounts: Object.fromEntries(categories.map(c => [c, 0]))});
+  });
+  const next = page.locator('#categoryNext');
+  await next.waitFor({state: 'visible'});
+  await next.click();
+  await page.waitForFunction(() => document.getElementById('categoryList').scrollLeft > 0);
+  const last = page.locator('#categoryList button').last();
+  await last.focus();
+  await page.keyboard.press('Enter');
+  assert.equal(await last.getAttribute('data-category'), 'sample.category-21');
+  assert.ok(await last.evaluate(el => el.classList.contains('active')));
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+  await page.evaluate(() => filterByCategory('all'));
+  return downloadCheck;
+}
+
+async function checkTopicFixture(page, dataBase) {
+  const day = '2099-02-01';
+  const raw = ['Rotation spectroscopy', 'Strong-field optics'].map((title, i) => ({
+    id: '9902.9000' + i, title, summary: title + ' fixture abstract.',
+    authors: ['Example Author'], categories: ['physics.optics'],
+  }));
+  const topics = {keywords: ['strong-field optics', 'laser pulses', 'dispersion'], laser_plasma_keywords: ['strong-field optics']};
+  const english = raw.map((row, i) => ({...row, AI: Object.fromEntries(AI_FIELDS.map(field => [field, 'Fixture ' + field])),
+    ...(i ? {topics} : {})}));
+  const glob = dataBase + '/data/' + day + '*.jsonl';
+  await page.route(glob, route => {
+    const url = route.request().url();
+    if (url.includes('_Chinese')) return route.fulfill({status: 404, body: ''});
+    return route.fulfill({status: 200, contentType: 'application/x-ndjson',
+      body: (url.includes('_English') ? english : raw).map(row => JSON.stringify(row)).join('\n')});
+  });
+  try {
+    await page.evaluate(day => loadPapersByDate(day), day);
+    for (const language of ['English', 'Chinese']) {
+      await page.locator(`header [data-ai-language="${language}"]`).click();
+      await page.waitForFunction(() => document.querySelector('#paperContainer').getAttribute('aria-busy') === 'false');
+      const card = page.locator('.paper-card').first();
+      assert.equal(await card.getAttribute('data-id'), raw[1].id);
+      assert.deepEqual(await card.locator('.paper-keyword').allTextContents(), topics.keywords);
+      assert.deepEqual(await card.locator('.laser-plasma-keyword').allTextContents(), topics.laser_plasma_keywords);
+      assert.equal(await page.locator('.paper-card').count(), 2);
+      if (language === 'Chinese') assert.equal(await page.locator('.ai-summary-status').count(), 2);
+    }
+    await page.locator('header [data-ai-language="English"]').click();
+    await page.waitForFunction(() => document.querySelector('#paperContainer').getAttribute('aria-busy') === 'false');
+  } finally {
+    await page.unroute(glob);
+  }
 }
 
 async function runChecks(env = process.env) {
@@ -156,6 +267,11 @@ async function runChecks(env = process.env) {
         report.screenshots.push(filename);
       };
       await shot('home');
+      const namedPdfDownload = await checkReaderUpdates(page, width, shot);
+      await checkTopicFixture(page, config.data);
+      report.checks.push({width, scenario: 'Researcher priority, category overflow and bilingual topic fixture',
+        namedPdfDownload});
+      await page.evaluate(date => loadPapersByDate(date), config.date);
       await page.locator('header [data-ai-language="Chinese"]').focus();
       await page.keyboard.press('Enter');
       await finished(page);
@@ -179,6 +295,14 @@ async function runChecks(env = process.env) {
             renderedAbstract: detail.querySelector('.original-abstract')?.textContent};
         });
         assertPublishedDetail(actual, expectedAI[language], language);
+        const topics = expectedAI.English.topics;
+        const keywords = topics?.keywords || [];
+        assert.deepEqual(await page.locator('#modalBody .paper-keyword').allTextContents(), keywords);
+        assert.deepEqual(await page.locator('#modalBody .laser-plasma-keyword').allTextContents(),
+          keywords.filter(word => topics.laser_plasma_keywords.includes(word)));
+        if (topics) {
+          report.checks.push({scenario: 'Published shared topic keywords', id: verifyId, width, language, topics});
+        }
         report.checks.push({scenario: 'Published bilingual AI detail', width, id: verifyId, date: config.date, language,
           fieldsSha256: createHash('sha256').update(JSON.stringify(expectedAI[language].fields)).digest('hex'),
           passed: ['exact raw abstract', 'all five selected-language AI fields', 'visible detail matches published AI']});
@@ -258,7 +382,7 @@ async function runChecks(env = process.env) {
   return {status: report.status, screenshots: report.screenshots.length};
 }
 
-module.exports = {validateSiteUrl, validatePaperId, selectPublishedAI, assertPublishedDetail, isSitePage, redact, runChecks};
+module.exports = {validateSiteUrl, validatePaperId, selectPublishedAI, assertPublishedDetail, isSitePage, redact, checkReaderUpdates, checkTopicFixture, runChecks};
 if (require.main === module) {
   runChecks().then(result => console.log(JSON.stringify(result))).catch(error => {
     console.error(redact(error.message, process.env.ACCESS_PASSWORD));

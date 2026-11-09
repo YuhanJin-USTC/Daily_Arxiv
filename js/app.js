@@ -320,7 +320,7 @@ function initEventListeners() {
       }
     }
     // 左右箭头键导航论文（仅在论文模态框打开时）
-    else if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+    else if (!isInputFocused && (event.key === 'ArrowLeft' || event.key === 'ArrowRight')) {
       const paperModal = document.getElementById('paperModal');
       if (paperModal.classList.contains('active')) {
         event.preventDefault(); // 防止页面滚动
@@ -339,7 +339,7 @@ function initEventListeners() {
       
       // 只有在没有输入框焦点且日期选择器没有打开时才触发
       // 现在允许在论文模态框打开时也能使用R键切换到随机论文
-      if (!isInputFocused && !datePickerModal.classList.contains('active')) {
+      if (!isInputFocused && !activeElement?.closest('button, a, select') && !datePickerModal.classList.contains('active')) {
         event.preventDefault(); // 防止页面刷新
         event.stopPropagation(); // 阻止事件冒泡
         showRandomPaper();
@@ -348,19 +348,9 @@ function initEventListeners() {
   });
   
   // 添加鼠标滚轮横向滚动支持
-  const categoryScroll = document.querySelector('.category-scroll');
+  initCategoryNavigation();
   const keywordScroll = document.querySelector('.keyword-scroll');
   const authorScroll = document.querySelector('.author-scroll');
-  
-  // 为类别滚动添加鼠标滚轮事件
-  if (categoryScroll) {
-    categoryScroll.addEventListener('wheel', function(e) {
-      if (e.deltaY !== 0) {
-        e.preventDefault();
-        this.scrollLeft += e.deltaY;
-      }
-    });
-  }
   
   // 为关键词滚动添加鼠标滚轮事件
   if (keywordScroll) {
@@ -606,22 +596,11 @@ async function loadSelectedPapers(startDate, endDate) {
   container.setAttribute('aria-busy', 'true');
   container.innerHTML = '<div class="loading-container"><div class="loading-spinner"></div><p>Loading papers...</p></div>';
   try {
-    const loaded = await loadPaperDates(dates, language);
+    const loaded = await loadPaperDates(dates, language, {includeTopics: true});
     if (request !== paperRequest) return;
     paperData = loaded;
     renderCategoryFilter(getAllCategories(paperData, DATA_CONFIG.categories));
     renderPapers();
-    if (openPaperId !== null) {
-      const index = currentFilteredPapers.findIndex(paper => normalizePaperId(paper.id || paper.url) === openPaperId);
-      if (index !== -1) {
-        const scroll = document.getElementById('modalBody').scrollTop;
-        currentPaperIndex = index;
-        showPaperDetails(currentFilteredPapers[index], index + 1);
-        document.getElementById('modalBody').scrollTop = scroll;
-      } else {
-        closeModal();
-      }
-    }
   } catch (error) {
     if (request !== paperRequest) return;
     container.innerHTML = `<div class="loading-container"><p>Loading data failed. Please retry.</p><p>${escapeHtml(error.message)}</p></div>`;
@@ -630,13 +609,53 @@ async function loadSelectedPapers(startDate, endDate) {
   }
 }
 
+function updateCategoryNavigation() {
+  const list = document.getElementById('categoryList');
+  const prev = document.getElementById('categoryPrev');
+  const next = document.getElementById('categoryNext');
+  const available = list.clientWidth + prev.offsetWidth + next.offsetWidth;
+  prev.hidden = next.hidden = list.scrollWidth <= available + 1;
+  prev.disabled = list.scrollLeft <= 1;
+  next.disabled = list.scrollLeft + list.clientWidth >= list.scrollWidth - 1;
+}
+
+function revealActiveCategory(list) {
+  const active = list.querySelector('.category-button.active');
+  if (!active) return;
+  const start = active.offsetLeft - list.offsetLeft;
+  const end = start + active.offsetWidth;
+  if (start < list.scrollLeft) list.scrollLeft = start;
+  else if (end > list.scrollLeft + list.clientWidth) list.scrollLeft = end - list.clientWidth;
+}
+
+function initCategoryNavigation() {
+  const list = document.getElementById('categoryList');
+  const prev = document.getElementById('categoryPrev');
+  const next = document.getElementById('categoryNext');
+  const step = direction => list.scrollBy({left: direction * list.clientWidth * 0.8, behavior: 'smooth'});
+  prev.addEventListener('click', () => step(-1));
+  next.addEventListener('click', () => step(1));
+  list.addEventListener('scroll', updateCategoryNavigation, {passive: true});
+  list.addEventListener('wheel', event => {
+    if (event.ctrlKey || event.shiftKey || !event.deltaY || Math.abs(event.deltaX) >= Math.abs(event.deltaY)) return;
+    const atEdge = event.deltaY < 0 ? list.scrollLeft <= 0 :
+      list.scrollLeft >= list.scrollWidth - list.clientWidth - 1;
+    if (atEdge || list.scrollWidth <= list.clientWidth) return;
+    event.preventDefault();
+    const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? list.clientWidth : 1;
+    list.scrollLeft += event.deltaY * unit;
+  }, {passive: false});
+  new ResizeObserver(updateCategoryNavigation).observe(list.parentElement);
+  document.fonts.ready.then(updateCategoryNavigation);
+}
+
 function renderCategoryFilter(categories) {
   const container = document.querySelector('.category-scroll');
   const { sortedCategories, categoryCounts, totalCount = 0 } = categories;
   const totalPapers = totalCount;
 
   container.innerHTML = `
-    <button class="category-button ${currentCategory === 'all' ? 'active' : ''}" data-category="all">All<span class="category-count">${totalPapers}</span></button>
+    <button class="category-button ${currentCategory === 'all' ? 'active' : ''}" data-category="all" aria-pressed="${currentCategory === 'all'}">All<span class="category-count">${totalPapers}</span></button>
   `;
   
   sortedCategories.forEach(category => {
@@ -645,6 +664,7 @@ function renderCategoryFilter(categories) {
     button.className = `category-button ${category === currentCategory ? 'active' : ''}`;
     button.innerHTML = `${escapeHtml(category)}<span class="category-count">${count}</span>`;
     button.dataset.category = category;
+    button.setAttribute('aria-pressed', String(category === currentCategory));
     button.addEventListener('click', () => {
       filterByCategory(category);
     });
@@ -655,14 +675,18 @@ function renderCategoryFilter(categories) {
   document.querySelector('.category-button[data-category="all"]').addEventListener('click', () => {
     filterByCategory('all');
   });
+  updateCategoryNavigation();
+  revealActiveCategory(container);
 }
 
 function filterByCategory(category) {
   currentCategory = category;
   
-  document.querySelectorAll('.category-button').forEach(button => {
+  document.querySelectorAll('#categoryList [data-category]').forEach(button => {
     button.classList.toggle('active', button.dataset.category === category);
+    button.setAttribute('aria-pressed', String(button.dataset.category === category));
   });
+  revealActiveCategory(document.getElementById('categoryList'));
   
   // 保持当前激活的过滤标签
   renderFilterTags();
@@ -680,235 +704,64 @@ function formatAuthorsForCard(authorsString, authorTerms = [], researcherMatches
   return formatPaperAuthors({authors: authorsString, researcherMatches}, authorTerms, true);
 }
 
+function matchReasons(paper) {
+  const reasons = [];
+  const query = textSearchQuery.trim();
+  if (query) {
+    const searchable = [paper.title, paper.authors, paper.category.join(', '), paper.summary,
+      paper.details, paper.motivation, paper.method, paper.result, paper.conclusion,
+      ...(paper.topics?.keywords || [])].join(' ').toLowerCase();
+    if (searchable.includes(query.toLowerCase())) reasons.push(`文本: ${query}`);
+  }
+  const titleAndSummary = `${paper.title} ${paper.summary}`.toLowerCase();
+  const keywords = activeKeywords.filter(term => titleAndSummary.includes(term.toLowerCase()));
+  const authorText = String(paper.authors || '').toLowerCase();
+  const authors = activeAuthors.filter(term => authorText.includes(term.toLowerCase()));
+  if (keywords.length) reasons.push(`关键词: ${keywords.join(', ')}`);
+  if (authors.length) reasons.push(`作者: ${authors.join(', ')}`);
+  return reasons;
+}
+
+function rankedPapers(papers) {
+  return papers.map(paper => {
+    const matchReason = matchReasons(paper);
+    const researcherKind = ['reliable', 'suspected'].find(kind =>
+      paper.researcherMatches.some(match => match.kind === kind));
+    const priority = {reliable: 0, suspected: 1}[researcherKind] ??
+      (paper.topics?.laser_plasma_keywords.length ? 2 : 3);
+    return {...paper, matchReason, isMatched: Boolean(matchReason.length), researcherKind, priority};
+  }).sort((a, b) => Number(b.isMatched) - Number(a.isMatched) || a.priority - b.priority);
+}
+
+function formatPaperKeywords(paper) {
+  if (!paper.topics) return '';
+  const chips = paper.topics.keywords.map(keyword => {
+    const relevant = paper.topics.laser_plasma_keywords.includes(keyword);
+    const label = relevant ? `Laser–plasma keyword: ${keyword}` : keyword;
+    return `<span class="paper-keyword${relevant ? ' laser-plasma-keyword' : ''}" role="listitem" aria-label="${escapeHtml(label)}" title="${escapeHtml(label)}">${escapeHtml(keyword)}</span>`;
+  });
+  return `<div class="paper-keywords" role="list" aria-label="Paper keywords">${chips.join('')}</div>`;
+}
+
 function renderPapers() {
   const container = document.getElementById('paperContainer');
   container.innerHTML = '';
   container.className = `paper-container ${currentView === 'list' ? 'list-view' : ''}`;
-  
-  const papers = papersForCategory(paperData, currentCategory);
-
-  // 创建匹配论文的集合
-  let filteredPapers = [...papers];
-
-  // 重置所有论文的匹配状态，避免上次渲染的残留
-  filteredPapers.forEach(p => {
-    p.isMatched = false;
-    p.matchReason = undefined;
-  });
-
-  // 文本搜索优先：当存在非空文本时，像关键词/作者一样只排序不隐藏
-  if (textSearchQuery && textSearchQuery.trim().length > 0) {
-    const q = textSearchQuery.toLowerCase();
-
-    // 排序：匹配的排前
-    filteredPapers.sort((a, b) => {
-      const hayA = [
-        a.title,
-        a.authors,
-        Array.isArray(a.category) ? a.category.join(', ') : a.category,
-        a.summary,
-        a.details || '',
-        a.motivation || '',
-        a.method || '',
-        a.result || '',
-        a.conclusion || ''
-      ].join(' ').toLowerCase();
-      const hayB = [
-        b.title,
-        b.authors,
-        Array.isArray(b.category) ? b.category.join(', ') : b.category,
-        b.summary,
-        b.details || '',
-        b.motivation || '',
-        b.method || '',
-        b.result || '',
-        b.conclusion || ''
-      ].join(' ').toLowerCase();
-      const am = hayA.includes(q);
-      const bm = hayB.includes(q);
-      if (am && !bm) return -1;
-      if (!am && bm) return 1;
-      return 0;
-    });
-
-    // 标记匹配项，用于卡片样式与提示
-    filteredPapers.forEach(p => {
-      const hay = [
-        p.title,
-        p.authors,
-        Array.isArray(p.category) ? p.category.join(', ') : p.category,
-        p.summary,
-        p.details || '',
-        p.motivation || '',
-        p.method || '',
-        p.result || '',
-        p.conclusion || ''
-      ].join(' ').toLowerCase();
-      const matched = hay.includes(q);
-      p.isMatched = matched;
-      p.matchReason = matched ? [`文本: ${textSearchQuery}`] : undefined;
-    });
-  } else {
-    // 关键词和作者匹配，但不过滤，只排序
-    if (activeKeywords.length > 0 || activeAuthors.length > 0) {
-      // 对论文进行排序，将匹配的论文放在前面
-      filteredPapers.sort((a, b) => {
-        const aMatchesKeyword = activeKeywords.length > 0 ? 
-          activeKeywords.some(keyword => {
-            // 仅在标题和摘要中搜索关键词
-            const searchText = `${a.title} ${a.summary}`.toLowerCase();
-            return searchText.includes(keyword.toLowerCase());
-          }) : false;
-          
-        const aMatchesAuthor = activeAuthors.length > 0 ?
-          activeAuthors.some(author => {
-            // 仅在作者中搜索作者名
-            return a.authors.toLowerCase().includes(author.toLowerCase());
-          }) : false;
-          
-        const bMatchesKeyword = activeKeywords.length > 0 ?
-          activeKeywords.some(keyword => {
-            // 仅在标题和摘要中搜索关键词
-            const searchText = `${b.title} ${b.summary}`.toLowerCase();
-            return searchText.includes(keyword.toLowerCase());
-          }) : false;
-          
-        const bMatchesAuthor = activeAuthors.length > 0 ?
-          activeAuthors.some(author => {
-            // 仅在作者中搜索作者名
-            return b.authors.toLowerCase().includes(author.toLowerCase());
-          }) : false;
-      
-        // a和b的匹配状态（关键词或作者匹配都算）
-        const aMatches = aMatchesKeyword || aMatchesAuthor;
-        const bMatches = bMatchesKeyword || bMatchesAuthor;
-        
-        if (aMatches && !bMatches) return -1;
-        if (!aMatches && bMatches) return 1;
-        return 0;
-      });
-      
-      // 标记匹配的论文
-      filteredPapers.forEach(paper => {
-        const matchesKeyword = activeKeywords.length > 0 ?
-          activeKeywords.some(keyword => {
-            const searchText = `${paper.title} ${paper.summary}`.toLowerCase();
-            return searchText.includes(keyword.toLowerCase());
-          }) : false;
-          
-        const matchesAuthor = activeAuthors.length > 0 ?
-          activeAuthors.some(author => {
-            return paper.authors.toLowerCase().includes(author.toLowerCase());
-          }) : false;
-          
-        // 添加匹配标记（用于后续高亮整个论文卡片）
-        paper.isMatched = matchesKeyword || matchesAuthor;
-        
-        // 添加匹配原因（用于显示匹配提示）
-        if (paper.isMatched) {
-          paper.matchReason = [];
-          if (matchesKeyword) {
-            const matchedKeywords = activeKeywords.filter(keyword => 
-              `${paper.title} ${paper.summary}`.toLowerCase().includes(keyword.toLowerCase())
-            );
-            if (matchedKeywords.length > 0) {
-              paper.matchReason.push(`关键词: ${matchedKeywords.join(', ')}`);
-            }
-          }
-          if (matchesAuthor) {
-            const matchedAuthors = activeAuthors.filter(author => 
-              paper.authors.toLowerCase().includes(author.toLowerCase())
-            );
-            if (matchedAuthors.length > 0) {
-              paper.matchReason.push(`作者: ${matchedAuthors.join(', ')}`);
-            }
-          }
-        }
-      });
+  const filteredPapers = rankedPapers(papersForCategory(paperData, currentCategory));
+  currentFilteredPapers = filteredPapers;
+  if (openPaperId !== null) {
+    const index = filteredPapers.findIndex(paper => normalizePaperId(paper.id || paper.url) === openPaperId);
+    if (index === -1) {
+      closeModal();
+    } else {
+      const body = document.getElementById('modalBody');
+      const scroll = body.scrollTop;
+      currentPaperIndex = index;
+      showPaperDetails(filteredPapers[index], index + 1);
+      body.scrollTop = scroll;
     }
   }
-  
-  // 关键词和作者匹配，但不过滤，只排序
-  if (activeKeywords.length > 0 || activeAuthors.length > 0) {
-    // 对论文进行排序，将匹配的论文放在前面
-    filteredPapers.sort((a, b) => {
-      const aMatchesKeyword = activeKeywords.length > 0 ? 
-        activeKeywords.some(keyword => {
-          // 仅在标题和摘要中搜索关键词
-          const searchText = `${a.title} ${a.summary}`.toLowerCase();
-          return searchText.includes(keyword.toLowerCase());
-        }) : false;
-        
-      const aMatchesAuthor = activeAuthors.length > 0 ?
-        activeAuthors.some(author => {
-          // 仅在作者中搜索作者名
-          return a.authors.toLowerCase().includes(author.toLowerCase());
-        }) : false;
-        
-      const bMatchesKeyword = activeKeywords.length > 0 ?
-        activeKeywords.some(keyword => {
-          // 仅在标题和摘要中搜索关键词
-          const searchText = `${b.title} ${b.summary}`.toLowerCase();
-          return searchText.includes(keyword.toLowerCase());
-        }) : false;
-        
-      const bMatchesAuthor = activeAuthors.length > 0 ?
-        activeAuthors.some(author => {
-          // 仅在作者中搜索作者名
-          return b.authors.toLowerCase().includes(author.toLowerCase());
-        }) : false;
-      
-      // a和b的匹配状态（关键词或作者匹配都算）
-      const aMatches = aMatchesKeyword || aMatchesAuthor;
-      const bMatches = bMatchesKeyword || bMatchesAuthor;
-      
-      if (aMatches && !bMatches) return -1;
-      if (!aMatches && bMatches) return 1;
-      return 0;
-    });
-    
-    // 标记匹配的论文
-    filteredPapers.forEach(paper => {
-      const matchesKeyword = activeKeywords.length > 0 ?
-        activeKeywords.some(keyword => {
-          const searchText = `${paper.title} ${paper.summary}`.toLowerCase();
-          return searchText.includes(keyword.toLowerCase());
-        }) : false;
-        
-      const matchesAuthor = activeAuthors.length > 0 ?
-        activeAuthors.some(author => {
-          return paper.authors.toLowerCase().includes(author.toLowerCase());
-        }) : false;
-        
-      // 添加匹配标记（用于后续高亮整个论文卡片）
-      paper.isMatched = matchesKeyword || matchesAuthor;
-      
-      // 添加匹配原因（用于显示匹配提示）
-      if (paper.isMatched) {
-        paper.matchReason = [];
-        if (matchesKeyword) {
-          const matchedKeywords = activeKeywords.filter(keyword => 
-            `${paper.title} ${paper.summary}`.toLowerCase().includes(keyword.toLowerCase())
-          );
-          if (matchedKeywords.length > 0) {
-            paper.matchReason.push(`关键词: ${matchedKeywords.join(', ')}`);
-          }
-        }
-        if (matchesAuthor) {
-          const matchedAuthors = activeAuthors.filter(author => 
-            paper.authors.toLowerCase().includes(author.toLowerCase())
-          );
-          if (matchedAuthors.length > 0) {
-            paper.matchReason.push(`作者: ${matchedAuthors.join(', ')}`);
-          }
-        }
-      }
-    });
-  }
-  
-  // 存储当前过滤后的论文列表，用于箭头键导航
-  currentFilteredPapers = [...filteredPapers];
-  
+
   if (filteredPapers.length === 0) {
     container.innerHTML = `
       <div class="loading-container">
@@ -920,8 +773,10 @@ function renderPapers() {
   
   filteredPapers.forEach((paper, index) => {
     const paperCard = document.createElement('div');
-    // 添加匹配高亮类
-    paperCard.className = `paper-card ${paper.isMatched ? 'matched-paper' : ''}`;
+    const classes = ['paper-card'];
+    if (paper.isMatched) classes.push('matched-paper');
+    if (paper.researcherKind) classes.push(`researcher-card-${paper.researcherKind}`);
+    paperCard.className = classes.join(' ');
     paperCard.dataset.id = paper.id || paper.url;
     
     if (paper.isMatched) {
@@ -977,13 +832,14 @@ function renderPapers() {
 
     paperCard.innerHTML = `
       <div class="paper-card-index">${index + 1}</div>
-      ${paper.isMatched ? '<div class="match-badge" title="匹配您的搜索条件"></div>' : ''}
+      ${paper.isMatched ? `<div class="match-badge" role="img" aria-label="${escapeHtml(paperCard.title)}" title="${escapeHtml(paperCard.title)}"></div>` : ''}
       <div class="paper-card-header">
         <h3 class="paper-card-title">${highlightedTitle}</h3>
         <p class="paper-card-authors">${formattedAuthors}</p>
         <div class="paper-card-categories">
           ${categoryTags}
         </div>
+        ${formatPaperKeywords(paper)}
       </div>
       <div class="paper-card-body">
         ${!paper.aiAvailable ? `<p class="ai-summary-status">${escapeHtml(aiUnavailableMessage(paper))}</p>` : ''}
@@ -992,7 +848,7 @@ function renderPapers() {
           <div class="footer-left">
             <span class="paper-card-date">${formatDate(paper.date)}</span>
           </div>
-          <span class="paper-card-link">Details</span>
+          <button type="button" class="paper-card-link" aria-label="Details for ${escapeHtml(paper.title)}">Details</button>
         </div>
       </div>
     `;
@@ -1006,6 +862,110 @@ function renderPapers() {
   });
 }
 
+function paperPdfSource(value) {
+  const path = /^https?:\/\/(?:www\.)?arxiv\.org\/(?:abs|pdf)\/([^?#\s]+)(?:[?#][^\s]*)?$/i.exec(value);
+  if (!path) return null;
+  const id = path[1].replace(/\.pdf$/i, '');
+  if (id.length > 80) return null;
+  const modern = /^(\d{2})(0[1-9]|1[0-2])\.\d{4,5}(?:v[1-9]\d*)?$/.exec(id);
+  const legacy = /^[a-z][a-z.-]*\/(\d{2})(0[1-9]|1[0-2])\d{3}(?:v[1-9]\d*)?$/i.exec(id);
+  if (!modern && !legacy) return null;
+  const [, yy, month] = modern || legacy;
+  const year = (legacy && Number(yy) >= 91 ? 1900 : 2000) + Number(yy);
+  const yearMonth = year * 100 + Number(month);
+  if (modern ? yearMonth < 200704 : yearMonth < 199108 || yearMonth > 200703) return null;
+  return {id, year, url: `https://arxiv.org/pdf/${id}`};
+}
+
+function paperPdfNames(paper, source) {
+  const clean = value => String(value || '').normalize('NFC')
+    .replace(/[<>:"/\\|?*\s\p{Cc}\p{Cs}\u202a-\u202e\u2066-\u2069]+/gu, '-')
+    .replace(/^-+|-+$/g, '');
+  const author = clean(paper.authorList?.[0]) || 'Unknown-author';
+  const title = clean(paper.title) || clean(source.id);
+  const stem = `${source.year}-ArXiv-${author}-${title}`;
+  const full = stem + '.pdf';
+  const encoder = new TextEncoder();
+  if (encoder.encode(full).length <= 255) return {full, download: full};
+
+  const suffix = `-${clean(source.id)}.pdf`;
+  let available = 255 - encoder.encode(suffix).length;
+  let prefix = '';
+  for (const character of stem) {
+    available -= encoder.encode(character).length;
+    if (available < 0) break;
+    prefix += character;
+  }
+  return {full, download: prefix.replace(/[. -]+$/, '') + suffix};
+}
+
+function bindPdfDownload(source, names) {
+  const button = document.getElementById('downloadPaperPdf');
+  const status = document.getElementById('pdfDownloadStatus');
+  const fallback = document.getElementById('pdfDownloadFallback');
+  const suggested = document.getElementById('suggestedPdfName');
+  suggested.value = names.full;
+  suggested.addEventListener('focus', () => suggested.select());
+  button.addEventListener('click', async () => {
+    if (button.disabled) return;
+    button.disabled = true;
+    status.textContent = 'Downloading PDF…';
+    try {
+      const response = await fetch(source.url, {credentials: 'omit', redirect: 'error'});
+      if (!response.ok) throw new Error('PDF request failed');
+      const blob = await response.blob();
+      if (await blob.slice(0, 5).text() !== '%PDF-') throw new Error('Invalid PDF');
+      if (!button.isConnected || openPaperId === null) return;
+
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      try {
+        link.href = url;
+        link.download = names.download;
+        document.body.appendChild(link);
+        link.click();
+      } finally {
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 30000);
+      }
+      status.textContent = names.download === names.full ? 'Download started.' : 'Download started with a shortened filename.';
+    } catch {
+      fallback.hidden = false;
+      status.textContent = 'Download unavailable. Open the PDF and save it using the suggested filename.';
+    } finally {
+      button.disabled = false;
+    }
+  });
+}
+
+function bindChatGPT(paper, source) {
+  const link = document.getElementById('chatgptLink');
+  const feedback = document.getElementById('chatgptFeedback');
+  const status = document.getElementById('chatgptStatus');
+  const field = document.getElementById('chatgptPrompt');
+  feedback.hidden = field.hidden = true;
+  const request = getPreferredLanguage() === 'Chinese'
+    ? '请阅读这篇论文，用中文概括研究问题、方法、主要结果和局限。若无法读取全文，请说明可用来源。'
+    : 'Read this paper and summarize its research question, methods, main results and limitations in English. If you cannot access the full text, identify the sources you used.';
+  const prompt = [request, paper.title, ...(source ? [`https://arxiv.org/abs/${source.id}`, source.url] : [])].join('\n\n');
+  field.value = prompt;
+  const copyPrompt = async () => {
+    let copied = false;
+    try {
+      await navigator.clipboard.writeText(prompt);
+      copied = true;
+    } catch {
+      // Browsers may deny clipboard access when opening a new tab.
+    }
+    if (link.onclick !== copyPrompt) return;
+    feedback.hidden = false;
+    field.hidden = copied;
+    status.textContent = copied ? 'Prompt copied. Paste it into your ChatGPT chat.' : 'Copy this prompt and paste it into ChatGPT.';
+    if (!copied) field.select();
+  };
+  link.onclick = copyPrompt;
+}
+
 function showPaperDetails(paper, paperIndex) {
   openPaperId = normalizePaperId(paper.id || paper.url);
   const modal = document.getElementById('paperModal');
@@ -1014,6 +974,8 @@ function showPaperDetails(paper, paperIndex) {
   const paperLink = document.getElementById('paperLink');
   const pdfLink = document.getElementById('pdfLink');
   const htmlLink = document.getElementById('htmlLink');
+  const pdfSource = paperPdfSource(paper.url);
+  const pdfNames = pdfSource && paperPdfNames(paper, pdfSource);
   
   // 重置模态框的滚动位置
   modalBody.scrollTop = 0;
@@ -1080,6 +1042,7 @@ function showPaperDetails(paper, paperIndex) {
       <p><strong>Authors: </strong>${highlightedAuthors}</p>
       <p><strong>Categories: </strong>${escapeHtml(categoryDisplay)}</p>
       <p><strong>Date: </strong>${formatDate(paper.date)}</p>
+      ${formatPaperKeywords(paper)}
       
       
       ${!paper.aiAvailable ? `<p class="ai-summary-status">${escapeHtml(aiUnavailableMessage(paper))}</p>` : ''}
@@ -1095,10 +1058,11 @@ function showPaperDetails(paper, paperIndex) {
       
       ${paper.aiAvailable && highlightedAbstract ? `<h3>Abstract</h3><p class="original-abstract">${highlightedAbstract}</p>` : ''}
       
-      <div class="pdf-preview-section">
+      ${pdfSource ? `<div class="pdf-preview-section">
         <div class="pdf-header">
           <h3>PDF Preview</h3>
-          <button class="pdf-expand-btn" onclick="togglePdfSize(this)">
+          <button type="button" id="downloadPaperPdf" class="pdf-download-btn">Download PDF</button>
+          <button type="button" class="pdf-expand-btn" aria-label="Toggle PDF preview size" onclick="togglePdfSize(this)">
             <svg class="expand-icon" viewBox="0 0 24 24" width="24" height="24">
               <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
             </svg>
@@ -1107,17 +1071,25 @@ function showPaperDetails(paper, paperIndex) {
             </svg>
           </button>
         </div>
-        <div class="pdf-container">
-          <iframe src="${escapeHtml(safeHttpUrl(paper.url).replace('/abs/', '/pdf/'))}" width="100%" height="800px" frameborder="0"></iframe>
+        <div id="pdfDownloadStatus" role="status" class="pdf-download-status"></div>
+        <div id="pdfDownloadFallback" class="pdf-download-fallback" ${pdfNames.full === pdfNames.download ? 'hidden' : ''}>
+          <label for="suggestedPdfName">Full suggested filename</label>
+          <input type="text" readonly id="suggestedPdfName">
+          <a href="${escapeHtml(pdfSource.url)}" target="_blank" rel="noopener noreferrer">Open PDF</a>
         </div>
-      </div>
+        <div class="pdf-container">
+          <iframe src="${escapeHtml(pdfSource.url)}" title="Paper PDF preview" width="100%" height="800px" frameborder="0"></iframe>
+        </div>
+      </div>` : '<p>arXiv PDF unavailable.</p>'}
     </div>
   `;
   
   // Update modal content
   document.getElementById('modalBody').innerHTML = modalContent;
+  if (pdfSource) bindPdfDownload(pdfSource, pdfNames);
   document.getElementById('paperLink').href = safeHttpUrl(paper.url);
-  document.getElementById('pdfLink').href = safeHttpUrl(paper.url).replace('/abs/', '/pdf/');
+  pdfLink.href = pdfSource?.url || '#';
+  pdfLink.style.display = pdfSource ? '' : 'none';
   document.getElementById('htmlLink').href = safeHttpUrl(paper.url).replace('/abs/', '/html/');
   
   // --- GitHub Button Logic ---
@@ -1132,9 +1104,7 @@ function showPaperDetails(paper, paperIndex) {
   }
   // ---------------------------
 
-  // 提示词来自：https://papers.cool/
-  prompt = `请你阅读这篇文章${paper.url.replace('abs', 'pdf')},总结一下这篇文章解决的问题、相关工作、研究方法、做了什么实验及其结果、结论，最后整体总结一下这篇文章的内容`
-  document.getElementById('kimiChatLink').href = `https://www.kimi.com/_prefill_chat?prefill_prompt=${prompt}&system_prompt=你是一个学术助手，后面的对话将围绕着以下论文内容进行，已经通过链接给出了论文的PDF和论文已有的FAQ。用户将继续向你咨询论文的相关问题，请你作出专业的回答，不要出现第一人称，当涉及到分点回答时，鼓励你以markdown格式输出。&send_immediately=true&force_search=true`;
+  bindChatGPT(paper, pdfSource);
   
   // 更新论文位置信息
   const paperPosition = document.getElementById('paperPosition');

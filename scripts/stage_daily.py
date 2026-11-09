@@ -16,7 +16,7 @@ from ai.errors import EnhancementError, safe_failure
 from ai.quality import read_records, valid_ai, validate_records
 from ai.reuse import generation_provenance
 from ai.storage import digest, write_bytes, write_json, write_jsonl
-from ai.structured_output import valid_fields
+from ai.structured_output import DERIVED_PAPER_FIELDS, valid_fields
 from daily_arxiv.merge_published import merge_published
 from to_md.convert import convert
 
@@ -36,7 +36,7 @@ def stage(
     rows = read_records(raw)
     if not rows:
         return None
-    if any("AI" in row or "AI_status" in row for row in rows):
+    if any(DERIVED_PAPER_FIELDS.intersection(row) for row in rows):
         raise ValueError("Raw staging input contains unbound AI fields")
     language = validate_language(language)
     source_hash = digest(raw)

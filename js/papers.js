@@ -1,4 +1,5 @@
 const DEFAULT_SUBSCRIBED_CATEGORIES = "__DEFAULT_CATEGORIES__";
+const SUMMARY_FIELDS = ['tldr', 'motivation', 'method', 'result', 'conclusion'];
 
 const AI_ERROR_PLACEHOLDERS = new Set([
   'summary generation failed', 'motivation analysis unavailable',
@@ -8,7 +9,7 @@ const AI_ERROR_PLACEHOLDERS = new Set([
 ]);
 
 function hasValidAI(ai) {
-  return ai && ['tldr', 'motivation', 'method', 'result', 'conclusion'].every(field =>
+  return ai && SUMMARY_FIELDS.every(field =>
     typeof ai[field] === 'string' && ai[field].trim() &&
     !AI_ERROR_PLACEHOLDERS.has(ai[field].trim().toLowerCase())
   );
@@ -21,17 +22,18 @@ function uniquePapers(data) {
   );
   ordered.forEach(paper => {
     const id = normalizePaperId(paper.id || paper.url);
-    const previous = byId.get(id);
-    if (!previous) {
-      byId.set(id, paper);
-    } else {
-      const preferred = paper.aiAvailable && !previous.aiAvailable ? paper : previous;
-      const categories = [...new Set([...previous.category, ...paper.category])];
-      const date = previous.date < paper.date ? previous.date : paper.date;
-      byId.set(id, {...preferred, date, category: categories, allCategories: categories});
-    }
+    if (!byId.has(id)) byId.set(id, []);
+    byId.get(id).push(paper);
   });
-  return [...byId.values()];
+  return Array.from(byId.values(), copies => {
+    if (copies.length === 1) return copies[0];
+    const preferred = copies.find(paper => paper.aiAvailable) || copies[0];
+    const categories = [...new Set(copies.flatMap(paper => paper.category))];
+    const topics = copies.filter(paper => paper.title === preferred.title &&
+      paper.details === preferred.details && paper.topics).map(paper => paper.topics);
+    return {...preferred, date: copies[copies.length - 1].date, category: categories,
+      allCategories: categories, topics: consistentTopics(topics)};
+  });
 }
 
 function papersForCategory(data, category) {
@@ -75,6 +77,7 @@ function parseJsonlData(jsonlText, date) {
         allCategories: allCategories,
         aiAvailable: aiAvailable,
         aiLanguage: paper.aiLanguage || '',
+        topics: validatedTopics(paper.topics),
         researcherMatches: paper.researcherMatches || [],
         summary: summary,
         details: paper.summary || '',
@@ -115,7 +118,7 @@ function getAllCategories(data, subscribedCategories) {
 }
 
 function normalizePaperId(value) {
-  return String(value || '').replace(/^https?:\/\/(?:www\.)?arxiv\.org\/abs\//, '').replace(/v\d+$/, '');
+  return typeof value === 'string' ? value.replace(/^https?:\/\/(?:www\.)?arxiv\.org\/abs\//, '').replace(/v\d+$/, '') : '';
 }
 
 function preferenceKey(name) {
@@ -195,25 +198,74 @@ function readJsonlRows(text) {
   return text.split('\n').filter(line => line.trim()).map(line => JSON.parse(line));
 }
 
-function attachLanguage(rawText, enhancedText, date, language, researcherIndex = null) {
-  const enhanced = new Map();
-  readJsonlRows(enhancedText).forEach(row => {
-    const id = normalizePaperId(row.id || row.abs);
-    if (hasValidAI(row.AI)) {
-      const candidates = enhanced.get(id) || [];
-      candidates.push(row);
-      enhanced.set(id, candidates);
+function validatedTopics(topics) {
+  if (!Array.isArray(topics?.keywords) || topics.keywords.length < 3 || topics.keywords.length > 5 ||
+      !Array.isArray(topics.laser_plasma_keywords) || topics.laser_plasma_keywords.length > 5) return null;
+  function phrases(values) {
+    const result = new Map();
+    for (const value of values) {
+      if (typeof value !== 'string' || /[<>\p{C}]|(?! )\p{Z}/u.test(value)) return null;
+      const phrase = value.trim().replace(/ +/g, ' ');
+      if (!/\p{Script=Latin}/u.test(phrase) || /(?!(?:\p{Script=Latin}|\p{Script=Greek}))\p{L}/u.test(phrase)) return null;
+      const key = phrase.toLowerCase();
+      if (result.has(key) || AI_ERROR_PLACEHOLDERS.has(key)) return null;
+      result.set(key, phrase);
     }
-  });
+    return result;
+  }
+  const keywords = phrases(topics.keywords);
+  const subset = phrases(topics.laser_plasma_keywords);
+  if (!keywords || !subset || Array.from(subset.keys()).some(key => !keywords.has(key))) return null;
+  return {keywords: [...keywords.values()], laser_plasma_keywords: Array.from(subset.keys(), key => keywords.get(key))};
+}
+
+function consistentTopics(values) {
+  const first = values[0];
+  if (!first) return null;
+  const signature = JSON.stringify(first);
+  return values.every(value => JSON.stringify(value) === signature) ? first : null;
+}
+
+function indexEnhancements(text) {
+  const byId = new Map();
+  let rows;
+  try {
+    rows = readJsonlRows(text);
+  } catch {
+    // Each optional language file may be unavailable independently.
+    return byId;
+  }
+  for (const row of rows) {
+    if (!row || !hasValidAI(row.AI)) continue;
+    const id = normalizePaperId(row.id || row.abs);
+    if (!id) continue;
+    if (!byId.has(id)) byId.set(id, []);
+    byId.get(id).push(row);
+  }
+  return byId;
+}
+
+function consistentEnhancement(candidates) {
+  const first = candidates[0];
+  return first && candidates.every(candidate =>
+    SUMMARY_FIELDS.every(field => candidate.AI[field] === first.AI[field])
+  ) ? first : null;
+}
+
+function attachLanguage(rawText, enhancedText, date, language, researcherIndex = null, englishText = '') {
+  const enhanced = indexEnhancements(enhancedText);
+  const english = language === 'English' ? enhanced : indexEnhancements(englishText);
   const rows = readJsonlRows(rawText).map(row => {
     const id = normalizePaperId(row.id || row.abs);
-    const candidates = (enhanced.get(id) || []).filter(candidate => candidate.summary === row.summary);
-    const first = candidates[0];
-    const consistent = first && candidates.every(candidate =>
-      ['tldr', 'motivation', 'method', 'result', 'conclusion'].every(field => candidate.AI[field] === first.AI[field])
-    );
-    return {...row, AI: consistent ? first.AI : null, aiLanguage: language,
-      code_url: consistent ? first.code_url : row.code_url,
+    const sameAbstract = candidate => typeof row.summary === 'string' && row.summary.trim() &&
+      candidate.summary === row.summary;
+    const selected = consistentEnhancement((enhanced.get(id) || []).filter(sameAbstract));
+    const topicRows = (english.get(id) || []).filter(candidate => sameAbstract(candidate) &&
+      typeof row.title === 'string' && row.title.trim() && candidate.title === row.title);
+    const topics = consistentEnhancement(topicRows) ?
+      consistentTopics(topicRows.map(candidate => validatedTopics(candidate.topics))) : null;
+    return {...row, AI: selected?.AI || null, aiLanguage: language, topics,
+      code_url: selected ? selected.code_url : row.code_url,
       researcherMatches: currentResearcherMatches(researcherIndex, id)};
   });
   return parseJsonlData(rows.map(row => JSON.stringify(row)).join('\n'), date);
@@ -224,7 +276,7 @@ function currentResearcherMatches(index, id) {
       index.config_digest !== DATA_CONFIG.researchersDigest) return [];
   const matches = index.papers?.[id];
   return Array.isArray(matches) ? matches.filter(match =>
-    ['reliable', 'suspected'].includes(match.kind) && typeof match.author === 'string' &&
+    match && ['reliable', 'suspected'].includes(match.kind) && typeof match.author === 'string' &&
     typeof match.display_name === 'string' && typeof match.researcher_id === 'string'
   ) : [];
 }
@@ -254,30 +306,24 @@ async function loadResearcherIndex() {
   return researcherIndexPromise;
 }
 
-async function loadPaperDate(date, language) {
-  const [rawResponse, enhancedText, index] = await Promise.all([
+async function loadPaperDate(date, language, {includeTopics = false} = {}) {
+  const fetchEnhanced = name => fetch(DATA_CONFIG.getDataUrl(`data/${date}_AI_enhanced_${name}.jsonl`))
+    .then(response => response.ok ? response.text() : '').catch(() => '');
+  const [rawResponse, enhancedText, englishText, index] = await Promise.all([
     fetch(DATA_CONFIG.getDataUrl(`data/${date}.jsonl`)),
-    fetch(DATA_CONFIG.getDataUrl(`data/${date}_AI_enhanced_${language}.jsonl`))
-      .then(response => response.ok ? response.text() : '')
-      .catch(() => ''),
+    fetchEnhanced(language),
+    includeTopics && language !== 'English' ? fetchEnhanced('English') : '',
     loadResearcherIndex()
   ]);
   if (rawResponse.status === 404) return {};
   if (!rawResponse.ok) throw new Error(`Raw papers unavailable (HTTP ${rawResponse.status})`);
-  const rawText = await rawResponse.text();
-  try {
-    return attachLanguage(rawText, enhancedText, date, language, index);
-  } catch (error) {
-    // Invalid AI data must not hide verified raw papers.
-    if (enhancedText) return attachLanguage(rawText, '', date, language, index);
-    throw error;
-  }
+  return attachLanguage(await rawResponse.text(), enhancedText, date, language, index, englishText);
 }
 
-async function loadPaperDates(dates, language) {
+async function loadPaperDates(dates, language, options) {
   const combined = {};
   for (const date of dates) {
-    const data = await loadPaperDate(date, language);
+    const data = await loadPaperDate(date, language, options);
     Object.entries(data).forEach(([category, papers]) => {
       combined[category] = (combined[category] || []).concat(papers);
     });
@@ -336,4 +382,8 @@ function formatPaperAuthors(paper, terms = [], truncated = false) {
 
 function aiUnavailableMessage(paper) {
   return `${paper.aiLanguage || getPreferredLanguage()} AI summary unavailable; showing the original abstract.`;
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {validatedTopics, consistentTopics};
 }

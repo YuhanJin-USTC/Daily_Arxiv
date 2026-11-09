@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from ai.enhance import resume_rows
 from ai.errors import EnhancementError
@@ -17,6 +17,10 @@ from to_md.convert import convert
 
 DAY = "2026-10-21"
 GOOD = {field: "Valid " + field for field in FIELDS}
+TOPICS = {
+    "keywords": ["laser wakefield acceleration", "electron injection", "plasma waves"],
+    "laser_plasma_keywords": ["laser wakefield acceleration", "electron injection"],
+}
 
 
 def paper(identifier="2610.00001"):
@@ -97,6 +101,202 @@ class BilingualTests(unittest.TestCase):
         )
         self.assertTrue((self.source / f"data/{DAY}_English.md").exists())
         self.assertTrue((self.source / f"data/{DAY}_Chinese.md").exists())
+
+    def test_topics_only_on_new_english_discoveries_preserve_existing_bytes(self):
+        history, older, new = paper("2610.00009"), paper(), paper("2610.00002")
+        raw = self.source / f"data/{DAY}.jsonl"
+        english = self.source / f"data/{DAY}_AI_enhanced_English.jsonl"
+        raw_bytes = (json.dumps(history) + "\r\n").encode()
+        english_bytes = (json.dumps({**history, "AI": GOOD}) + "\r\n").encode()
+        raw.write_bytes(raw_bytes)
+        english.write_bytes(english_bytes)
+        self.raw([older])
+        state = load_state(self.source)
+        # This discovery was already pending when the topic prompt was introduced.
+        del state["discoveries"][older["id"]]["topics_enabled"]
+        write_json(self.source / "data/pipeline-state.json", state)
+
+        def legacy_partial(items, language, progress):
+            raise EnhancementError(
+                "Synthetic failure",
+                {**items[0], "AI": {"tldr": "Legacy partial"}, "topics": TOPICS},
+            )
+
+        self.language("English", legacy_partial)
+        checkpoint = self.source / "data/ai-checkpoints/English.json"
+        legacy = json.loads(checkpoint.read_bytes())["records"][older["id"]]
+        self.assertNotIn("topics", legacy)
+        self.assertNotIn("topic_provenance", legacy)
+        self.raw([new])
+        self.assertTrue(raw.read_bytes().startswith(raw_bytes))
+        raw_snapshot = raw.read_bytes()
+        self.assertEqual(read_records(raw), [history, older, new])
+
+        calls = []
+
+        def generate_topics(items, language, progress, *, topics_enabled=False):
+            calls.append((language, topics_enabled, [item["id"] for item in items]))
+            if language == "English" and not topics_enabled:
+                self.assertEqual(items[0]["AI"], {"tldr": "Legacy partial"})
+            result = [{**item, "AI": GOOD, "topics": TOPICS} for item in items]
+            progress(result, None)
+            return result
+
+        self.language("English", generate_topics)
+        self.language("Chinese", generate_topics)
+        self.assertEqual(
+            calls,
+            [
+                ("English", False, [older["id"]]),
+                ("English", True, [new["id"]]),
+                ("Chinese", False, [older["id"], new["id"]]),
+            ],
+        )
+        self.assertEqual(raw.read_bytes(), raw_snapshot)
+        self.assertTrue(english.read_bytes().startswith(english_bytes))
+        old_rows, new_row = read_records(english)[:-1], read_records(english)[-1]
+        self.assertTrue(all("topics" not in row for row in old_rows))
+        self.assertEqual(new_row, {**new, "AI": GOOD, "topics": TOPICS})
+        chinese = self.source / f"data/{DAY}_AI_enhanced_Chinese.jsonl"
+        self.assertTrue(all("topics" not in row for row in read_records(chinese)))
+        self.raw([])
+        generator = Mock()
+        self.language("English", generator)
+        generator.assert_not_called()
+        self.assertNotIn(
+            "topics_enabled", load_state(self.source)["discoveries"][older["id"]]
+        )
+
+    def test_topic_partial_survives_selection_and_requires_its_original_prompt(self):
+        first, second = paper(), paper("2610.00002")
+        self.raw([first, second])
+
+        def interrupt(items, language, progress, **options):
+            self.assertEqual(options, {"topics_enabled": True})
+            partial = {**items[0], "AI": {"tldr": "Retained TLDR"}, "topics": TOPICS}
+            raise EnhancementError("Synthetic failure", partial)
+
+        self.language("English", interrupt, ids=[second["id"]])
+        path = self.source / "data/ai-checkpoints/English.json"
+        checkpoint = json.loads(path.read_bytes())
+        partial = checkpoint["records"][second["id"]]
+        self.assertEqual(partial["topics"], TOPICS)
+        self.assertEqual(
+            partial["topic_provenance"], generation_provenance(topics_enabled=True)
+        )
+        write_json(
+            path,
+            {
+                **checkpoint,
+                "records": {second["id"]: {**partial, "topic_provenance": {}}},
+            },
+        )
+        generator = Mock()
+        with self.assertRaisesRegex(ValueError, "topic prompt changed"):
+            stage_language(self.source, self.output(), "English", generator)
+        generator.assert_not_called()
+
+        write_json(path, checkpoint)
+        self.language("English", ids=[first["id"]])
+        self.assertEqual(
+            json.loads(path.read_bytes())["records"][second["id"]], partial
+        )
+        self.raw([])
+
+        def resume(items, language, progress, *, topics_enabled=False):
+            self.assertTrue(topics_enabled)
+            self.assertEqual(items, [{**second, "AI": partial["AI"], "topics": TOPICS}])
+            return generate(items, language, progress)
+
+        self.language("English", resume)
+        result = read_records(self.source / f"data/{DAY}_AI_enhanced_English.jsonl")
+        self.assertNotIn("topics", result[0])
+        self.assertEqual(result[1]["topics"], TOPICS)
+        self.assertEqual(result[1]["AI"]["tldr"], "Retained TLDR")
+        self.assertEqual(json.loads(path.read_bytes())["records"], {})
+
+    def test_summary_only_generator_cannot_checkpoint_or_publish_topics(self):
+        row = paper()
+        self.raw([row])
+
+        def interrupted(items, language, progress):
+            partial = {**items[0], "AI": {"tldr": "Original TLDR"}, "topics": TOPICS}
+            raise EnhancementError("Synthetic failure", partial)
+
+        self.language("English", interrupted)
+        checkpoint = json.loads(
+            (self.source / "data/ai-checkpoints/English.json").read_bytes()
+        )
+        partial = checkpoint["records"][row["id"]]
+        self.assertNotIn("topics", partial)
+        self.assertNotIn("topic_provenance", partial)
+        self.assertEqual(checkpoint["provenance"], generation_provenance())
+        with patch("ai.enhance.DeepSeekSummaryChain") as chain:
+            with self.assertRaisesRegex(ValueError, "topic prompt changed"):
+                stage_language(self.source, self.output(), "English")
+        chain.assert_not_called()
+
+        def retry(items, language, progress):
+            self.assertEqual(items, [{**row, "AI": {"tldr": "Original TLDR"}}])
+            return [{**items[0], "AI": {**GOOD, **items[0]["AI"]}, "topics": TOPICS}]
+
+        self.language("English", retry)
+        result = read_records(self.source / f"data/{DAY}_AI_enhanced_English.jsonl")[0]
+        self.assertEqual(result["AI"]["tldr"], "Original TLDR")
+        self.assertNotIn("topics", result)
+
+    def test_published_english_topic_row_with_another_title_blocks_reuse(self):
+        first, second = paper(), paper("2610.00002")
+        self.raw([first, second])
+        self.language("English", ids=[second["id"]])
+        published = self.source / f"data/{DAY}_AI_enhanced_English.jsonl"
+        write_jsonl(
+            published,
+            [{**second, "title": "Other title", "AI": GOOD, "topics": TOPICS}],
+        )
+        generator = Mock()
+        with self.assertRaisesRegex(ValueError, "Published language row"):
+            stage_language(
+                self.source, self.output(), "English", generator, ids=[second["id"]]
+            )
+        state = load_state(self.source)
+        state["discoveries"][second["id"]]["languages"]["English"] = "pending"
+        write_json(self.source / "data/pipeline-state.json", state)
+        with self.assertRaisesRegex(ValueError, "Published language row"):
+            stage_language(self.source, self.output(), "English", generator)
+        generator.assert_not_called()
+
+    def test_raw_rejects_derived_topic_fields(self):
+        for field, value in (("topics", TOPICS), ("topics_enabled", True)):
+            with (
+                self.subTest(field=field),
+                self.assertRaisesRegex(ValueError, "AI fields"),
+            ):
+                self.raw([{**paper(), field: value}])
+        self.assertFalse((self.source / f"data/{DAY}.jsonl").exists())
+
+    def test_default_generation_includes_topics_in_the_existing_english_request(self):
+        row = paper()
+        self.raw([row])
+        output = self.output()
+        with (
+            patch("ai.enhance.DeepSeekSummaryChain") as chain,
+            patch("ai.enhance.is_sensitive", return_value=False),
+        ):
+            chain.return_value.invoke.return_value = {**GOOD, "topics": TOPICS}
+            stage_language(self.source, output, "English")
+        chain.return_value.invoke.assert_called_once_with(
+            {
+                "language": "English",
+                "content": row["summary"],
+                "topic_title": row["title"],
+            }
+        )
+        apply(self.source, output)
+        self.assertEqual(
+            read_records(self.source / f"data/{DAY}_AI_enhanced_English.jsonl"),
+            [{**row, "AI": GOOD, "topics": TOPICS}],
+        )
 
     def test_limited_ids_keep_unselected_pending_and_checkpoints_in_both_languages(
         self,
@@ -312,12 +512,16 @@ class BilingualTests(unittest.TestCase):
 
     def test_legacy_raw_staging_rejects_unbound_ai_before_generation(self):
         raw = self.root / "raw.jsonl"
-        write_jsonl(raw, [{**paper(), "AI": GOOD}])
         generator = Mock()
-        with self.assertRaisesRegex(ValueError, "unbound AI"):
-            stage_legacy(
-                self.source, raw, self.output(), DAY, generator, language="Chinese"
-            )
+        for field in ("AI", "topics", "topics_enabled"):
+            with self.subTest(field=field):
+                write_jsonl(raw, [{**paper(), field: GOOD}])
+                output = self.output()
+                with self.assertRaisesRegex(ValueError, "unbound AI"):
+                    stage_legacy(
+                        self.source, raw, output, DAY, generator, language="Chinese"
+                    )
+                self.assertFalse(output.exists())
         generator.assert_not_called()
 
     def test_markdown_filename_refuses_wrong_language(self):

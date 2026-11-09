@@ -131,10 +131,12 @@
             <div class="category-nav">
                 <div class="category-label-container">
                     <span class="category-nav-label">Category</span>
-                    <div class="category-scroll">
+                    <button type="button" id="categoryPrev" class="category-step" aria-label="Scroll categories left" aria-controls="categoryList" hidden>‹</button>
+                    <div class="category-scroll" id="categoryList">
                         <button class="category-button active" data-category="all">All</button>
                         <!-- 分类按钮将通过 JavaScript 动态生成 -->
                     </div>
+                    <button type="button" id="categoryNext" class="category-step" aria-label="Scroll categories right" aria-controls="categoryList" hidden>›</button>
                 </div>
                 <!-- Filter Tag Container -->
                 <div class="filter-label-container">
@@ -202,13 +204,17 @@
                 </div>
                 <div class="paper-modal-body" id="modalBody">
                 </div>
+                <div id="chatgptFeedback" class="paper-action-feedback" hidden>
+                    <p id="chatgptStatus" role="status"></p>
+                    <textarea id="chatgptPrompt" rows="3" readonly aria-label="Paper prompt for ChatGPT" hidden></textarea>
+                </div>
                 <div class="paper-modal-footer">
                     <div class="paper-navigation">
                         <span class="navigation-hint">← → to navigate • space for random</span>
                         <span id="paperPosition" class="paper-position">-</span>
                     </div>
                     <div class="paper-modal-buttons">
-                    <a id="kimiChatLink" href="#" target="_blank" class="button icon-button" title="Open in KimiChat">
+                    <a id="chatgptLink" href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer" class="button icon-button" title="Copy paper prompt and open ChatGPT" aria-label="Copy paper prompt and open ChatGPT">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <text x="4" y="17" fill="#a42c25" font-family="Arial" font-weight="bold" font-size="14">AI</text>
                         </svg>

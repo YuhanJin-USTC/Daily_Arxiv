@@ -4,6 +4,8 @@ import argparse
 import copy
 from datetime import date
 import hashlib
+from inspect import signature
+from itertools import groupby
 import json
 from pathlib import Path
 import sys
@@ -17,7 +19,7 @@ from ai.errors import EnhancementError, safe_failure
 from ai.quality import read_records, valid_ai, validate_records
 from ai.reuse import generation_provenance
 from ai.storage import digest, write_bytes, write_json, write_jsonl
-from ai.structured_output import valid_fields
+from ai.structured_output import DERIVED_PAPER_FIELDS, valid_fields, validated_topics
 from daily_arxiv.history import load_history_ids, paper_id
 from daily_arxiv.merge_published import merge_published
 from daily_arxiv.validate_crawl import validate
@@ -56,6 +58,8 @@ def load_state(source):
     for identifier, entry in state["discoveries"].items():
         if paper_id(identifier) != identifier:
             raise ValueError("Discovery ID must be normalized")
+        if type(entry.get("topics_enabled", False)) is not bool:
+            raise ValueError("Invalid discovery topic eligibility")
         date.fromisoformat(entry["date"])
         if set(entry["languages"]) != set(LANGUAGES) or any(
             status not in ("pending", "complete")
@@ -127,7 +131,7 @@ def stage_raw(source, raw, output, day, coverage):
     added = []
     for row in rows:
         identifier = paper_id(row["id"])
-        if "AI" in row or "AI_status" in row:
+        if DERIVED_PAPER_FIELDS.intersection(row):
             raise ValueError("Raw discovery contains AI fields")
         if identifier in known:
             continue
@@ -136,6 +140,7 @@ def stage_raw(source, raw, output, day, coverage):
             "date": day,
             "summary_sha256": abstract_hash(row),
             "source_sha256": source_hash(row),
+            "topics_enabled": True,
             "languages": {language: "pending" for language in LANGUAGES},
         }
         known.add(identifier)
@@ -156,6 +161,102 @@ def stage_raw(source, raw, output, day, coverage):
         coverage_sha256=coverage_hash,
     )
     return stage.finish()
+
+
+def accepts_topic_option(generate):
+    try:
+        signature(generate).bind_partial(topics_enabled=True)
+    except (TypeError, ValueError):
+        return False
+    return True
+
+
+def prepare_language_days(
+    stage, language, discoveries, selected, records, topic_profile, supports_topics
+):
+    if not records.keys() <= discoveries.keys():
+        raise ValueError("Checkpoint contains an unknown discovery")
+    groups = {}
+    for identifier, entry in discoveries.items():
+        requested = (
+            identifier in selected
+            if selected is not None
+            else entry["languages"][language] == "pending"
+        )
+        if requested or identifier in records:
+            groups.setdefault(entry["date"], []).append(identifier)
+
+    # Verify all sources and partials before any model request, including later days.
+    days = []
+    for day, identifiers in sorted(groups.items()):
+        raw = stage.source / "data" / f"{day}.jsonl"
+        if not raw.is_file():
+            raise ValueError("Discovery has no raw source")
+        raw_hash = digest(raw)
+        originals = {paper_id(row["id"]): row for row in read_records(raw)}
+        name = f"data/{day}_AI_enhanced_{language}.jsonl"
+        stage.track(name)
+        path = stage.source / name
+        existing = read_records(path) if path.exists() else []
+        if existing:
+            validate_records(existing)
+        published = {paper_id(row["id"]): row for row in existing}
+        work = []
+        for identifier in identifiers:
+            row = originals.get(identifier)
+            entry = discoveries[identifier]
+            eligible = language == "English" and entry.get("topics_enabled", False)
+            if row is None or abstract_hash(row) != entry["summary_sha256"]:
+                raise ValueError("Discovery source or abstract changed")
+            binding = source_hash(row)
+            if entry.get("source_sha256") != binding and (
+                entry.get("source_sha256") is not None
+                or (selected is not None and identifier in selected)
+                or entry.get("topics_enabled", False)
+            ):
+                raise ValueError("Discovery source or abstract changed")
+            saved = records.get(identifier)
+            if saved is not None:
+                if (
+                    saved.get("summary_sha256") != entry["summary_sha256"]
+                    or saved.get("source_sha256") != binding
+                ):
+                    raise ValueError("Checkpoint source or abstract changed")
+                used_topics = "topic_provenance" in saved
+                if (
+                    used_topics
+                    and (not eligible or saved["topic_provenance"] != topic_profile)
+                ) or ("topics" in saved and not used_topics):
+                    raise ValueError(
+                        "Checkpoint topic prompt changed; explicit recovery required"
+                    )
+            if selected is not None and identifier not in selected:
+                continue
+            if identifier in published or entry["languages"][language] == "complete":
+                result = published.get(identifier, {})
+                if (
+                    not valid_ai(result.get("AI"))
+                    or result.get("summary") != row["summary"]
+                    or (eligible and result.get("title") != row["title"])
+                ):
+                    raise ValueError("Published language row needs explicit recovery")
+                entry["languages"][language] = "complete"
+                records.pop(identifier, None)
+                continue
+            item = copy.deepcopy(row)
+            if saved is not None:
+                if used_topics != (eligible and supports_topics):
+                    raise ValueError(
+                        "Checkpoint topic prompt changed; explicit recovery required"
+                    )
+                item["AI"] = valid_fields(saved.get("AI"))
+                topics = validated_topics(saved.get("topics"))
+                if topics:
+                    item["topics"] = topics
+            work.append(item)
+        if work:
+            days.append((day, name, raw, raw_hash, originals, work))
+    return days
 
 
 def stage_language(source, output, language, generate=process_all_items, *, ids=None):
@@ -201,91 +302,28 @@ def stage_language(source, output, language, generate=process_all_items, *, ids=
             "records": {},
         }
     )
-    if selected is not None:
-        verified_days = {}
-        for identifier in sorted(selected):
-            entry = state["discoveries"][identifier]
-            day = entry["date"]
-            if day not in verified_days:
-                raw = source / "data" / f"{day}.jsonl"
-                if not raw.is_file():
-                    raise ValueError("Selected discovery has no raw source")
-                originals = {paper_id(row["id"]): row for row in read_records(raw)}
-                enhanced = source / "data" / f"{day}_AI_enhanced_{language}.jsonl"
-                published = (
-                    {paper_id(row["id"]): row for row in read_records(enhanced)}
-                    if enhanced.exists()
-                    else {}
-                )
-                verified_days[day] = originals, published
-            originals, published = verified_days[day]
-            row = originals.get(identifier)
-            if (
-                row is None
-                or abstract_hash(row) != entry["summary_sha256"]
-                or source_hash(row) != entry.get("source_sha256")
-            ):
-                raise ValueError("Selected discovery raw source or abstract changed")
-            saved = checkpoints["records"].get(identifier)
-            if saved and (
-                saved.get("summary_sha256") != abstract_hash(row)
-                or saved.get("source_sha256") != source_hash(row)
-            ):
-                raise ValueError("Selected checkpoint source or abstract changed")
-            if entry["languages"][language] == "complete":
-                existing = published.get(identifier, {})
-                if (
-                    not valid_ai(existing.get("AI"))
-                    or existing.get("summary") != row["summary"]
-                ):
-                    raise ValueError("Selected completed language is absent or invalid")
-    groups = {}
-    for identifier, entry in state["discoveries"].items():
-        if entry["languages"][language] == "pending" and (
-            selected is None or identifier in selected
-        ):
-            groups.setdefault(entry["date"], []).append(identifier)
+    topic_provenance = (
+        generation_provenance(topics_enabled=True) if language == "English" else None
+    )
+    discoveries = state["discoveries"]
+    supports_topics = language == "English" and accepts_topic_option(generate)
+
+    def topics_enabled(identifier):
+        return supports_topics and discoveries[identifier].get("topics_enabled", False)
+
+    days = prepare_language_days(
+        stage,
+        language,
+        discoveries,
+        selected,
+        checkpoints["records"],
+        topic_provenance,
+        supports_topics,
+    )
     stage.manifest.update(completed_ids=[], failures=[])
-    for day, ids in sorted(groups.items()):
-        raw = source / "data" / f"{day}.jsonl"
-        raw_hash = digest(raw)
-        originals = {paper_id(row["id"]): row for row in read_records(raw)}
-        name = f"data/{day}_AI_enhanced_{language}.jsonl"
-        stage.track(name)
-        existing = read_records(source / name) if (source / name).exists() else []
-        if existing:
-            validate_records(existing)
-        published = {paper_id(row["id"]): row for row in existing}
-        work = []
-        for identifier in ids:
-            row = copy.deepcopy(originals[identifier])
-            discovery = state["discoveries"][identifier]
-            if abstract_hash(row) != discovery["summary_sha256"] or (
-                discovery.get("source_sha256") is not None
-                and source_hash(row) != discovery["source_sha256"]
-            ):
-                raise ValueError("Discovery source or abstract changed")
-            if identifier in published:
-                if (
-                    not valid_ai(published[identifier].get("AI"))
-                    or published[identifier].get("summary") != row["summary"]
-                ):
-                    raise ValueError("Published language row needs explicit recovery")
-                state["discoveries"][identifier]["languages"][language] = "complete"
-                checkpoints["records"].pop(identifier, None)
-                continue
-            binding = {
-                "summary_sha256": abstract_hash(row),
-                "source_sha256": source_hash(originals[identifier]),
-            }
-            saved = checkpoints["records"].get(identifier)
-            if saved:
-                if any(saved.get(key) != value for key, value in binding.items()):
-                    raise ValueError(
-                        "Checkpoint abstract or source changed; explicit recovery required"
-                    )
-                row["AI"] = valid_fields(saved.get("AI"))
-            work.append(row)
+    for day, name, raw, raw_hash, originals, work in days:
+        if digest(raw) != raw_hash:
+            raise ValueError("Raw source changed before generation")
         retained = {paper_id(row["id"]): row for row in work}
         accepted = set()
 
@@ -293,10 +331,11 @@ def stage_language(source, output, language, generate=process_all_items, *, ids=
             accepted.update(paper_id(row["id"]) for row in completed)
             for row in [*completed, *([partial] if partial else [])]:
                 identifier = paper_id(row["id"])
-                if identifier not in retained or row.get("summary") != originals[
-                    identifier
-                ].get("summary"):
-                    raise ValueError("Generated identity or abstract changed")
+                if identifier not in batch_ids or any(
+                    row.get(field) != originals[identifier].get(field)
+                    for field in ("title", "summary")
+                ):
+                    raise ValueError("Generated identity, title or abstract changed")
                 retained[identifier] = {
                     **row,
                     "AI": {
@@ -310,14 +349,24 @@ def stage_language(source, output, language, generate=process_all_items, *, ids=
                     "raw_sha256": raw_hash,
                     "AI": retained[identifier]["AI"],
                 }
+                retained[identifier].pop("topics", None)
+                if topics_enabled(identifier):
+                    saved = checkpoints["records"][identifier]
+                    saved["topic_provenance"] = topic_provenance
+                    topics = validated_topics(row.get("topics"))
+                    if topics:
+                        retained[identifier]["topics"] = saved["topics"] = topics
             write_json(output / checkpoint_name, checkpoints)
 
-        if work:
-            checkpoint([], None)
+        checkpoint([], None)
+        for enabled, items in groupby(work, lambda row: topics_enabled(row["id"])):
+            batch = list(items)
+            batch_ids = {paper_id(row["id"]) for row in batch}
+            options = {"topics_enabled": True} if enabled else {}
             try:
-                generated = generate(work, language, progress=checkpoint)
+                generated = generate(batch, language, progress=checkpoint, **options)
                 if [paper_id(row["id"]) for row in generated] != [
-                    paper_id(row["id"]) for row in work
+                    paper_id(row["id"]) for row in batch
                 ]:
                     raise ValueError("AI generation changed paper IDs or order")
                 validate_records(generated)
@@ -327,27 +376,28 @@ def stage_language(source, output, language, generate=process_all_items, *, ids=
                 stage.manifest["failures"].append(
                     {"date": day, "error": str(safe_failure(error))}
                 )
-            completed = [
-                row
-                for identifier, row in retained.items()
-                if identifier in accepted and valid_ai(row.get("AI"))
-            ]
-            if completed:
-                validate_records(completed)
-                if digest(raw) != raw_hash:
-                    raise ValueError("Raw source changed during generation")
-                write_jsonl(output / name, completed)
-                merge_published(source / name, output / name)
-                markdown_name = f"data/{day}_{language}.md"
-                stage.track(markdown_name)
-                convert(output / name, language=language)
-                for row in completed:
-                    identifier = paper_id(row["id"])
-                    state["discoveries"][identifier]["languages"][language] = "complete"
-                    checkpoints["records"].pop(identifier, None)
-                    stage.manifest["completed_ids"].append(identifier)
-            if stage.manifest["failures"]:
                 break
+        completed = [
+            row
+            for identifier, row in retained.items()
+            if identifier in accepted and valid_ai(row.get("AI"))
+        ]
+        if completed:
+            validate_records(completed)
+            if digest(raw) != raw_hash:
+                raise ValueError("Raw source changed during generation")
+            write_jsonl(output / name, completed)
+            merge_published(source / name, output / name)
+            markdown_name = f"data/{day}_{language}.md"
+            stage.track(markdown_name)
+            convert(output / name, language=language)
+            for row in completed:
+                identifier = paper_id(row["id"])
+                state["discoveries"][identifier]["languages"][language] = "complete"
+                checkpoints["records"].pop(identifier, None)
+                stage.manifest["completed_ids"].append(identifier)
+        if stage.manifest["failures"]:
+            break
     write_json(output / checkpoint_name, checkpoints)
     write_json(output / STATE, state)
     stage.index()
