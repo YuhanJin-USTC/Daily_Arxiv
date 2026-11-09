@@ -14,9 +14,14 @@ from ai import deepseek, enhance
 from ai.config import settings
 from ai.errors import AuthenticationFailure, EnhancementError, safe_failure
 from ai.quality import FIELDS, valid_ai, validate_records
+from ai.reuse import generation_provenance
 from ai.storage import write_bytes
 
 GOOD = {key: "Valid " + key for key in FIELDS}
+TOPICS = {
+    "keywords": ["vacuum birefringence", "strong-field QED", "probe polarization"],
+    "laser_plasma_keywords": ["vacuum birefringence", "strong-field QED"],
+}
 
 
 def paper(identifier="2610.26164"):
@@ -67,6 +72,166 @@ class ModelTests(unittest.TestCase):
             chain = deepseek.DeepSeekSummaryChain()
         self.addCleanup(chain.close)
         return chain
+
+    def test_topics_use_the_normal_english_completion_with_title_and_entire_abstract(
+        self,
+    ):
+        requests = []
+
+        def handle(request):
+            requests.append(json.loads(request.content))
+            return httpx.Response(200, json=completion({**GOOD, "topics": TOPICS}))
+
+        original = {
+            **paper(),
+            "title": "Vacuum birefringence from intense lasers",
+            "summary": "A full abstract " * 1000 + "END_OF_INPUT",
+        }
+        with patch.object(enhance, "is_sensitive", return_value=False) as moderation:
+            (result,) = enhance.process_all_items(
+                [original], "English", self.chain(handle), topics_enabled=True
+            )
+        self.assertEqual(len(requests), 1)
+        system, user = (message["content"] for message in requests[0]["messages"])
+        self.assertIn("strong-field optics or vacuum strong-field QED", system)
+        self.assertIn("laser_plasma_keywords", system)
+        self.assertIn(original["title"], user)
+        self.assertIn(original["summary"], user)
+        self.assertEqual(result["topics"], TOPICS)
+        self.assertEqual(result["AI"], GOOD)
+        moderation.assert_any_call(original["title"])
+        moderation.assert_any_call("\n".join(TOPICS["keywords"]))
+        self.assertNotIn("topics", original)
+
+    def test_legacy_and_chinese_requests_ignore_supplied_and_model_topics(self):
+        original = {**paper(), "topics": TOPICS, "topics_enabled": True}
+        for language, enabled in [("English", False), ("Chinese", True)]:
+            chain = Mock()
+            chain.invoke.return_value = {**GOOD, "topics": TOPICS}
+            with patch.object(enhance, "is_sensitive", return_value=False):
+                row = enhance.process_single_item(
+                    chain, original, language, topics_enabled=enabled
+                )
+            chain.invoke.assert_called_once_with(
+                {"content": paper()["summary"], "language": language}
+            )
+            self.assertEqual(row["AI"], GOOD)
+            self.assertNotIn("topics", row)
+            self.assertNotIn("topics_enabled", row)
+
+    def test_rejected_title_or_source_outage_stops_before_model_and_cleans_checkpoint(
+        self,
+    ):
+        partial_ai = {"tldr": GOOD["tldr"]}
+        original = {
+            **paper(),
+            "AI": partial_ai,
+            "topics": TOPICS,
+            "topics_enabled": True,
+        }
+        for rejection in (True, EnhancementError("Content-check service failed")):
+            chain = Mock()
+            progress = Mock()
+            with (
+                patch.object(
+                    enhance, "is_sensitive", side_effect=[False, rejection]
+                ) as moderation,
+                self.assertRaises(EnhancementError) as failure,
+            ):
+                enhance.process_all_items(
+                    [original], "English", chain, progress, topics_enabled=True
+                )
+            self.assertEqual(
+                [call.args[0] for call in moderation.call_args_list],
+                [
+                    original["summary"],
+                    original["title"],
+                ],
+            )
+            chain.invoke.assert_not_called()
+            snapshot = failure.exception.record
+            self.assertEqual(snapshot["AI"], partial_ai)
+            self.assertNotIn("topics", snapshot)
+            self.assertNotIn("topics_enabled", snapshot)
+            progress.assert_called_once_with([], snapshot)
+
+    def test_topic_moderation_outage_or_rejection_preserves_the_summary(self):
+        text = "\n".join(TOPICS["keywords"])
+        for fail in (True, EnhancementError("moderation unavailable")):
+
+            def moderate(content):
+                if content == text:
+                    if isinstance(fail, Exception):
+                        raise fail
+                    return fail
+                return False
+
+            chain = Mock()
+            chain.invoke.return_value = {**GOOD, "topics": TOPICS}
+            with patch.object(enhance, "is_sensitive", side_effect=moderate):
+                row = enhance.process_single_item(
+                    chain, paper(), "English", topics_enabled=True
+                )
+            self.assertEqual(row["AI"], GOOD)
+            self.assertNotIn("topics", row)
+            chain.invoke.assert_called_once()
+
+    def test_only_a_matching_topic_checkpoint_resumes_partial_results(self):
+        chain = Mock()
+        chain.invoke.side_effect = [
+            {"tldr": GOOD["tldr"], "topics": TOPICS},
+            RuntimeError(),
+        ]
+        with (
+            patch.object(enhance, "is_sensitive", return_value=False),
+            self.assertRaises(EnhancementError) as failure,
+        ):
+            enhance.process_single_item(chain, paper(), "English", topics_enabled=True)
+        partial = failure.exception.record
+        self.assertEqual(partial["AI"], {"tldr": GOOD["tldr"]})
+        self.assertEqual(partial["topics"], TOPICS)
+
+        provenance = generation_provenance(topics_enabled=True)
+        self.assertNotEqual(provenance, generation_provenance())
+        with patch.object(deepseek, "TOPIC_INSTRUCTIONS", "CHANGED"):
+            self.assertNotEqual(provenance, generation_provenance(topics_enabled=True))
+        path = Mock()
+        path.read_text.return_value = json.dumps(
+            {
+                "source_sha256": "bound",
+                "provenance": provenance,
+                "language": "English",
+                "partial": partial,
+            }
+        )
+        with self.assertRaisesRegex(ValueError, "provenance"):
+            enhance.resume_rows([paper()], path, "bound", "English")
+        with self.assertRaisesRegex(ValueError, "title"):
+            enhance.resume_rows(
+                [{**paper(), "title": "Other"}],
+                path,
+                "bound",
+                "English",
+                topics_enabled=True,
+            )
+        rows = enhance.resume_rows(
+            [paper()], path, "bound", "English", topics_enabled=True
+        )
+        chain = Mock()
+        chain.invoke.return_value = {"topics": None, **GOOD}
+        with patch.object(enhance, "is_sensitive", return_value=False):
+            (result,) = enhance.process_all_items(
+                rows, "English", chain, topics_enabled=True
+            )
+        self.assertEqual(result["AI"], GOOD)
+        self.assertEqual(result["topics"], TOPICS)
+        chain.invoke.assert_called_once()
+        with patch.object(enhance, "is_sensitive", return_value=False):
+            complete = enhance.process_single_item(
+                chain, {**paper(), "AI": GOOD}, "English", topics_enabled=True
+            )
+        self.assertNotIn("topics", complete)
+        chain.invoke.assert_called_once()
 
     def test_max_request_and_partial_recovery_in_both_languages(self):
         for language in ("English", "Chinese"):

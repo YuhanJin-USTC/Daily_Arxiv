@@ -56,6 +56,18 @@ const enhanced = AI => ({...raw, AI});
 const detail = (expected, language) => ({id: expected.id, language, available: true, abstract: raw.summary,
   fields: expected.fields, heading: 'TL;DR', unavailable: 0, rendered: expected.fields, renderedAbstract: raw.summary});
 
+test('live verification selects shared keywords only from the matching published title and abstract', () => {
+  const paper = {...raw, title: 'Strong-field optics'};
+  const topics = {keywords: ['strong-field optics', 'polarization', 'harmonics'], laser_plasma_keywords: ['strong-field optics']};
+  const row = {...paper, AI: english, topics};
+  assert.deepEqual(selectPublishedAI([paper], [row], '2610.29709').topics, topics);
+  const earlier = {...row, title: 'Previous title'};
+  assert.equal(selectPublishedAI([paper], [earlier], '2610.29709').topics, null);
+  assert.deepEqual(selectPublishedAI([paper], [earlier, row], '2610.29709').topics, topics);
+  assert.equal(selectPublishedAI([paper], [row, {...row, topics: {...topics, laser_plasma_keywords: []}}], '2610.29709').topics, null);
+  assert.equal(selectPublishedAI([paper], [{...row, topics: {keywords: ['malformed']}}], '2610.29709').topics, null);
+});
+
 test('published AI selection binds normalized ID and exact abstract, and rejects incomplete or conflicting data', () => {
   const expected = selectPublishedAI([raw], [enhanced(english)], '2610.29709');
   assert.deepEqual(expected.fields, Object.values(english));

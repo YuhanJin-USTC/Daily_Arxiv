@@ -1,6 +1,7 @@
 """Reuse complete archived summaries for identical abstracts and language."""
 
 import hashlib
+import json
 import re
 
 from .quality import FIELDS, read_records, valid_ai
@@ -60,7 +61,7 @@ class SuccessfulSummaries:
         ] if reused else []
 
 
-def generation_provenance(config=None):
+def generation_provenance(config=None, *, topics_enabled=False):
     from pathlib import Path
 
     from .config import settings
@@ -68,10 +69,34 @@ def generation_provenance(config=None):
     if config is None:
         config = settings()
     root = Path(__file__).resolve().parent
-    return {
+    provenance = {
         "profile": config["deepseek"],
         "prompt_sha256": {
             name: digest(root / name)
             for name in ("system.txt", "template.txt", "structure.py")
         },
     }
+    if topics_enabled:
+        from .deepseek import summary_messages
+        from .structured_output import repair_content
+
+        system = (root / "system.txt").read_text(encoding="utf-8")
+        template = (root / "template.txt").read_text(encoding="utf-8")
+        abstract = "{abstract}"
+        contents = (abstract, repair_content(abstract, "English", {"tldr": "{tldr}"}))
+        messages = [
+            summary_messages(
+                system,
+                template,
+                {
+                    "language": "English",
+                    "content": content,
+                    "topic_title": "{title}",
+                },
+            )
+            for content in contents
+        ]
+        provenance["prompt_sha256"]["english_topics"] = hashlib.sha256(
+            json.dumps(messages, ensure_ascii=False).encode("utf-8")
+        ).hexdigest()
+    return provenance

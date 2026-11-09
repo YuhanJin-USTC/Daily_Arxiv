@@ -103,7 +103,19 @@ class NotificationTests(unittest.TestCase):
             self.assertEqual(self.dispatch(state)["sent"], 0)
         self.assertEqual(self.sent, [])
 
-    def test_configured_initials_never_enqueue_or_send_mail(self):
+    def test_vieira_confirmed_alias_uses_ordinary_delivery_once(self):
+        self.config["researchers"] = settings()["researchers"]
+        row = paper(authors=["J. Vieira", "J. P. Palastro"])
+        state = self.queue([row])
+        discovered = state["discoveries"]["2610.12345"]
+        self.assertEqual(
+            [(m["author"], m["kind"]) for m in discovered["matches"]],
+            [("J. Vieira", "reliable"), ("J. P. Palastro", "suspected")],
+        )
+        self.assertEqual(self.dispatch(state)["sent"], 2)
+        self.assertEqual(self.dispatch(self.queue([row], state))["sent"], 0)
+
+    def test_configured_suspected_aliases_never_enqueue_or_send_mail(self):
         config = settings()
         self.config["researchers"] = config["researchers"]
         self.config["categories"] = config["categories"]

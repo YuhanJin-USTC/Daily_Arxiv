@@ -6,10 +6,19 @@ from types import SimpleNamespace
 from unittest.mock import Mock
 from pydantic import ValidationError
 from ai.structure import Structure
-from ai.structured_output import DEFAULT_AI_FIELDS, enhance_fields, response_fields
+from ai.structured_output import (
+    DEFAULT_AI_FIELDS,
+    enhance_fields,
+    response_fields,
+    validated_topics,
+)
 
 GOOD = {key: "有效内容：" + key for key in DEFAULT_AI_FIELDS}
 FOUR = {key: value for key, value in GOOD.items() if key != "conclusion"}
+TOPICS = {
+    "keywords": ["Strong-field QED", "γ-ray emission", "laser polarization"],
+    "laser_plasma_keywords": ["Strong-field QED", "laser polarization"],
+}
 
 
 def envelope(fields):
@@ -23,6 +32,63 @@ def envelope(fields):
 
 
 class RecoveryTests(unittest.TestCase):
+    def test_topic_validation_requires_english_terms_and_an_exact_subset(self):
+        normalized = {
+            "keywords": [
+                "  Strong-field  QED ",
+                "γ-ray emission",
+                "laser polarization",
+            ],
+            "laser_plasma_keywords": ["strong-field qed", " LASER POLARIZATION "],
+        }
+        self.assertEqual(validated_topics(normalized), TOPICS)
+        self.assertEqual(
+            validated_topics({**TOPICS, "laser_plasma_keywords": []})[
+                "laser_plasma_keywords"
+            ],
+            [],
+        )
+        for invalid in (
+            None,
+            [],
+            {"keywords": TOPICS["keywords"]},
+            {**TOPICS, "keywords": ["one", "two"]},
+            {**TOPICS, "keywords": ["a", "b", "c", "d", "e", "f"]},
+            {**TOPICS, "keywords": ["term", " TERM", "probe"]},
+            {**TOPICS, "keywords": ["laser", "optics", "激光研究"]},
+            {**TOPICS, "keywords": ["laser", "optics", "<script>"]},
+            {**TOPICS, "laser_plasma_keywords": ["unlisted term"]},
+            {
+                **TOPICS,
+                "laser_plasma_keywords": ["Strong-field QED", "strong-field qed"],
+            },
+        ):
+            with self.subTest(invalid=invalid):
+                self.assertIsNone(validated_topics(invalid))
+
+    def test_partial_topic_response_is_retained_and_does_not_drive_retries(self):
+        chain = Mock()
+        chain.invoke.side_effect = [
+            envelope({**FOUR, "topics": TOPICS}),
+            envelope({**GOOD, "topics": {**TOPICS, "laser_plasma_keywords": []}}),
+        ]
+        result = enhance_fields(chain, "abstract", "English", topic_title="Laser QED")
+        self.assertEqual(result.fields, GOOD)
+        self.assertEqual(result.topics, TOPICS)
+        self.assertEqual(chain.invoke.call_count, 2)
+        for call in chain.invoke.call_args_list:
+            self.assertEqual(call.args[0]["topic_title"], "Laser QED")
+        for value in (None, {"keywords": ["invalid"]}):
+            with self.subTest(value=value):
+                chain = Mock()
+                chain.invoke.return_value = envelope({**GOOD, "topics": value})
+                result = enhance_fields(
+                    chain, "abstract", "English", topic_title="title"
+                )
+                self.assertTrue(result.complete)
+                self.assertIsNone(result.topics)
+                chain.invoke.assert_called_once()
+
     def test_missing_conclusion_keeps_four_fields_and_repairs_only_missing(self):
         chain = Mock()
         chain.invoke.side_effect = [

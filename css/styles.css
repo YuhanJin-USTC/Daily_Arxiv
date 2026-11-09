@@ -351,16 +351,40 @@ header {
 
 .category-scroll {
   display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+  box-sizing: border-box;
   overflow-x: auto;
   gap: 10px;
   -ms-overflow-style: none;
   scrollbar-width: none;
-  width: 100%;
   justify-content: flex-start; /* 改为左对齐 */
   flex-wrap: nowrap; /* 禁止换行 */
   white-space: nowrap; /* 确保内容不会换行 */
   /* 添加鼠标滚轮横向滚动支持 */
   overflow-y: hidden;
+}
+
+.category-step {
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: var(--primary-color);
+  background: var(--background-hover);
+  font: inherit;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.category-step:disabled {
+  opacity: 0.4;
+}
+
+.category-step:focus-visible,
+.category-button:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: -2px;
 }
 
 .filter-scroll {
@@ -1816,7 +1840,8 @@ footer {
 }
 
 /* 匹配论文卡片的高亮样式 */
-.paper-card.matched-paper {
+.paper-card.matched-paper,
+.paper-card.researcher-card-reliable {
   box-shadow: 0 0 0 2px var(--gold-color), var(--shadow-md);
   background-color: var(--match-highlight);
   position: relative;
@@ -1824,7 +1849,8 @@ footer {
   border: 1px solid rgba(255, 215, 0, 0.45);
 }
 
-.paper-card.matched-paper:hover {
+.paper-card.matched-paper:hover,
+.paper-card.researcher-card-reliable:hover {
   box-shadow: 0 0 0 2px var(--gold-color), var(--shadow-lg);
   transform: translateY(-3px);
   border: 1px solid rgba(255, 215, 0, 0.5);
@@ -1849,7 +1875,8 @@ footer {
 }
 
 /* 为匹配论文添加列表视图的特殊样式 */
-.list-view .paper-card.matched-paper {
+.list-view .paper-card.matched-paper,
+.list-view .paper-card.researcher-card-reliable {
   border-left: 4px solid var(--gold-color);
 }
 
@@ -2138,7 +2165,37 @@ footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   margin-bottom: 1rem;
+}
+
+.pdf-header h3 {
+  margin-right: auto;
+}
+
+.pdf-download-btn {
+  padding: 5px 12px;
+  border-radius: 16px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--primary-color);
+  background: var(--background-hover);
+}
+
+.pdf-download-fallback {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.pdf-download-fallback input {
+  width: 100%;
+  font: inherit;
+}
+
+.pdf-download-status {
+  font-size: 13px;
+  color: var(--text-secondary);
 }
 
 .pdf-expand-btn {
@@ -2378,6 +2435,44 @@ footer {
 
 .researcher-suspected .researcher-marker {
   color: var(--text-secondary);
+}
+
+.paper-card.researcher-card-suspected:not(.matched-paper) {
+  border: 1px dashed var(--text-tertiary);
+}
+
+.paper-keywords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-block: 6px;
+}
+
+.paper-keyword {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: var(--background-hover);
+}
+
+.laser-plasma-keyword {
+  color: var(--primary-color);
+  background: rgba(102, 126, 234, 0.12);
+  font-weight: 600;
+}
+
+.paper-action-feedback {
+  color: var(--text-secondary);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.paper-action-feedback textarea {
+  width: 100%;
+  font: inherit;
 }
 
 .researcher-status,

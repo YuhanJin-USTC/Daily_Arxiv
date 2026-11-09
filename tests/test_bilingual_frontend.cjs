@@ -6,6 +6,7 @@ const path = require('node:path');
 const read = name => fs.readFileSync(path.join(__dirname, '..', name), 'utf8');
 const fields = ['tldr', 'motivation', 'method', 'result', 'conclusion'];
 const good = Object.fromEntries(fields.map(field => [field, `AI ${field}`]));
+const topics = {keywords: ['Laser wakefields', 'Betatron radiation', 'X-ray diagnostics'], laser_plasma_keywords: ['Laser wakefields']};
 const raw = (id, extra = {}) => ({id, title: `Plasma ${id}`, authors: ['First', 'Second', 'Alexey Arefiev', 'Fourth', 'Last'], summary: 'Exact original abstract', categories: ['physics.plasm-ph'], ...extra});
 const jsonl = rows => rows.map(JSON.stringify).join('\n');
 const match = (extra = {}) => ({researcher_id: 'arefiev', display_name: 'Alexey Arefiev', author: 'Alexey Arefiev', kind: 'reliable', basis: 'confirmed_name', ...extra});
@@ -101,6 +102,52 @@ test('wrong abstract, partial AI and conflicting AI remain unavailable', () => {
   }
 });
 
+test('both languages use the English keywords bound to the raw title and abstract', () => {
+  const {ctx} = browser();
+  const source = raw('one');
+  const english = {...source, id: 'https://arxiv.org/abs/onev2', AI: good, topics};
+  const chinese = {...source, AI: {...good, tldr: '中文摘要'}, topics: {...topics, laser_plasma_keywords: []}};
+  const join = (language, selected, englishRows = []) => rows(ctx, ctx.attachLanguage(jsonl([source]),
+    jsonl(selected), '2026-10-20', language, null, jsonl(englishRows)))[0];
+  const en = join('English', [english, english]);
+  const zh = join('Chinese', [chinese], [english]);
+  const pending = join('Chinese', [], [english]);
+  assert.deepEqual(JSON.parse(JSON.stringify(en.topics)), topics);
+  assert.deepEqual(zh.topics, en.topics);
+  assert.deepEqual(pending.topics, en.topics);
+  assert.equal(zh.summary, '中文摘要');
+  assert.equal(pending.aiAvailable, false);
+  assert.equal(pending.summary, source.summary);
+
+  for (const englishRows of [[], [{...english, id: 'two'}], [{...english, title: 'Different title'}],
+    [{...english, summary: source.summary + ' '}], [{...english, AI: {...good, result: ''}}],
+    [english, {...english, AI: {...good, tldr: 'Contradiction'}}],
+    [english, {...english, topics: {...topics, laser_plasma_keywords: []}}]]) {
+    const paper = join('Chinese', [chinese], englishRows);
+    assert.equal(paper.topics, null);
+    assert.equal(paper.summary, '中文摘要');
+  }
+});
+
+test('optional bad labels leave healthy English fields visible; valid subsets use keyword spelling', () => {
+  const {ctx} = browser();
+  const source = raw('one');
+  const join = input => rows(ctx, ctx.attachLanguage(jsonl([source]),
+    jsonl([{...source, topics: input, AI: good}]), '2026-10-20', 'English'))[0];
+  for (const invalid of [null, {}, {...topics, keywords: ['Only one']},
+    {...topics, keywords: ['Only', 'TWO', 'two']}, {...topics, keywords: ['Laser', '电子动力学', 'Waves']},
+    {...topics, keywords: ['Laser', '<img src=x>', 'Waves']}, {...topics, laser_plasma_keywords: ['Missing']},
+    {...topics, keywords: ['Valid', 'Terms', 'Processing failed']},
+    {...topics, laser_plasma_keywords: ['Laser wakefields', 'LASER WAKEFIELDS']}]) {
+    const paper = join(invalid);
+    assert.equal(paper.topics, null);
+    assert.equal(paper.aiAvailable, true);
+    assert.equal(paper.summary, good.tldr);
+  }
+  const normalized = join({...topics, laser_plasma_keywords: ['  laser  WAKEFIELDS ']}).topics;
+  assert.deepEqual([...normalized.laser_plasma_keywords], ['Laser wakefields']);
+});
+
 test('raw dates and legacy inventory dates are deduplicated without relying on English inventory', () => {
   const {ctx} = browser();
   assert.deepEqual([...ctx.datesFromInventory('data/2026-10-20.jsonl\n2026-10-19_AI_enhanced_Chinese.jsonl\ndata/2026-10-20_AI_enhanced_English.jsonl\n2026-10-18_English.md')], ['2026-10-20', '2026-10-19']);
@@ -139,6 +186,36 @@ test('raw file and only requested language are fetched; missing or broken AI sti
   }
 });
 
+test('homepage fetches English once for topics and keeps language failures independent', async () => {
+  const requested = [];
+  const source = raw('one');
+  const translations = {
+    English: jsonl([{...source, AI: good, topics}]),
+    Chinese: jsonl([{...source, AI: {...good, tldr: '中文摘要'}}])
+  };
+  const {ctx} = browser({fetch: async url => {
+    requested.push(url);
+    if (url.endsWith('researcher-index.json')) return response(JSON.stringify(index()));
+    const language = url.match(/_AI_enhanced_(English|Chinese)/)?.[1];
+    return response(language ? translations[language] : jsonl([source]));
+  }});
+  const load = async language => rows(ctx,
+    await ctx.loadPaperDates(['2026-10-20'], language, {includeTopics: true}))[0];
+  assert.equal((await load('English')).summary, good.tldr);
+  assert.equal(requested.filter(url => url.includes('_English')).length, 1);
+  assert.equal(requested.filter(url => url.includes('_Chinese')).length, 0);
+  const englishText = translations.English;
+  translations.English = 'invalid JSON';
+  const missingEnglish = await load('Chinese');
+  assert.equal(missingEnglish.topics, null);
+  assert.equal(missingEnglish.summary, '中文摘要');
+  translations.Chinese = 'invalid JSON';
+  translations.English = englishText;
+  const missingChinese = await load('Chinese');
+  assert.deepEqual(JSON.parse(JSON.stringify(missingChinese.topics)), topics);
+  assert.equal(missingChinese.summary, source.summary);
+});
+
 test('date ranges merge raw IDs and categories once while preserving source order', async () => {
   const {ctx} = browser({fetch: async url => {
     if (url.endsWith('researcher-index.json')) return response(JSON.stringify(index()));
@@ -152,6 +229,22 @@ test('date ranges merge raw IDs and categories once while preserving source orde
   assert.equal(ctx.getAllCategories(data, ['physics.plasm-ph']).totalCount, 3);
 });
 
+test('date-range duplicates keep available English topics only for the displayed source', () => {
+  const {ctx} = browser();
+  const source = raw('one');
+  const day = (date, row, chinese, english) => ctx.attachLanguage(jsonl([row]),
+    chinese ? jsonl([{...row, AI: good}]) : '', date, 'Chinese', null,
+    english ? jsonl([{...row, AI: good, topics: english}]) : '');
+  const combine = (older, newer) => rows(ctx, {a: Object.values(older).flat(), b: Object.values(newer).flat()})[0];
+  const newer = day('2026-10-20', source, false, topics);
+  const old = day('2026-10-19', source, true, null);
+  assert.deepEqual(JSON.parse(JSON.stringify(combine(old, newer).topics)), topics);
+  const revised = day('2026-10-19', {...source, summary: source.summary + '.'}, true, null);
+  assert.equal(combine(revised, newer).topics, null);
+  const conflicting = day('2026-10-19', source, true, {...topics, laser_plasma_keywords: []});
+  assert.equal(combine(conflicting, newer).topics, null);
+});
+
 test('rapid language requests retain the latest result, range, filters, view and open paper', async () => {
   const {ctx, get} = browser();
   vm.runInContext(read('js/app.js'), ctx);
@@ -160,7 +253,6 @@ test('rapid language requests retain the latest result, range, filters, view and
     currentCategory = 'physics.plasm-ph'; currentView = 'list'; textSearchQuery = 'laser';
     activeAuthors = ['personal']; activeKeywords = ['keyword']; openPaperId = 'one';
     renderCategoryFilter = () => {};
-    renderPapers = () => {currentFilteredPapers = uniquePapers(paperData);};
     showPaperDetails = paper => {globalThis.opened = paper;};
   `, ctx);
   const pending = [];
@@ -211,6 +303,66 @@ test('homepage and detail render safe content and the same researcher marks', ()
   assert.match(get('modalBody').innerHTML, /researcher-reliable/);
   assert.doesNotMatch(get('modalBody').innerHTML, /<script>/);
   assert.doesNotMatch(get('modalTitle').innerHTML, /<img/);
+});
+
+test('cards rank active hits, researcher evidence and laser–plasma topics in stable category order', () => {
+  const {ctx, get} = browser();
+  vm.runInContext(read('js/app.js'), ctx);
+  const ids = ['other', 'hit-other', 'topic', 'suspected', 'reliable', 'hit-topic', 'hit-suspected',
+    'hit-reliable', 'hit-reliable-2', 'general-keywords', 'other-category'];
+  const source = ids.map(id => raw(id, {
+    title: id.startsWith('hit-') ? `Selected ${id}` : id,
+    authors: id === 'hit-other' ? ['Personal Author'] : ['Alexey Arefiev'],
+    categories: id === 'other-category' ? ['physics.optics'] : ['physics.optics', 'physics.plasm-ph']
+  }));
+  const enhanced = source.map(row => ({...row, AI: good,
+    topics: row.id.includes('topic') ? topics : {...topics, laser_plasma_keywords: []}}));
+  ctx.loaded = ctx.attachLanguage(jsonl([...source, source[4]]), jsonl(enhanced), '2026-10-20', 'English',
+    index({reliable:[match()], suspected:[match({kind:'suspected'})],
+      'hit-reliable':[match({kind:'suspected'}), match()], 'hit-reliable-2':[match()], 'hit-suspected':[match({kind:'suspected'})]}));
+  vm.runInContext(`paperData = loaded; currentCategory = 'physics.plasm-ph';
+    textSearchQuery = 'selected'; activeKeywords = ['hit-other']; activeAuthors = ['Personal']; renderPapers();`, ctx);
+  const cards = get('paperContainer').children;
+  const order = () => Array.from(vm.runInContext('currentFilteredPapers', ctx), paper => paper.id);
+  const expected = ['hit-reliable', 'hit-reliable-2', 'hit-suspected', 'hit-topic', 'hit-other',
+    'reliable', 'suspected', 'topic', 'other', 'general-keywords'];
+  assert.deepEqual(order(), expected);
+  assert.deepEqual(cards.map(card => card.dataset.id), expected);
+  assert.equal(cards[0].className, 'paper-card matched-paper researcher-card-reliable');
+  assert.equal(cards[2].className, 'paper-card matched-paper researcher-card-suspected');
+  assert.equal(cards[3].className, 'paper-card matched-paper');
+  assert.match(cards[4].title, /文本: selected.*关键词: hit-other.*作者: Personal/);
+  assert.equal(cards[7].className, 'paper-card');
+  assert.match(cards[7].innerHTML, /laser-plasma-keyword/);
+  assert.doesNotMatch(cards[9].innerHTML, /laser-plasma-keyword/);
+
+  vm.runInContext(`currentPaperIndex = 4; showPaperDetails(currentFilteredPapers[4], 5);
+    textSearchQuery = ''; activeKeywords = []; activeAuthors = []; renderPapers();`, ctx);
+  assert.equal(vm.runInContext('currentFilteredPapers[currentPaperIndex].id', ctx), 'hit-other');
+  assert.equal(get('paperPosition').textContent, '9 / 10');
+  ctx.navigateToPreviousPaper();
+  assert.equal(vm.runInContext('openPaperId', ctx), 'other');
+  ctx.navigateToNextPaper();
+  assert.equal(vm.runInContext('openPaperId', ctx), 'hit-other');
+});
+
+test('topic chips in a Chinese raw fallback escape scientific labels identically in both views', () => {
+  const {ctx, get} = browser();
+  vm.runInContext(read('js/app.js'), ctx);
+  const source = raw('one');
+  const keyword = 'Laser & "plasma"';
+  const labels = {keywords: [keyword, 'PIC simulations', 'Betatron radiation'], laser_plasma_keywords: [keyword]};
+  ctx.loaded = ctx.attachLanguage(jsonl([source]), '', '2026-10-20', 'Chinese', null,
+    jsonl([{...source, AI: good, topics: labels}]));
+  vm.runInContext('paperData = loaded; renderPapers(); showPaperDetails(currentFilteredPapers[0], 1);', ctx);
+  const card = get('paperContainer').children[0].innerHTML;
+  const detail = get('modalBody').innerHTML;
+  const chips = html => html.match(/<div class="paper-keywords"[^>]*>.*?<\/div>/)?.[0];
+  assert.equal(chips(card), chips(detail));
+  assert.match(chips(card), /aria-label="Laser–plasma keyword: Laser &amp; &quot;plasma&quot;"/);
+  assert.match(card, /Chinese AI summary unavailable/);
+  assert.match(detail, /Exact original abstract/);
+  assert.doesNotMatch(detail, /AI tldr/);
 });
 
 test('language controls use native buttons and preferences explain their local scope', () => {

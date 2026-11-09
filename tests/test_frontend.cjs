@@ -106,3 +106,138 @@ test('both pages use shared language selection without a language fallback', () 
     assert.match(page, /loadPaperDates/);
   }
 });
+
+const konzelPaper = {
+  url: 'https://arxiv.org/abs/2610.26476',
+  authorList: ['A. Konzel', 'J. Vieira'],
+  title: 'Spatiotemporal spherical Gaussian pulses',
+  date: '2027-01-01'
+};
+const konzelFilename = '2026-ArXiv-A.-Konzel-Spatiotemporal-spherical-Gaussian-pulses.pdf';
+
+function pdfContext(overrides = {}) {
+  const ctx = vm.createContext({TextEncoder, document: {addEventListener() {}}, ...overrides});
+  vm.runInContext(source, ctx);
+  return ctx;
+}
+
+test('ChatGPT handoff copies the paper in the selected language and exposes a manual fallback', async () => {
+  const elements = Object.fromEntries(['chatgptLink', 'chatgptFeedback', 'chatgptStatus', 'chatgptPrompt']
+    .map(id => [id, {select() { this.selected = true; }}]));
+  let copied;
+  const ctx = pdfContext({document: {addEventListener() {}, getElementById: id => elements[id]},
+    navigator: {clipboard: {writeText: async text => { copied = text; }}}, getPreferredLanguage: () => 'Chinese'});
+  const source = ctx.paperPdfSource(konzelPaper.url);
+  ctx.bindChatGPT(konzelPaper, source);
+  await elements.chatgptLink.onclick();
+  assert.match(copied, /请阅读/);
+  assert.ok([konzelPaper.title, source.url, konzelPaper.url].every(term => copied.includes(term)));
+  assert.equal(elements.chatgptPrompt.hidden, true);
+  ctx.navigator.clipboard.writeText = async () => { throw new Error('denied'); };
+  await elements.chatgptLink.onclick();
+  assert.equal(elements.chatgptPrompt.value, copied);
+  assert.equal(elements.chatgptPrompt.hidden, false);
+  assert.equal(elements.chatgptPrompt.selected, true);
+});
+
+test('PDF names use the ID year, original first author and full title', () => {
+  const ctx = pdfContext();
+  const info = ctx.paperPdfSource(konzelPaper.url);
+  assert.equal(info.url, 'https://arxiv.org/pdf/2610.26476');
+  const names = ctx.paperPdfNames(konzelPaper, info);
+  assert.equal(names.full, konzelFilename);
+  assert.equal(names.download, konzelFilename);
+  const legacy = ctx.paperPdfSource('http://www.arxiv.org/pdf/math.GT/9908123v2.pdf#page=3');
+  assert.equal(legacy.year, 1999);
+  assert.equal(legacy.url, 'https://arxiv.org/pdf/math.GT/9908123v2');
+  assert.equal(ctx.paperPdfSource('https://arxiv.org/abs/physics/0301123').year, 2003);
+  assert.equal(ctx.paperPdfSource('https://arxiv.org/abs/0704.0001v3').year, 2007);
+  const unicode = ctx.paperPdfNames({authorList: ['李 M. Öztürk'], title: 'β/γ: 激光 <pulse>?'}, legacy);
+  assert.equal(unicode.download, '1999-ArXiv-李-M.-Öztürk-β-γ-激光-pulse.pdf');
+  const long = ctx.paperPdfNames({...konzelPaper, title: '激光🌞'.repeat(60) + ' END'}, info);
+  assert.ok(long.full.endsWith('激光🌞-END.pdf'));
+  assert.ok(long.download.endsWith('-2610.26476.pdf'));
+  assert.ok(Buffer.byteLength(long.download, 'utf8') <= 255);
+  assert.equal(Buffer.from(long.download).toString('utf8'), long.download);
+});
+
+test('PDF preview accepts only official paper URLs and valid ID paths', () => {
+  const ctx = pdfContext();
+  for (const bad of [
+    'javascript:alert(1)', 'https://arxiv.org.attacker.test/abs/2610.26476',
+    'https://arxiv.org@attacker.test/abs/2610.26476', 'https://user@arxiv.org/pdf/2610.26476',
+    'https://arxiv.org/pdf/2610.26476/extra', 'https://arxiv.org/abs/2613.26476',
+    'https://arxiv.org/abs/%2F2610.26476', 'https://arxiv.org/search/?id=2610.26476'
+  ]) assert.equal(ctx.paperPdfSource(bad), null, bad);
+});
+
+function pdfDownloadHarness(request) {
+  const elements = {};
+  for (const id of ['downloadPaperPdf', 'pdfDownloadStatus', 'pdfDownloadFallback', 'suggestedPdfName']) {
+    elements[id] = {addEventListener(event, handler) {this[event] = handler;}, isConnected: true, hidden: true};
+  }
+  const downloads = [];
+  const revoked = [];
+  const cleanup = [];
+  let savedBlob;
+  const ctx = pdfContext({
+    document: {
+      addEventListener() {}, getElementById: id => elements[id], body: {appendChild() {}},
+      createElement: () => ({click() {downloads.push(this);}, remove() {this.removed = true;}})
+    },
+    URL: {
+      createObjectURL(blob) {savedBlob = blob; return 'blob:paper';},
+      revokeObjectURL(url) {revoked.push(url);}
+    },
+    setTimeout: callback => cleanup.push(callback), fetch: request
+  });
+  vm.runInContext("openPaperId = '2610.26476'", ctx);
+  const info = ctx.paperPdfSource(konzelPaper.url);
+  ctx.bindPdfDownload(info, ctx.paperPdfNames(konzelPaper, info));
+  return {elements, downloads, cleanup, revoked, savedBlob: () => savedBlob};
+}
+
+test('preview downloads the PDF bytes with its suggested name and releases the object URL', async () => {
+  const bytes = new Blob(['%PDF-1.7\n'], {type: 'application/pdf'});
+  const harness = pdfDownloadHarness(async (url, options) => {
+    assert.equal(url, 'https://arxiv.org/pdf/2610.26476');
+    assert.equal(options.credentials, 'omit');
+    return {ok: true, blob: async () => bytes};
+  });
+  await harness.elements.downloadPaperPdf.click();
+  assert.equal(harness.elements.suggestedPdfName.value, konzelFilename);
+  assert.equal(harness.downloads.length, 1);
+  assert.equal(harness.downloads[0].download, konzelFilename);
+  assert.equal(harness.downloads[0].href, 'blob:paper');
+  assert.ok(harness.downloads[0].removed);
+  assert.equal(harness.savedBlob(), bytes);
+  harness.cleanup.forEach(fn => fn());
+  assert.deepEqual(harness.revoked, ['blob:paper']);
+});
+
+test('blocked requests and non-PDF bodies show the manual save instructions', async () => {
+  for (const request of [
+    async () => {throw new TypeError('Failed to fetch');},
+    async () => ({ok: false}),
+    async () => ({ok: true, blob: async () => new Blob(['<html>Error</html>'], {type: 'application/pdf'})})
+  ]) {
+    const {elements, downloads} = pdfDownloadHarness(request);
+    await elements.downloadPaperPdf.click();
+    assert.equal(downloads.length, 0);
+    assert.match(elements.pdfDownloadStatus.textContent, /Open the PDF/);
+    assert.equal(elements.pdfDownloadFallback.hidden, false);
+    assert.equal(elements.suggestedPdfName.value, konzelFilename);
+    assert.equal(elements.downloadPaperPdf.disabled, false);
+  }
+});
+
+test('a PDF request cannot start another download after the preview was replaced', async () => {
+  let finish;
+  const {elements, downloads} = pdfDownloadHarness(() => new Promise(resolve => {finish = resolve;}));
+  const pending = elements.downloadPaperPdf.click();
+  assert.equal(elements.downloadPaperPdf.disabled, true);
+  elements.downloadPaperPdf.isConnected = false;
+  finish({ok: true, blob: async () => new Blob(['%PDF-1.7\n'])});
+  await pending;
+  assert.equal(downloads.length, 0);
+});
