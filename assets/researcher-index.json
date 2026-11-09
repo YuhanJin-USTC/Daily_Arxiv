@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "config_digest": "5be00deb90a1b16f9c41bc374f26d3fb3e76192cc83ff9b5d43e26a85fce7239",
+  "config_digest": "c59f7306269c2b73566a638f3066c884e317c58b1e3fe5e74c65568acc021105",
   "papers": {
     "2602.09941": [
       {
@@ -16,6 +16,15 @@
         "researcher_id": "hui-zhang",
         "display_name": "Hui Zhang",
         "author": "H. Zhang",
+        "kind": "suspected",
+        "basis": "unconfirmed_alias"
+      }
+    ],
+    "2602.17468": [
+      {
+        "researcher_id": "alexander-pukhov",
+        "display_name": "Alexander Pukhov",
+        "author": "A. Pukhov",
         "kind": "suspected",
         "basis": "unconfirmed_alias"
       }
@@ -140,6 +149,15 @@
         "basis": "full_name"
       }
     ],
+    "2604.00622": [
+      {
+        "researcher_id": "zhengming-sheng",
+        "display_name": "Zhengming Sheng",
+        "author": "Zhengming Sheng",
+        "kind": "reliable",
+        "basis": "full_name"
+      }
+    ],
     "2604.03568": [
       {
         "researcher_id": "hui-zhang",
@@ -199,6 +217,13 @@
     ],
     "2604.22369": [
       {
+        "researcher_id": "alexander-pukhov",
+        "display_name": "Alexander Pukhov",
+        "author": "Alexander Pukhov",
+        "kind": "reliable",
+        "basis": "full_name"
+      },
+      {
         "researcher_id": "liangliang-ji",
         "display_name": "Liangliang Ji",
         "author": "Liangliang Ji",
@@ -231,6 +256,15 @@
         "basis": "full_name"
       }
     ],
+    "2605.07929": [
+      {
+        "researcher_id": "alexander-pukhov",
+        "display_name": "Alexander Pukhov",
+        "author": "A. Pukhov",
+        "kind": "suspected",
+        "basis": "unconfirmed_alias"
+      }
+    ],
     "2605.14873": [
       {
         "researcher_id": "qing-jia",
@@ -248,6 +282,13 @@
       }
     ],
     "2605.19814": [
+      {
+        "researcher_id": "alexander-pukhov",
+        "display_name": "Alexander Pukhov",
+        "author": "Alexander Pukhov",
+        "kind": "reliable",
+        "basis": "full_name"
+      },
       {
         "researcher_id": "liangliang-ji",
         "display_name": "Liangliang Ji",
@@ -352,8 +393,8 @@
         "researcher_id": "jorge-vieira",
         "display_name": "Jorge Vieira",
         "author": "J. Vieira",
-        "kind": "suspected",
-        "basis": "unconfirmed_alias"
+        "kind": "reliable",
+        "basis": "confirmed_alias"
       }
     ],
     "2606.26054": [
@@ -427,6 +468,13 @@
         "researcher_id": "liangliang-ji",
         "display_name": "Liangliang Ji",
         "author": "L. Ji",
+        "kind": "suspected",
+        "basis": "unconfirmed_alias"
+      },
+      {
+        "researcher_id": "alexander-pukhov",
+        "display_name": "Alexander Pukhov",
+        "author": "A. Pukhov",
         "kind": "suspected",
         "basis": "unconfirmed_alias"
       }
@@ -505,6 +553,13 @@
     ],
     "2608.04932": [
       {
+        "researcher_id": "alexander-pukhov",
+        "display_name": "Alexander Pukhov",
+        "author": "Alexander Pukhov",
+        "kind": "reliable",
+        "basis": "full_name"
+      },
+      {
         "researcher_id": "liangliang-ji",
         "display_name": "Liangliang Ji",
         "author": "Liangliang Ji",
@@ -544,6 +599,24 @@
         "researcher_id": "liangliang-ji",
         "display_name": "Liangliang Ji",
         "author": "Liangliang Ji",
+        "kind": "reliable",
+        "basis": "full_name"
+      }
+    ],
+    "2609.02326": [
+      {
+        "researcher_id": "zhengming-sheng",
+        "display_name": "Zhengming Sheng",
+        "author": "Zheng-Ming Sheng",
+        "kind": "reliable",
+        "basis": "confirmed_alias"
+      }
+    ],
+    "2609.03550": [
+      {
+        "researcher_id": "zhengming-sheng",
+        "display_name": "Zhengming Sheng",
+        "author": "Zhengming Sheng",
         "kind": "reliable",
         "basis": "full_name"
       }
@@ -663,13 +736,22 @@
         "basis": "full_name"
       }
     ],
+    "2610.16910": [
+      {
+        "researcher_id": "alexander-pukhov",
+        "display_name": "Alexander Pukhov",
+        "author": "Alexander Pukhov",
+        "kind": "reliable",
+        "basis": "full_name"
+      }
+    ],
     "2610.26476": [
       {
         "researcher_id": "jorge-vieira",
         "display_name": "Jorge Vieira",
         "author": "J. Vieira",
-        "kind": "suspected",
-        "basis": "unconfirmed_alias"
+        "kind": "reliable",
+        "basis": "confirmed_alias"
       },
       {
         "researcher_id": "john-palastro",
@@ -688,11 +770,38 @@
         "basis": "unconfirmed_alias"
       }
     ],
+    "2610.31622": [
+      {
+        "researcher_id": "alexander-pukhov",
+        "display_name": "Alexander Pukhov",
+        "author": "Alexander Pukhov",
+        "kind": "reliable",
+        "basis": "full_name"
+      }
+    ],
+    "2611.04261": [
+      {
+        "researcher_id": "zhengming-sheng",
+        "display_name": "Zhengming Sheng",
+        "author": "Zheng-Ming Sheng",
+        "kind": "reliable",
+        "basis": "confirmed_alias"
+      }
+    ],
     "2611.04162": [
       {
         "researcher_id": "liangliang-ji",
         "display_name": "Liangliang Ji",
         "author": "Liangliang Ji",
+        "kind": "reliable",
+        "basis": "full_name"
+      }
+    ],
+    "2611.01640": [
+      {
+        "researcher_id": "alexander-pukhov",
+        "display_name": "Alexander Pukhov",
+        "author": "Alexander Pukhov",
         "kind": "reliable",
         "basis": "full_name"
       }
