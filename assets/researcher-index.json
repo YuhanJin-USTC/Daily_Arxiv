@@ -805,6 +805,15 @@
         "kind": "reliable",
         "basis": "full_name"
       }
+    ],
+    "2611.12410": [
+      {
+        "researcher_id": "zhengming-sheng",
+        "display_name": "Zhengming Sheng",
+        "author": "Zheng-Ming Sheng",
+        "kind": "reliable",
+        "basis": "confirmed_alias"
+      }
     ]
   }
 }
