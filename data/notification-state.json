@@ -45539,7 +45539,7 @@
         "last_error": null
       },
       "2611.12410": {
-        "status": "sending",
+        "status": "sent",
         "recipient": {
           "id": "shifengjia",
           "email": "jiashifeng@mail.ustc.edu.cn"
@@ -45628,7 +45628,8 @@
       ],
       "date": "2026-11-10",
       "site_url": "https://yuhanjin-ustc.github.io/Daily_Arxiv/",
-      "sender": "yhjin1005@qq.com"
+      "sender": "yhjin1005@qq.com",
+      "sent_date": "2026-11-10"
     }
   },
   "resolutions": [],
