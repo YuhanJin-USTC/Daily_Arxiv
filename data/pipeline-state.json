@@ -16180,6 +16180,616 @@
         "English": "complete",
         "Chinese": "complete"
       }
+    },
+    "2611.13436": {
+      "date": "2026-11-11",
+      "summary_sha256": "35c98793ae0ca4767690a5dab9b4348fab6827fabc536a866afe2f5f948e002e",
+      "source_sha256": "dc3d4a6561bc20cce4705fd12febdd7e116a28cd0392236222505457488c1c54",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.14082": {
+      "date": "2026-11-11",
+      "summary_sha256": "b0473b23ff07c235dfa391b67aa42f7b81e721d27d7424e08ae16f6e9a4570a3",
+      "source_sha256": "def415067a57ca776dab49cbffc387e81d67975f9e8fb2f11e8932817f8addd5",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.13800": {
+      "date": "2026-11-11",
+      "summary_sha256": "a2ebdc6e65e057ce7313c1da505db374141d6ba916d5219720db562de7e1d2ba",
+      "source_sha256": "0b80ab40113393e7c7498b30dbf36def5cf078d5ac497bcfee3d7366418ae8fc",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.14291": {
+      "date": "2026-11-11",
+      "summary_sha256": "846f68fef1b82de24d379a706030cdc9175641b4bc504c666a47d64e53026fcb",
+      "source_sha256": "56428167a3a665dfb6c9ffbefce46d1dbc963d2ec45c9fcb1ee89cfc2f5bd246",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.14205": {
+      "date": "2026-11-11",
+      "summary_sha256": "442203a6d63f6fb2225baf5a72f6bd258283ffb4c8f4956f1528e5657f47d8ce",
+      "source_sha256": "fad414e6a831ae6a62caa9dfa873f7cdfd198ee329877ee986935e039ea2ae6c",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.13665": {
+      "date": "2026-11-11",
+      "summary_sha256": "4848b6718e348381a28dc62df022b6c4e8f557727ec0e340aa03fee3128b199b",
+      "source_sha256": "7d06714e1e76872cfa5d4da17b2bce9ae38c30ed6f6d8d2972538b80eb6c2181",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.14158": {
+      "date": "2026-11-11",
+      "summary_sha256": "f3947a9b147a2dcef85791ce87ecff8ade73932c82650876f874b6d439f30af1",
+      "source_sha256": "24fbebe7b130aee80ac09709ecb787eeabfcae023a8097bf43b42874af192cd2",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.13522": {
+      "date": "2026-11-11",
+      "summary_sha256": "ae1757573b633c7c7b1e37b2d22e228138cbeff9460fa2ac3e71829e48c439a6",
+      "source_sha256": "0f910c6ca52a613f13a3c8118df22ac8b3a35f53a099c4c3ebca3e2958448263",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.13463": {
+      "date": "2026-11-11",
+      "summary_sha256": "a034ecea834b4d3e4f83f296c027b275961552bb5857e8ffd81d944117af507e",
+      "source_sha256": "b4e21db846ec7c48480b5bf47134ff12f3edec9496774044a7550a5783cd12c9",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.14119": {
+      "date": "2026-11-11",
+      "summary_sha256": "0a41f58ea0eb2fd5b2273602b103177e02ddac8c0815ef8144bf266f20675460",
+      "source_sha256": "cec6635e664a83c6e8f1920b90297dcbb87096a5a229ba94882a6c98a4e81b88",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.14348": {
+      "date": "2026-11-11",
+      "summary_sha256": "5108ac946adb888cbb58fede72067ac227a5303a687e5342d385958775c33bfb",
+      "source_sha256": "4f0ff098cdb87c4a54df2be41eac8221b65a65c82c22500648c70b881f69a3b9",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.14101": {
+      "date": "2026-11-11",
+      "summary_sha256": "a5dec9ff52bbcc3e129e8817872da4b531380245f6959df2787486447faa2669",
+      "source_sha256": "8a8dd40d127b209efed32a55c852be9f43d83af0aa5ec0677a30de00b94b1f04",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.14297": {
+      "date": "2026-11-11",
+      "summary_sha256": "50b22cc832b62e3bdcb9da6d931ae7aec6c03183597cf2d65b03a02defb4442d",
+      "source_sha256": "7b6a326cf4354294770788165902411dcec79de636c7338847f05eb42562aed7",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.14041": {
+      "date": "2026-11-11",
+      "summary_sha256": "745013d59b5d9210c9fce0c5332fc63381649cac8391b57af41359c4be896a1d",
+      "source_sha256": "17c19dbcaaca83dae0160ee7b2e708abf1e67c61ffe1c53ea8642aa799bade5e",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.14276": {
+      "date": "2026-11-11",
+      "summary_sha256": "065871649df8f5ad7fb60f5210dda84a9e183446d5d89776bfe4b93bb454f7eb",
+      "source_sha256": "de6ff25be463143c527fc8d1df95ae1cc7a167bfa50aa4d7f634027176794761",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.14023": {
+      "date": "2026-11-11",
+      "summary_sha256": "d106a1d52cb219527796fbded2b75beda58d98bef8c29edd06a0d819d09392ea",
+      "source_sha256": "033718e482587ae2fea4564bc39da8a9b7c3eac4605563e06a7b496926d5e3a5",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.14224": {
+      "date": "2026-11-11",
+      "summary_sha256": "779655a4cd60a0e6a288afc7eebd8a8a865469decf7040f1a981226dafce1671",
+      "source_sha256": "5c844d735192af6fdf7bd3d240b92c41a1e166669410293b29330dd04a6313a0",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.13899": {
+      "date": "2026-11-11",
+      "summary_sha256": "3a785da4a07d87e90592186b0ec73d05977a06b1bf5445ce7214d8c6be9dd7a4",
+      "source_sha256": "116c16db81394bdec6319d0f9578f68f64c216ae3ed7e94dbdbf1f3cdeb8e7cf",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.14104": {
+      "date": "2026-11-11",
+      "summary_sha256": "4d9eabdccc0e4912a01dd927b8ef8a4cc984797e538e30d6b5a2455503d4116c",
+      "source_sha256": "7f04613189820025597776da8a7bb9f1baf2280327a1370a060957f0362eb643",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.13736": {
+      "date": "2026-11-11",
+      "summary_sha256": "7c221f07ccd1047efdd2fe28fe5dad8c7d663e22d9a1ffc495f561b099cee084",
+      "source_sha256": "9c700cc8906399bef0a1a505e6a20868c9ffe013cc27b02af63b71eae52f18fc",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.14095": {
+      "date": "2026-11-11",
+      "summary_sha256": "e6cb29ed2842cd89577e294d97083cc1a4d41fefd841e2d0379f6e44b8b2acba",
+      "source_sha256": "614826145e34df5c4efe691cf9a2f203634194a5157710e44f422f8d85c97385",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.14474": {
+      "date": "2026-11-11",
+      "summary_sha256": "02c46e437012accb477ca1938aab520db1d1e142f0a336d39cde8d039b8f5ba2",
+      "source_sha256": "6734776460228a63b2869ac0b75b33d78c5197458db384e9079b126d16314470",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.13727": {
+      "date": "2026-11-11",
+      "summary_sha256": "84252ba134422fdb28c48bd773c432ba9c0589baefdf9b4196c0277632c31484",
+      "source_sha256": "5120d83ba304444ff971b1359d8a12343b994c674b2d4cefb12c4caa8d7b4001",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.13989": {
+      "date": "2026-11-11",
+      "summary_sha256": "913c91de4caa1dd81bb742b73befe975f0c735b0637a91839a249013075912ca",
+      "source_sha256": "4868c0dc16b07716175a523a96fd2576d14f515eb5c02e308ce26377a3b4050d",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.14293": {
+      "date": "2026-11-11",
+      "summary_sha256": "e9543511b4301b44e88d6ad00c09ae4af45dc76a40a7ff0eb87bb3c999ce6520",
+      "source_sha256": "6525b3740118835870a690bdcb01f53dd199d8019ca7d12c7022d5f35cc67b83",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.13737": {
+      "date": "2026-11-11",
+      "summary_sha256": "64f4d26100a9ae94c41638169edbdfafb8fa00241f08276b3d9b0bedd462497f",
+      "source_sha256": "4bce678c181e05130415f3ff88f31cd590e7bcd045f009da45bfc96671bd47d5",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.14133": {
+      "date": "2026-11-11",
+      "summary_sha256": "3e536ffbf35808c3514662fd1a84e58268d7ea87f51e54a25f15d49531422fe9",
+      "source_sha256": "2933ff28669b53c0dc5c349510b4998628d1aec730179df5232158ae9e861ff6",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.14193": {
+      "date": "2026-11-11",
+      "summary_sha256": "50383e34bfd861c718ef8ee843268a6dcac16626db54d2616701822b166c9073",
+      "source_sha256": "79b798f65ddc5363874409d39cecfbd599745df743b45752e2e331ca5f3c6cc7",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.13399": {
+      "date": "2026-11-11",
+      "summary_sha256": "d79a95a0869fa72d24c820d75343b867a79e915b4a1287f73b3fc035866cf681",
+      "source_sha256": "4786a9c87f79b531d70d35b44ae702a0ebbe913198e51b06bd5fa52351bfe41e",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.14112": {
+      "date": "2026-11-11",
+      "summary_sha256": "0747a730c94705c0bc1872580e8ff348fd10e28729bdd1245a7adcd8d4537ee2",
+      "source_sha256": "177e5dc6449db50ec0ce23ce7dd92c753dbe773b581ab0f3347a4f134af465a5",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.13793": {
+      "date": "2026-11-11",
+      "summary_sha256": "0f52052229d267f0bb76b963835ee4a7a6988f5ef5a5199f9afa09959306a3c5",
+      "source_sha256": "a1e53d6dad5912bb6f948b7af4098caf2b7862230bddaf1e5a7f0b78ac44b080",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.13063": {
+      "date": "2026-11-11",
+      "summary_sha256": "da2ffa55a3aa6d099afd4aef24dcff02546b1baab0b1da7d3df5fbf2a7d6e8b1",
+      "source_sha256": "2430ebdf9daedb9d350a448849f67d8c6e48d84b1a6954f22969c4577d11968d",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.14034": {
+      "date": "2026-11-11",
+      "summary_sha256": "844d412fced135cd45a0f6450c79e71d6463d911665a8c59d4abfcd6ae495c66",
+      "source_sha256": "15b7364a4b918f99ca0b6bcf95fce95b447fcaea800459bb9f1895303820c1a5",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.13587": {
+      "date": "2026-11-11",
+      "summary_sha256": "dd3508910c5b3524ac6f4d09b7384e54457e5e9aee17524d9ec5166f6080f2b4",
+      "source_sha256": "46924f1d608c685e7c4c9297cfe5bb914e74186fa7109fabf0d2014def81b044",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.12965": {
+      "date": "2026-11-11",
+      "summary_sha256": "6e84fbb469d26578b013f9db5d6d4c6fffdb25cfc77f3e4d817417f22c42feb8",
+      "source_sha256": "124f256df24fafb84e9c4c95f8c450025f745a4597c982ff9ef1227c49248a62",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.13764": {
+      "date": "2026-11-11",
+      "summary_sha256": "4727b4f037e493f96df0b6ec26db8bfff5b8378d78a8b9accdd168f6031ef52f",
+      "source_sha256": "48d3750ce601a497ea859b1d8374cad2b501723badd9081d512e2a6e2b5c9288",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.13179": {
+      "date": "2026-11-11",
+      "summary_sha256": "1b1725b17150560b978580f08536b448ce44375d5532498b0d19e444aea0cac6",
+      "source_sha256": "f39a6929bf2ed713de28e39116e0993d8027b8da11c539beac59ec6a00aba9c3",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.12963": {
+      "date": "2026-11-11",
+      "summary_sha256": "3c2226c4fef18ddf5c6334c393ca08e4f1ce3864a5514c1ddc1580e550dffda2",
+      "source_sha256": "887e7eb3f4223ba0251a566f4e9f6ebc38d3d219e73e22f9eb257a4e72209066",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.13746": {
+      "date": "2026-11-11",
+      "summary_sha256": "0eab35ff4420f9299ec9c965f0c85a722fc9ec77f016f44b818d23113f6f5a37",
+      "source_sha256": "4d50c5ed92892ea946d3bfaefe7f41be1d7950127ea2ff396d726485cf9d03d6",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.13158": {
+      "date": "2026-11-11",
+      "summary_sha256": "23da986564c9ba955d4ac9071f97efbbc88b1cdf42ef3522aaa9198c51be7288",
+      "source_sha256": "3dd74ae1d21c6654b50179a7b7ffcac2db893648bd17ff2ed39e84072fc51e77",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.14235": {
+      "date": "2026-11-11",
+      "summary_sha256": "a5e6561be8cf987097c53646b3bfc8cd538cc8cfd0a0b386ac99487cd375f094",
+      "source_sha256": "548c6d1c0759f30a6abf42f4ee0e7080fca9c2dd2dfaade681cef80d007f3535",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.13743": {
+      "date": "2026-11-11",
+      "summary_sha256": "c59f992aad08a3a256193e5e874b49d94e535a242be61169f60f3558b51d528f",
+      "source_sha256": "efc54fa7540f823a152e6d1d8b9af895211b49676d447f94fa096ec06678b654",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.14441": {
+      "date": "2026-11-11",
+      "summary_sha256": "639563962b42c447a2eaf0b2c29e7c4d3d54805edaeb8cf961e94ca3d2bf9f63",
+      "source_sha256": "e1e91d0e489e9520bd4a62b51b47d826dbfe4a220b2e686c419e5c18ed7fb92a",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.14096": {
+      "date": "2026-11-11",
+      "summary_sha256": "60485c9906a0a1ec6a068dc6849367a96a16b4e78d83a0a9c2f53126380abb67",
+      "source_sha256": "59a80c2870b5af9e9cfd70ca9dc7c0a598987096b289ff15de9d4d41b71be044",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.13722": {
+      "date": "2026-11-11",
+      "summary_sha256": "3da5bf9370eba95774ffd1a3cbf0190f5b8615f8bfb3b19eeae532144cf795ae",
+      "source_sha256": "99cb874936dc487cec71712db55674ec55f9e1dc0a112914036c3bd1398aa239",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.13570": {
+      "date": "2026-11-11",
+      "summary_sha256": "474115e864de474a9f28cc481ec017032d93aab3a8795396597660a33e26a897",
+      "source_sha256": "e11d58e3d6c9c12c3c59082aa330ccee35fe986f5b93ad79ffda40fed9b0a8d3",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.13969": {
+      "date": "2026-11-11",
+      "summary_sha256": "8c6b07b9009f75b0ff249843031cc873c1d32428f266d5114bf4593c0e6e8eae",
+      "source_sha256": "b9847f4dcaf267c57ca94b845ccabae82cb987cfe938386fca51f5f7694830f9",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.13663": {
+      "date": "2026-11-11",
+      "summary_sha256": "148ef7e926efa34c07b421d3eff8e2e808b8d1f708f20a3ae6777323307e7043",
+      "source_sha256": "75f76d38b1dbdb5d4eea1dff93cb1a88bab61b5acad8542fc53ae924775e9046",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.13317": {
+      "date": "2026-11-11",
+      "summary_sha256": "2cf32c2e97e5ada7cf70524ba414b2ef4e850913741ffcdf284b3544dc28fd39",
+      "source_sha256": "4ada2613082650d50e1618424151d736ba139a25d8deab49bee20c091d0fe46c",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.13589": {
+      "date": "2026-11-11",
+      "summary_sha256": "abe3d3f343a4e09da2ced9244eee6469a09ea5917d222abbb4852f4c8a1a55a6",
+      "source_sha256": "fcf4cae48e997f20a1eec063ab1072ac4d1326b9d61bf3c4407a28b9ca90d64d",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.12926": {
+      "date": "2026-11-11",
+      "summary_sha256": "0d99585ab786b73b5a1d5adbf74692516c322ebf03b3f5af96c3e9e0772ed1f3",
+      "source_sha256": "9508507044e8f7a14d7cc73c2f211233007be3f7a4f1c79fb7b2f1f73c51e99a",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.13476": {
+      "date": "2026-11-11",
+      "summary_sha256": "b750904fd999966a7ee83ed7d352cd8498ac43be88eb0a208dc333a42cca91eb",
+      "source_sha256": "8bc0be9a00c3e0fb836ad72c54429a75826e6af6adb23164592c2e1d32763083",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.12895": {
+      "date": "2026-11-11",
+      "summary_sha256": "2d730ff0df4689f0c9f17e36aef110b30c2715ecad305176270ab9080052c8c8",
+      "source_sha256": "ef5d9f74b3f0e8e9167a271579aaf844f6610aa0bf30c82bea6ca991714ced51",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.13341": {
+      "date": "2026-11-11",
+      "summary_sha256": "336e948172bb020014b8a89a320225ede2a62787ed347aa0a4fe7957ad15cf5c",
+      "source_sha256": "7ccc89bec5ec4edea8fa6b607d63886dc1b05492c6d33987899cfd99bf479c55",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.13328": {
+      "date": "2026-11-11",
+      "summary_sha256": "b1730f52da84cb837ec3b47bc35d5e0907a8eba3acef8cdc2e2b3fef5b45fb24",
+      "source_sha256": "8e9e47e8f7094c79dac198f0d88eec395c4790f7f14416112e7ef90a40258ded",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.13242": {
+      "date": "2026-11-11",
+      "summary_sha256": "706cb231c24de4ba4cca726d1f9e01cd3dc75a5a5aaaad2c63a69e19385706ec",
+      "source_sha256": "c5ba8d7d413ee695a43e1892b191275a1c4f7305f5bcb255aec67b55087bffc9",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.14447": {
+      "date": "2026-11-11",
+      "summary_sha256": "9856c6e2734cae51ab68312bd999c7b6c80c8b6a3d7d8e4fcb4376c35e454b3f",
+      "source_sha256": "23dc696493f1d3b5a37dda557ce264b7c3af4c926526adb08ec560d0a8e944d1",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.14044": {
+      "date": "2026-11-11",
+      "summary_sha256": "fa3db4a88eeb17ec994fa3e7bc78acca2ba936c2bda0728f49a23d85aeb647ca",
+      "source_sha256": "5a33258a41954138b9c90d930ad59c23eb6d180572f74e822eaa999f3a949cbd",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.13936": {
+      "date": "2026-11-11",
+      "summary_sha256": "ee7a6bb7c7e57c9d05da2e735ce526b38dbdc69efad19d4b061dbc1ff7ed12b1",
+      "source_sha256": "c4b2e554d42d38beb629fa28a2462e195ea1ecff0dac0846d0c005bef2f28a83",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.13351": {
+      "date": "2026-11-11",
+      "summary_sha256": "5b702ea1a276e506341db448faea79fcbf21839b3d6b15d6019aecabf7ed6866",
+      "source_sha256": "28928674cc124d0f331d99fc2bfead1fbe27a0d64bf6560c0119439068713ad2",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
+    },
+    "2611.13319": {
+      "date": "2026-11-11",
+      "summary_sha256": "013f75679300ae13ed9def7fb86ebd7627c4986abddad5d86b2814d72fb7c2cd",
+      "source_sha256": "1fde448c58989fcb24a75fb5bf5e92976579e10a36ecee9faaac291e84b01ab5",
+      "topics_enabled": true,
+      "languages": {
+        "English": "pending",
+        "Chinese": "pending"
+      }
     }
   }
 }
