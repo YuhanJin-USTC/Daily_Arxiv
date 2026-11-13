@@ -53354,7 +53354,7 @@
         "last_error": null
       },
       "2611.17279": {
-        "status": "sending",
+        "status": "sent",
         "recipient": {
           "id": "xiangtang",
           "email": "xiangtang@mail.ustc.edu.cn"
@@ -53505,7 +53505,8 @@
       ],
       "date": "2026-11-13",
       "site_url": "https://yuhanjin-ustc.github.io/Daily_Arxiv/",
-      "sender": "yhjin1005@qq.com"
+      "sender": "yhjin1005@qq.com",
+      "sent_date": "2026-11-13"
     }
   },
   "resolutions": [],
