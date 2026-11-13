@@ -814,6 +814,15 @@
         "kind": "reliable",
         "basis": "confirmed_alias"
       }
+    ],
+    "2611.17279": [
+      {
+        "researcher_id": "john-palastro",
+        "display_name": "John P. Palastro",
+        "author": "John Palastro",
+        "kind": "reliable",
+        "basis": "confirmed_alias"
+      }
     ]
   }
 }
