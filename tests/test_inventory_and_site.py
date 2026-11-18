@@ -208,7 +208,22 @@ class InventoryTests(unittest.TestCase):
             output.write_bytes(b"previous raw bytes")
             client = Mock()
             client.results.side_effect = [
-                [arxiv.Result(entry_id=ids[1], title="A", summary="Abstract")],
+                [
+                    arxiv.Result(
+                        entry_id=ids[1],
+                        title="A",
+                        summary="Abstract",
+                        authors=[arxiv.Result.Author("A")],
+                        categories=["physics.optics"],
+                    ),
+                    arxiv.Result(
+                        entry_id=ids[0],
+                        title="B",
+                        summary="",
+                        authors=[arxiv.Result.Author("B")],
+                        categories=["physics.optics"],
+                    ),
+                ],
                 [],
                 [],
                 arxiv.HTTPError("", 0, 503),

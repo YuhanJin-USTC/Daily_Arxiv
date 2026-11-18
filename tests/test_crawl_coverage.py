@@ -117,48 +117,71 @@ class MetadataTests(unittest.TestCase):
 
     def test_short_atom_page_requeries_only_missing_ids_using_locked_client(self):
         ids = ["2610.24394", "2610.24296"]
+        header = """<feed xmlns="http://www.w3.org/2005/Atom"
+            xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/"
+            xmlns:arxiv="http://arxiv.org/schemas/atom">
+            <opensearch:totalResults>2</opensearch:totalResults>"""
 
-        def feed(identifier, total):
-            return Mock(
-                status_code=200,
-                content=f"""
-                <feed xmlns="http://www.w3.org/2005/Atom"
-                      xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/"
-                      xmlns:arxiv="http://arxiv.org/schemas/atom">
-                  <opensearch:totalResults>{total}</opensearch:totalResults>
-                  <entry>
-                    <id>http://arxiv.org/abs/{identifier}v2</id>
-                    <updated>2026-10-19T00:00:00Z</updated>
-                    <published>2026-10-19T00:00:00Z</published>
-                    <title>Paper</title><summary>Abstract</summary>
-                    <author><name>A</name></author><category term="physics.optics"/>
-                    <arxiv:primary_category term="physics.optics"/><link href="https://arxiv.org"/>
-                  </entry>
-                </feed>
-            """.encode(),
-            )
+        def entry(identifier):
+            return f"""<entry><id>http://arxiv.org/abs/{identifier}v2</id>
+                <updated>2026-10-19T00:00:00Z</updated><published>2026-10-19T00:00:00Z</published>
+                <title>0</title><summary>Abstract</summary><author><name>A</name></author>
+                <category term="physics.optics"/><arxiv:primary_category term="physics.optics"/>
+                <link href="https://arxiv.org"/></entry>"""
 
-        with (
-            patch(
-                "requests.Session.get", side_effect=[feed(ids[1], 2), feed(ids[0], 1)]
-            ) as get,
-            patch("daily_arxiv.pipelines.time.sleep") as sleep,
-        ):
-            client = MetadataClient()
-            self.assertEqual(
-                (client.page_size, client.delay_seconds, client.num_retries), (50, 3, 0)
+        first, second = entry(ids[1]), entry(ids[0])
+        cases = {
+            "short page": "</feed>",
+            "cut after entry ID": second.split("<updated>")[0],
+            "cut before entry end": second.removesuffix("</entry>"),
+            "missing source title": second.replace("<title>0</title>", "") + "</feed>",
+            "empty abstract": second.replace("Abstract", "") + "</feed>",
+            "missing SDK date": second.replace(
+                "<published>2026-10-19T00:00:00Z</published>", ""
             )
+            + "</feed>",
+        }
+        for case, tail in cases.items():
+            first_page = Mock(status_code=200, content=(header + first + tail).encode())
+            recovery = Mock(
+                status_code=200, content=(header + second + "</feed>").encode()
+            )
+            with (
+                self.subTest(case=case),
+                patch(
+                    "requests.Session.get", side_effect=[first_page, recovery]
+                ) as get,
+                patch("daily_arxiv.pipelines.time.sleep") as sleep,
+            ):
+                client = MetadataClient()
+                self.assertEqual(
+                    (client.page_size, client.delay_seconds, client.num_retries),
+                    (50, 3, 0),
+                )
+                received = {}
+                fetch_batch(client, ids, received, [])
+                calls = [
+                    parse_qs(urlsplit(args.args[0]).query)
+                    for args in get.call_args_list
+                ]
+                self.assertEqual(
+                    [query["id_list"] for query in calls], [[",".join(ids)], [ids[0]]]
+                )
+                self.assertTrue(all(query["start"] == ["0"] for query in calls))
+                self.assertTrue(
+                    all(args.kwargs["timeout"] == 60 for args in get.call_args_list)
+                )
+                sleep.assert_any_call(30)
+                self.assertEqual(set(received), set(ids))
+                self.assertEqual(received[ids[1]]["title"], "0")
+        # A missing feed end tag does not invalidate entries already closed.
+        without_feed_end = Mock(
+            status_code=200, content=(header + first + second).encode()
+        )
+        with patch("requests.Session.get", return_value=without_feed_end) as get:
             received = {}
-            fetch_batch(client, ids, received, [])
-        calls = [parse_qs(urlsplit(args.args[0]).query) for args in get.call_args_list]
-        self.assertEqual(
-            [query["id_list"] for query in calls], [[",".join(ids)], [ids[0]]]
-        )
-        self.assertTrue(all(query["start"] == ["0"] for query in calls))
-        self.assertTrue(
-            all(args.kwargs["timeout"] == 60 for args in get.call_args_list)
-        )
-        sleep.assert_any_call(30)
+            fetch_batch(MetadataClient(), ids, received, [])
+        get.assert_called_once()
         self.assertEqual(set(received), set(ids))
 
     def test_native_scrapy_pipeline_preserves_discovery_and_metadata_fields(self):

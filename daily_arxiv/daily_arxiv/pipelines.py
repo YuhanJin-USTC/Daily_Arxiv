@@ -1,8 +1,9 @@
 """Fetch arXiv metadata by normalized identity, preserving listing order."""
 
-from functools import partial
+from io import BytesIO
 import logging
 import time
+from xml.etree import ElementTree
 
 import arxiv
 from requests import exceptions
@@ -16,14 +17,42 @@ logger = logging.getLogger(__name__)
 class MetadataClient(arxiv.Client):
     def __init__(self):
         super().__init__(page_size=BATCH_SIZE, delay_seconds=3, num_retries=0)
-        # arxiv.py 2.1.3 supplies no timeout on its session's GET.
-        self._session.get = partial(self._session.get, timeout=60)
+        get = self._session.get
 
-    def _parse_feed(self, url, first_page=True, _try_index=0):
-        # A batch fits in one page. Recover a short page using only missing IDs.
-        if not first_page:
-            raise arxiv.UnexpectedEmptyPageError(url, 0, {})
-        return super()._parse_feed(url, first_page, _try_index)
+        def get_page(url, **kwargs):
+            response = get(url, timeout=60, **kwargs)
+            self._page_body = response.content
+            return response
+
+        self._session.get = get_page
+
+    def results(self, search, offset=0):
+        # Use one SDK request. A short page is retried with the missing IDs.
+        feed = self._parse_feed(self._format_url(search, offset, self.page_size))
+        entries = feed.entries
+        if feed.bozo:
+            # feedparser can return an unfinished entry with plausible-looking fields.
+            closed = 0
+            try:
+                for _, element in ElementTree.iterparse(BytesIO(self._page_body)):
+                    if element.tag == "{http://www.w3.org/2005/Atom}entry":
+                        closed += 1
+            except ElementTree.ParseError:
+                pass
+            entries = entries[:closed]
+        for entry in entries:
+            if not entry.get("id"):
+                continue
+            # Preserve the ID for verification even when the body is incomplete.
+            if entry.get("title"):
+                try:
+                    paper = arxiv.Result._from_feed_entry(entry)
+                except (AttributeError, KeyError, TypeError, ValueError):
+                    pass
+                else:
+                    yield paper
+                    continue
+            yield arxiv.Result(entry_id=entry.id)
 
 
 class MetadataError(ValueError):
@@ -41,6 +70,11 @@ def fetch_batch(client, pending, received, attempts):
                 identifier = paper_id(paper.entry_id)
                 if identifier not in pending:
                     raise MetadataError(f"unexpected_metadata_id:{identifier}")
+                # The abstract/PDF links are derived from the validated ID.
+                if not all(
+                    (paper.title, paper.summary, paper.authors, paper.categories)
+                ):
+                    continue
                 row = {
                     "id": identifier,
                     "pdf": f"https://arxiv.org/pdf/{identifier}",
