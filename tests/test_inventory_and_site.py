@@ -11,6 +11,8 @@ from types import SimpleNamespace
 from unittest.mock import Mock, patch
 from urllib.parse import unquote, urlsplit
 
+import arxiv
+
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "daily_arxiv"))
 spec = importlib.util.spec_from_file_location(
@@ -20,6 +22,7 @@ crawl = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(crawl)
 from ai.config import settings
 from scripts.build_site import build
+from scripts.daily_update import raw_update
 
 
 class PageReferences(HTMLParser):
@@ -34,6 +37,64 @@ class PageReferences(HTMLParser):
 
 
 class InventoryTests(unittest.TestCase):
+    def test_daily_fetches_contiguous_batches_after_verified_listing_in_listing_order(
+        self,
+    ):
+        ids = ["physics/0601001", *[f"2610.{n:05d}" for n in range(50, 0, -1)]]
+        listings = [
+            {"id": identifier, "announcement_date": f"2026-10-{19 + n % 2}"}
+            for n, identifier in enumerate(ids)
+        ]
+        audit = {"complete": True, "errors": [], "expected_ids": sorted(ids)}
+
+        def reverse_results(search):
+            return [
+                arxiv.Result(
+                    entry_id=f"https://arxiv.org/abs/{identifier}v3",
+                    title=identifier,
+                    summary="Summary",
+                    authors=[arxiv.Result.Author("A")],
+                    categories=["physics.optics"],
+                )
+                for identifier in reversed(search.id_list)
+            ]
+
+        client = Mock()
+        client.results.side_effect = reverse_results
+        with (
+            patch.object(crawl, "recent_listings", return_value=(listings, audit)),
+            patch.object(crawl, "MetadataClient", return_value=client),
+        ):
+            rows, audit = crawl.recent(None, None)
+        batches = [request.args[0].id_list for request in client.results.call_args_list]
+        self.assertEqual(batches, [ids[:50], ids[50:]])
+        self.assertEqual(
+            [batch[0]["requested_ids"] for batch in audit["metadata_batches"]], batches
+        )
+        self.assertEqual(audit["metadata_ids"], audit["expected_ids"])
+        self.assertTrue(audit["complete"])
+        self.assertEqual(audit["missing_metadata_ids"], [])
+        self.assertEqual([r["id"] for r in rows], ids)
+        self.assertEqual([r["title"] for r in rows], ids)
+        self.assertEqual(
+            [r["announcement_date"] for r in rows],
+            [r["announcement_date"] for r in listings],
+        )
+
+    def test_incomplete_listing_or_missing_listing_item_never_requests_metadata(self):
+        for complete in (False, True):
+            audit = {"complete": complete, "errors": [], "expected_ids": ["2610.26164"]}
+            with (
+                self.subTest(complete=complete),
+                patch.object(crawl, "recent_listings", return_value=([], audit)),
+                patch.object(crawl, "MetadataClient") as factory,
+            ):
+                rows, audit = crawl.recent(None, None)
+            self.assertFalse(audit["complete"])
+            self.assertEqual(rows, [])
+            self.assertEqual(audit["missing_metadata_ids"], ["2610.26164"])
+            factory.assert_not_called()
+
     def test_subset_uses_inventory_members_and_skips_already_published(self):
         inventory = ROOT / "docs/audits/arxiv-2026-10-20.json"
         items = json.loads(inventory.read_text())["papers"]
@@ -81,12 +142,26 @@ class InventoryTests(unittest.TestCase):
                     categories=["physics.plasm-ph"],
                     comment=None,
                 )
-                for i in sorted(selected)
+                for i in sorted(selected, reverse=True)
             ]
             client = Mock(results=Mock(return_value=iter(papers)))
             with patch("arxiv.Client", return_value=client):
                 rows, audit = crawl.archived_inventory(inventory, Path(temp))
-            self.assertEqual({r["id"] for r in rows}, selected)
+            self.assertEqual([r["id"] for r in rows], sorted(selected, reverse=True))
+            self.assertEqual(
+                list(rows[0]),
+                [
+                    "id",
+                    "title",
+                    "summary",
+                    "authors",
+                    "categories",
+                    "abs",
+                    "pdf",
+                    "comment",
+                    "announcement_date",
+                ],
+            )
             self.assertEqual(set(client.results.call_args.args[0].id_list), selected)
             self.assertEqual(len(audit["excluded_published_ids"]), 59)
             history.write_text(
@@ -112,6 +187,7 @@ class InventoryTests(unittest.TestCase):
             ]
             audit = {
                 "complete": True,
+                "errors": [],
                 "expected_ids": ["2610.26164"],
                 "excluded_published_ids": [],
             }
@@ -121,6 +197,67 @@ class InventoryTests(unittest.TestCase):
             ):
                 self.assertEqual(crawl.main(), 1)
             self.assertEqual(output.read_bytes(), b"previous output")
+
+    def test_unresolved_daily_metadata_preserves_previous_raw_and_blocks_publication(
+        self,
+    ):
+        ids = ["2610.24394", "2610.26164"]
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            output, coverage = root / "raw.jsonl", root / "coverage.json"
+            output.write_bytes(b"previous raw bytes")
+            client = Mock()
+            client.results.side_effect = [
+                [arxiv.Result(entry_id=ids[1], title="A", summary="Abstract")],
+                [],
+                [],
+                arxiv.HTTPError("", 0, 503),
+            ]
+            listings = [{"id": i, "announcement_date": "2026-10-20"} for i in ids]
+            audit = {
+                "complete": True,
+                "errors": [],
+                "expected_ids": ids,
+                "excluded_published_ids": [],
+            }
+            with (
+                patch.object(
+                    sys,
+                    "argv",
+                    [
+                        "crawl",
+                        "--output",
+                        str(output),
+                        "--audit",
+                        str(coverage),
+                        "--history-dir",
+                        temp,
+                    ],
+                ),
+                patch.object(crawl, "recent_listings", return_value=(listings, audit)),
+                patch.object(crawl, "MetadataClient", return_value=client),
+                patch("daily_arxiv.pipelines.time.sleep"),
+            ):
+                self.assertEqual(crawl.main(), 1)
+            self.assertEqual(output.read_bytes(), b"previous raw bytes")
+            saved = json.loads(coverage.read_text())
+            self.assertFalse(saved["complete"])
+            self.assertEqual(saved["errors"], ["metadata_retries_exhausted:http_503"])
+            self.assertEqual(saved["metadata_ids"], [ids[1]])
+            self.assertEqual(saved["missing_metadata_ids"], [ids[0]])
+            attempts = saved["metadata_batches"][0]
+            self.assertEqual(
+                [attempt["requested_ids"] for attempt in attempts],
+                [ids, [ids[0]], [ids[0]], [ids[0]]],
+            )
+            publish = Mock()
+            (root / "data").mkdir()
+            with self.assertRaisesRegex(ValueError, "metadata_retries_exhausted"):
+                raw_update(
+                    root, output, coverage, "2026-10-20", root / "staging", {}, publish
+                )
+            publish.assert_not_called()
+            self.assertFalse((root / "staging").exists())
 
 
 class SiteTests(unittest.TestCase):

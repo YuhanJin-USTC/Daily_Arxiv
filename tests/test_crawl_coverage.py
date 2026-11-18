@@ -5,8 +5,11 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, call, patch
+from urllib.parse import parse_qs, urlsplit
 
+import arxiv
+from requests import exceptions
 import scrapy
 from scrapy.http import HtmlResponse
 
@@ -14,6 +17,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "daily_arxiv"))
 from daily_arxiv.spiders.arxiv import ArxivSpider
 from daily_arxiv.validate_crawl import validate
 from daily_arxiv.check_stats import deduplicate
+from daily_arxiv.pipelines import (
+    DailyArxivPipeline,
+    MetadataClient,
+    MetadataError,
+    fetch_batch,
+)
 from ai.config import settings
 
 
@@ -29,6 +38,145 @@ def response(rows, total=None):
         body=body.encode(),
         encoding="utf-8",
     )
+
+
+def api_paper(identifier, title="Paper"):
+    return arxiv.Result(
+        entry_id=f"http://arxiv.org/abs/{identifier}v2",
+        title=title,
+        summary="Abstract",
+        authors=[arxiv.Result.Author("A")],
+        categories=["physics.plasm-ph"],
+    )
+
+
+class MetadataTests(unittest.TestCase):
+    def test_partial_and_interrupted_responses_retry_only_missing_ids(self):
+        ids = ["2610.24394", "physics/0601001", "2610.24296"]
+
+        def interrupted():
+            yield api_paper(ids[1])
+            raise exceptions.ChunkedEncodingError()
+
+        client = Mock()
+        client.results.side_effect = [
+            interrupted(),
+            [api_paper(ids[2])],
+            arxiv.HTTPError("", 0, 429),
+            [api_paper(ids[0])],
+        ]
+        accepted, attempts = {}, []
+        with patch("daily_arxiv.pipelines.time.sleep") as sleep:
+            fetch_batch(client, ids, accepted, attempts)
+        self.assertEqual(sleep.call_args_list, [call(30), call(120), call(300)])
+        self.assertEqual(
+            [args.args[0].id_list for args in client.results.call_args_list],
+            [ids, [ids[0], ids[2]], [ids[0]], [ids[0]]],
+        )
+        self.assertEqual(
+            [attempt.get("error") for attempt in attempts],
+            ["ChunkedEncodingError", "partial_response", "http_429", None],
+        )
+        self.assertEqual(set(accepted), set(ids))
+        self.assertEqual(accepted[ids[1]]["pdf"], f"https://arxiv.org/pdf/{ids[1]}")
+
+    def test_transient_errors_retry_permanent_http_and_bad_identities_stop(self):
+        identifier = "2610.24394"
+        paper = api_paper(identifier)
+        for failure in (
+            arxiv.HTTPError("", 0, 503),
+            exceptions.Timeout(),
+            exceptions.ConnectionError(),
+        ):
+            client = Mock()
+            client.results.side_effect = [failure, [paper]]
+            with (
+                self.subTest(error=failure),
+                patch("daily_arxiv.pipelines.time.sleep") as sleep,
+            ):
+                fetch_batch(client, [identifier], {}, [])
+                sleep.assert_called_once_with(30)
+        for first, reason in [
+            (arxiv.HTTPError("", 0, 404), "http_404"),
+            ([api_paper("2610.24296")], "unexpected_metadata_id:2610.24296"),
+            (
+                [paper, api_paper(identifier, title="Other")],
+                "conflicting_metadata:2610.24394",
+            ),
+        ]:
+            client = Mock()
+            client.results.side_effect = [first]
+            with (
+                self.subTest(reason=reason),
+                patch("daily_arxiv.pipelines.time.sleep") as sleep,
+                self.assertRaisesRegex(MetadataError, reason),
+            ):
+                fetch_batch(client, [identifier], {}, [])
+            sleep.assert_not_called()
+            client.results.assert_called_once()
+
+    def test_short_atom_page_requeries_only_missing_ids_using_locked_client(self):
+        ids = ["2610.24394", "2610.24296"]
+
+        def feed(identifier, total):
+            return Mock(
+                status_code=200,
+                content=f"""
+                <feed xmlns="http://www.w3.org/2005/Atom"
+                      xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/"
+                      xmlns:arxiv="http://arxiv.org/schemas/atom">
+                  <opensearch:totalResults>{total}</opensearch:totalResults>
+                  <entry>
+                    <id>http://arxiv.org/abs/{identifier}v2</id>
+                    <updated>2026-10-19T00:00:00Z</updated>
+                    <published>2026-10-19T00:00:00Z</published>
+                    <title>Paper</title><summary>Abstract</summary>
+                    <author><name>A</name></author><category term="physics.optics"/>
+                    <arxiv:primary_category term="physics.optics"/><link href="https://arxiv.org"/>
+                  </entry>
+                </feed>
+            """.encode(),
+            )
+
+        with (
+            patch(
+                "requests.Session.get", side_effect=[feed(ids[1], 2), feed(ids[0], 1)]
+            ) as get,
+            patch("daily_arxiv.pipelines.time.sleep") as sleep,
+        ):
+            client = MetadataClient()
+            self.assertEqual(
+                (client.page_size, client.delay_seconds, client.num_retries), (50, 3, 0)
+            )
+            received = {}
+            fetch_batch(client, ids, received, [])
+        calls = [parse_qs(urlsplit(args.args[0]).query) for args in get.call_args_list]
+        self.assertEqual(
+            [query["id_list"] for query in calls], [[",".join(ids)], [ids[0]]]
+        )
+        self.assertTrue(all(query["start"] == ["0"] for query in calls))
+        self.assertTrue(
+            all(args.kwargs["timeout"] == 60 for args in get.call_args_list)
+        )
+        sleep.assert_any_call(30)
+        self.assertEqual(set(received), set(ids))
+
+    def test_native_scrapy_pipeline_preserves_discovery_and_metadata_fields(self):
+        identifier = "physics/0601001"
+        listing = {
+            "id": identifier,
+            "categories": ["physics.optics"],
+            "announcement_date": "2026-10-19",
+        }
+        with patch.object(
+            MetadataClient, "results", return_value=[api_paper(identifier)]
+        ):
+            row = DailyArxivPipeline().process_item(listing, None)
+        self.assertEqual(row["announcement_date"], listing["announcement_date"])
+        self.assertEqual(row["id"], identifier)
+        self.assertEqual(row["categories"], ["physics.plasm-ph"])
+        self.assertEqual(row["abs"], f"https://arxiv.org/abs/{identifier}")
+        self.assertEqual(row["authors"], ["A"])
 
 
 class CrawlTests(unittest.TestCase):
