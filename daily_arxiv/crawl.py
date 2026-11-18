@@ -9,6 +9,7 @@ import tempfile
 sys.path.insert(1, str(Path(__file__).resolve().parents[1]))
 from ai.storage import write_json, write_jsonl
 from daily_arxiv.history import load_history_ids, paper_id
+from daily_arxiv.pipelines import BATCH_SIZE, MetadataClient, MetadataError, fetch_batch
 from daily_arxiv.validate_crawl import validate
 
 
@@ -66,7 +67,7 @@ def archived_inventory(path, history_dir, ids=()):
     return rows, audit
 
 
-def recent(history_dir, target_date):
+def recent_listings(history_dir, target_date):
     from scrapy import signals
     from scrapy.crawler import CrawlerProcess
     from scrapy.settings import Settings
@@ -76,6 +77,7 @@ def recent(history_dir, target_date):
     config = Settings()
     config.setmodule("daily_arxiv.settings")
     config.set("FEEDS", {})
+    config.set("ITEM_PIPELINES", {})
     process = CrawlerProcess(config)
     crawler = process.create_crawler(ArxivSpider)
 
@@ -94,6 +96,40 @@ def recent(history_dir, target_date):
     audit = crawler.spider.audit(crawler.stats.get_value("finish_reason"))
     audit["errors"].extend(errors)
     audit["complete"] = audit["complete"] and not errors
+    return rows, audit
+
+
+def recent(history_dir, target_date):
+    listings, audit = recent_listings(history_dir, target_date)
+    expected = set(audit["expected_ids"])
+    received = {}
+    audit["metadata_batches"] = []
+    rows = []
+    if audit["complete"] and (expected or listings):
+        try:
+            identifiers = [paper_id(row["id"]) for row in listings]
+            if len(identifiers) != len(expected) or set(identifiers) != expected:
+                raise MetadataError("listing_items_differ_from_expected_ids")
+            client = MetadataClient()
+            for start in range(0, len(identifiers), BATCH_SIZE):
+                attempts = []
+                audit["metadata_batches"].append(attempts)
+                fetch_batch(
+                    client, identifiers[start : start + BATCH_SIZE], received, attempts
+                )
+            rows = [
+                {**row, **received[identifier]}
+                for row, identifier in zip(listings, identifiers)
+            ]
+        except Exception as error:
+            audit["complete"] = False
+            audit["errors"].append(
+                str(error)
+                if isinstance(error, MetadataError)
+                else f"metadata_{type(error).__name__}"
+            )
+    audit["metadata_ids"] = sorted(received)
+    audit["missing_metadata_ids"] = sorted(expected - received.keys())
     return rows, audit
 
 
@@ -125,9 +161,18 @@ def main():
         with tempfile.TemporaryDirectory(prefix="arxiv-crawl-") as directory:
             staging = Path(directory) / "records.jsonl"
             write_jsonl(staging, rows)
-            validate(staging, args.audit)
+            try:
+                validate(staging, args.audit)
+            except ValueError as error:
+                if audit["complete"]:
+                    audit["complete"] = False
+                    audit["errors"].append(str(error))
+                    write_json(args.audit, audit)
+                raise
         write_jsonl(args.output, rows)
         print(f"Verified unpublished papers: {len(rows)}")
+        if "metadata_batches" in audit:
+            print(f"Verified metadata batches: {len(audit['metadata_batches'])}")
         return 0
     except Exception as error:
         print(

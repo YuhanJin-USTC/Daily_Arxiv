@@ -142,13 +142,42 @@ async function checkReaderUpdates(page, width, shot) {
   return downloadCheck;
 }
 
-async function checkTopicFixture(page, dataBase) {
+async function checkKeywordLayout(scope, topics, width) {
+  const chips = scope.locator('.paper-keyword');
+  assert.deepEqual(await chips.allTextContents(), topics.keywords);
+  assert.deepEqual(await scope.locator('.laser-plasma-keyword').allTextContents(), topics.laser_plasma_keywords);
+  const layouts = await chips.evaluateAll(elements => elements.map(chip => {
+    const style = getComputedStyle(chip);
+    const row = chip.parentElement;
+    const text = document.createRange();
+    text.selectNodeContents(chip);
+    return {border: style.border, radius: style.borderRadius, color: style.color, background: style.backgroundColor,
+      weight: style.fontWeight, wrap: style.overflowWrap, lines: text.getClientRects().length,
+      fits: chip.scrollWidth <= chip.clientWidth && row.scrollWidth <= row.clientWidth};
+  }));
+  for (const [i, layout] of layouts.entries()) {
+    const highlighted = topics.laser_plasma_keywords.includes(topics.keywords[i]);
+    assert.equal(layout.radius, '0px');
+    assert.equal(layout.border, highlighted ? '1px solid rgb(158, 173, 239)' : '1px solid rgb(191, 201, 236)');
+    assert.equal(layout.color, highlighted ? 'rgb(102, 126, 234)' : 'rgb(71, 85, 105)');
+    assert.equal(layout.background, highlighted ? 'rgba(102, 126, 234, 0.12)' : 'rgb(241, 245, 249)');
+    assert.equal(layout.weight, highlighted ? '600' : '400');
+    assert.equal(layout.wrap, 'anywhere');
+    assert.ok(layout.fits, `Overflowing keyword: ${topics.keywords[i]}`);
+  }
+  if (width === 390) assert.ok(layouts.at(-1).lines > 1, 'The long fixture keyword must wrap on mobile.');
+}
+
+async function checkTopicFixture(page, dataBase, shot) {
   const day = '2099-02-01';
   const raw = ['Rotation spectroscopy', 'Strong-field optics'].map((title, i) => ({
     id: '9902.9000' + i, title, summary: title + ' fixture abstract.',
-    authors: ['Example Author'], categories: ['physics.optics'],
+    authors: ['Example Author'], categories: ['physics.optics'], abs: 'https://example.invalid/papers/' + i,
   }));
-  const topics = {keywords: ['strong-field optics', 'laser pulses', 'dispersion'], laser_plasma_keywords: ['strong-field optics']};
+  const topics = {keywords: ['strong-field optics', 'laser pulses', 'dispersion',
+    'longitudinal electron beam phase-space reconstruction with spectrally resolved diagnostics'],
+    laser_plasma_keywords: ['strong-field optics']};
+  const width = page.viewportSize().width;
   const english = raw.map((row, i) => ({...row, AI: Object.fromEntries(AI_FIELDS.map(field => [field, 'Fixture ' + field])),
     ...(i ? {topics} : {})}));
   const glob = dataBase + '/data/' + day + '*.jsonl';
@@ -165,10 +194,22 @@ async function checkTopicFixture(page, dataBase) {
       await page.waitForFunction(() => document.querySelector('#paperContainer').getAttribute('aria-busy') === 'false');
       const card = page.locator('.paper-card').first();
       assert.equal(await card.getAttribute('data-id'), raw[1].id);
-      assert.deepEqual(await card.locator('.paper-keyword').allTextContents(), topics.keywords);
-      assert.deepEqual(await card.locator('.laser-plasma-keyword').allTextContents(), topics.laser_plasma_keywords);
       assert.equal(await page.locator('.paper-card').count(), 2);
+      assert.equal(await page.locator(`.paper-card[data-id="${raw[0].id}"] .paper-keywords`).count(), 0);
+      const categoryStyle = await card.locator('.category-tag').evaluate(el => {
+        const {borderRadius, borderWidth, borderStyle} = getComputedStyle(el);
+        return {borderRadius, borderWidth, borderStyle};
+      });
+      assert.deepEqual(categoryStyle, {borderRadius: '12px', borderWidth: '1px', borderStyle: 'solid'});
+      await checkKeywordLayout(card, topics, width);
+      if (shot && language === 'English') {
+        await card.evaluate(el => el.scrollIntoView({block: 'center', behavior: 'instant'}));
+        await shot('topics-card');
+      }
       if (language === 'Chinese') assert.equal(await page.locator('.ai-summary-status').count(), 2);
+      await card.getByRole('button', {name: /Details/}).click();
+      await checkKeywordLayout(page.locator('#modalBody'), topics, width);
+      await page.locator('#closeModal').click();
     }
     await page.locator('header [data-ai-language="English"]').click();
     await page.waitForFunction(() => document.querySelector('#paperContainer').getAttribute('aria-busy') === 'false');
@@ -268,9 +309,10 @@ async function runChecks(env = process.env) {
       };
       await shot('home');
       const namedPdfDownload = await checkReaderUpdates(page, width, shot);
-      await checkTopicFixture(page, config.data);
+      await checkTopicFixture(page, config.data, shot);
       report.checks.push({width, scenario: 'Researcher priority, category overflow and bilingual topic fixture',
-        namedPdfDownload});
+        namedPdfDownload, passed: ['round categories', 'bordered ordinary and Laser–Plasma keywords in cards and details',
+          'no empty keyword row', 'keywords fit their container']});
       await page.evaluate(date => loadPapersByDate(date), config.date);
       await page.locator('header [data-ai-language="Chinese"]').focus();
       await page.keyboard.press('Enter');
