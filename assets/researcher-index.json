@@ -823,6 +823,15 @@
         "kind": "reliable",
         "basis": "confirmed_alias"
       }
+    ],
+    "2611.24914": [
+      {
+        "researcher_id": "john-palastro",
+        "display_name": "John P. Palastro",
+        "author": "John P. Palastro",
+        "kind": "reliable",
+        "basis": "full_name"
+      }
     ]
   }
 }
