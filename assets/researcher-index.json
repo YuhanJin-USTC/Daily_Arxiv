@@ -832,6 +832,24 @@
         "kind": "reliable",
         "basis": "full_name"
       }
+    ],
+    "2611.26402": [
+      {
+        "researcher_id": "alexander-pukhov",
+        "display_name": "Alexander Pukhov",
+        "author": "Alexander Pukhov",
+        "kind": "reliable",
+        "basis": "full_name"
+      }
+    ],
+    "2611.26032": [
+      {
+        "researcher_id": "alexander-pukhov",
+        "display_name": "Alexander Pukhov",
+        "author": "Alexander Pukhov",
+        "kind": "reliable",
+        "basis": "full_name"
+      }
     ]
   }
 }
