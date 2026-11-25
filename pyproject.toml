@@ -218,6 +218,11 @@ id = "shifengjia"
 email = "jiashifeng@mail.ustc.edu.cn"
 enabled = true
 
+[[tool.daily_arxiv.notifications.recipients]]
+id = "haoji"
+email = "920123044@qq.com"
+enabled = true
+
 [tool.daily_arxiv.notifications.smtp]
 host = "smtp.qq.com"
 port = 465
