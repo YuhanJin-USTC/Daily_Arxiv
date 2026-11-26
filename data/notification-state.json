@@ -84635,7 +84635,7 @@
     },
     "haoji": {
       "2611.33989": {
-        "status": "sending",
+        "status": "sent",
         "recipient": {
           "id": "haoji",
           "email": "920123044@qq.com"
@@ -84942,7 +84942,8 @@
       ],
       "date": "2026-11-26",
       "site_url": "https://yuhanjin-ustc.github.io/Daily_Arxiv/",
-      "sender": "yhjin1005@qq.com"
+      "sender": "yhjin1005@qq.com",
+      "sent_date": "2026-11-26"
     }
   },
   "resolutions": [],
