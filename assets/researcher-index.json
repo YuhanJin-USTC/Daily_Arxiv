@@ -868,6 +868,15 @@
         "kind": "reliable",
         "basis": "full_name"
       }
+    ],
+    "2611.33989": [
+      {
+        "researcher_id": "hui-zhang",
+        "display_name": "Hui Zhang",
+        "author": "Hui Zhang",
+        "kind": "reliable",
+        "basis": "full_name"
+      }
     ]
   }
 }
