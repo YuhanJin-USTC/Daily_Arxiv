@@ -84635,13 +84635,13 @@
     },
     "haoji": {
       "2611.33989": {
-        "status": "pending",
+        "status": "sending",
         "recipient": {
           "id": "haoji",
           "email": "920123044@qq.com"
         },
-        "attempts": 0,
-        "batch_id": null,
+        "attempts": 1,
+        "batch_id": "0e5745fec77091c490f58d344e789baf",
         "last_error": null
       }
     }
@@ -84934,6 +84934,15 @@
       "site_url": "https://yuhanjin-ustc.github.io/Daily_Arxiv/",
       "sender": "yhjin1005@qq.com",
       "sent_date": "2026-11-26"
+    },
+    "0e5745fec77091c490f58d344e789baf": {
+      "recipient_id": "haoji",
+      "paper_ids": [
+        "2611.33989"
+      ],
+      "date": "2026-11-26",
+      "site_url": "https://yuhanjin-ustc.github.io/Daily_Arxiv/",
+      "sender": "yhjin1005@qq.com"
     }
   },
   "resolutions": [],
